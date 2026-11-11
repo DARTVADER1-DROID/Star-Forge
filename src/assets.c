@@ -25,7 +25,57 @@ if(!pixels||w<=0||h<=0){SDL_Log("Invalid sprite %s",path);stbi_image_free(pixels
 surface=SDL_CreateSurfaceFrom(w,h,SDL_PIXELFORMAT_RGBA32,pixels,w*4);
 if(!surface){stbi_image_free(pixels);return NULL;}
 texture=SDL_CreateTextureFromSurface(r,surface);SDL_DestroySurface(surface);stbi_image_free(pixels);
-if(texture)SDL_SetTextureScaleMode(texture,SDL_SCALEMODE_NEAREST);return texture;}
-bool sf_assets_init(SfAssets *a,SDL_Renderer *r){int count=0;memset(a,0,sizeof(*a));for(int i=0;i<SF_ASSET_COUNT;i++){a->textures[i]=load_one(r,paths[i]);if(a->textures[i])count++;}SDL_Log("Loaded %d/%d sprites",count,SF_ASSET_COUNT);return count>0;}
-void sf_assets_destroy(SfAssets *a){for(int i=0;i<SF_ASSET_COUNT;i++){if(a->textures[i])SDL_DestroyTexture(a->textures[i]);a->textures[i]=NULL;}}
-SDL_Texture *sf_assets_get(const SfAssets *a,SfAssetId id){if(!a||id<0||id>=SF_ASSET_COUNT)return NULL;return a->textures[id];}
+if (texture == NULL) {
+        SDL_Log("Could not create texture for %s: %s", path, SDL_GetError());
+        return NULL;
+    }
+
+    if (!SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST)) {
+        SDL_Log("Could not set pixel-art scaling for %s: %s", path, SDL_GetError());
+    }
+
+    return texture;}
+bool sf_assets_init(SfAssets *assets, SDL_Renderer *renderer)
+{
+    int loaded = 0;
+    int i;
+
+    if (assets == NULL || renderer == NULL) {
+        return false;
+    }
+
+    memset(assets, 0, sizeof(*assets));
+
+    for (i = 0; i < SF_ASSET_COUNT; ++i) {
+        assets->textures[i] = load_one(renderer, paths[i]);
+        if (assets->textures[i] != NULL) {
+            ++loaded;
+        }
+    }
+
+    SDL_Log("Loaded %d/%d sprites", loaded, SF_ASSET_COUNT);
+    return loaded == SF_ASSET_COUNT;
+}
+void sf_assets_destroy(SfAssets *assets)
+{
+    int i;
+
+    if (assets == NULL) {
+        return;
+    }
+
+    for (i = 0; i < SF_ASSET_COUNT; ++i) {
+        if (assets->textures[i] != NULL) {
+            SDL_DestroyTexture(assets->textures[i]);
+            assets->textures[i] = NULL;
+        }
+    }
+}
+SDL_Texture *sf_assets_get(const SfAssets *assets, SfAssetId id)
+{
+    if (assets == NULL || id < 0 || id >= SF_ASSET_COUNT) {
+        return NULL;
+    }
+
+    return assets->textures[id];
+}
