@@ -18,6 +18,9 @@ int main(void)
     assert(game.inventory[SF_ITEM_METAL] == 12);
     assert(game.npcs[0].role == SF_ROLE_CARGO);
     assert(game.npcs[1].role == SF_ROLE_PIRATE);
+    assert(game.npcs[0].cargo[SF_ITEM_FUEL] +
+           game.npcs[0].cargo[SF_ITEM_FOOD] +
+           game.npcs[0].cargo[SF_ITEM_METAL] == 100);
 
     /* Boost increases acceleration without consuming ship energy. */
     {
@@ -103,6 +106,8 @@ int main(void)
     sf_game_init(&game);
     assert(sf_game_jump_to_system(&game, 1));
     assert(game.current_system == 1);
+    assert(game.npcs[0].alive);
+    assert(game.npcs[1].alive);
     assert(game.inventory[SF_ITEM_FUEL] == 13);
     assert(sf_game_system_planet_count(1) == 2);
     assert(sf_game_system_moon_count(1) == 3);
