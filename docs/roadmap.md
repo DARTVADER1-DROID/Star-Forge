@@ -27,7 +27,6 @@
 ## Quality gates
 - Godot headless import and smoke test pass.
 - Android export completes and APK artifact is verified.
-- No C/C++ source, CMake files or SDL dependencies in the repository.
 - Test touch controls at multiple aspect ratios.
 - Test pause/resume, app backgrounding and interrupted saves.
 - Profile memory, frame pacing, thermal behavior and battery use on physical Android hardware.
