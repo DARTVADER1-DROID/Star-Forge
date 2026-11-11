@@ -84,6 +84,19 @@ int main(void)
     sf_game_update(&game, &idle, 1.0f / 60.0f);
     assert(sf_distance_squared(game.player.x, game.player.y, 520.0f, 250.0f) >= 34.0f * 34.0f);
 
+    /* Projectiles must collide with asteroids instead of passing through them. */
+    sf_game_init(&game);
+    for (int i = 0; i < SF_MAX_NPCS; ++i) {
+        game.npcs[i].alive = false;
+    }
+    game.projectiles[0].active = true;
+    game.projectiles[0].from_player = true;
+    game.projectiles[0].x = 520.0f;
+    game.projectiles[0].y = 250.0f;
+    game.projectiles[0].life = 1.0f;
+    sf_game_update(&game, &idle, 1.0f / 60.0f);
+    assert(!game.projectiles[0].active);
+
     /* Destroying a cargo NPC creates physical drops from its actual manifest. */
     sf_game_init(&game);
     game.player.x = 600.0f;
