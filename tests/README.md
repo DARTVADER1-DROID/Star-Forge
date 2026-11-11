@@ -1,8 +1,17 @@
 # Godot Tests
 
-Automated validation runs without a display device.
+CI runs the test runner as a regular Godot scene so project autoloads and runtime services are initialized exactly as they are in the game.
 
-- `godot --headless --editor --path . --import --quit` validates project import and resources.
-- `godot --headless --path . --script res://tests/godot_smoke_test.gd` loads the main scene and validates required runtime nodes and content definitions.
+Command:
 
-Add deterministic tests for cargo capacity, armour damage spillover, FTL adjacency and fuel consumption, NPC role data, save-file validation and system-state restoration. Keep tests in GDScript and run them in CI.
+`godot --headless --path . res://tests/test_runner.tscn`
+
+Coverage includes:
+- Content database loading and schema counts.
+- Cargo capacity and item volume.
+- Armour-first damage with hull spillover.
+- FTL adjacency, fuel checks and fuel consumption.
+- Local save/load round-trip.
+- Main scene composition and initial NPC population.
+
+Extend this runner with deterministic regression cases whenever gameplay rules change.
