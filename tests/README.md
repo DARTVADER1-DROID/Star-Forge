@@ -1,15 +1,8 @@
-# Tests
+# Godot Tests
 
-Automated tests will be added alongside engine modules.
+Automated validation runs without a display device.
 
-Priority test areas:
+- `godot --headless --editor --path . --import --quit` validates project import and resources.
+- `godot --headless --path . --script res://tests/godot_smoke_test.gd` loads the main scene and validates required runtime nodes and content definitions.
 
-- Coordinate and transform math
-- Fixed-step timing
-- Memory pool allocation and reset
-- Entity/component storage
-- Collision detection
-- Save-file versioning and recovery
-- Data-definition parsing and validation
-
-Tests should be deterministic and runnable in CI without requiring a graphics device wherever possible.
+Add deterministic tests for cargo capacity, armour damage spillover, FTL adjacency and fuel consumption, NPC role data, save-file validation and system-state restoration. Keep tests in GDScript and run them in CI.
