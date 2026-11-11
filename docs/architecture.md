@@ -1,55 +1,50 @@
-# Architecture
+# Godot Architecture
 
-## Principles
+## Engine conventions
 
-1. Keep gameplay and simulation independent of Android, Windows, Linux, and macOS APIs.
-2. Keep platform integration behind SDL3 and narrow engine interfaces.
-3. Prefer explicit ownership, fixed-capacity pools, and predictable data layouts.
-4. Separate game content from engine code.
-5. Keep the first playable prototype small; expand only when profiling and gameplay require it.
+- Godot 4.7.2 is the single engine runtime.
+- Typed GDScript is the primary and only gameplay language.
+- Gameplay is scene-oriented; reusable actors and world objects have dedicated scenes.
+- Global state is restricted to the `GameState` and `ContentDatabase` autoloads.
+- Content definitions are JSON with stable IDs and are loaded once by the content database.
+- Touch input is handled by the HUD; player simulation receives normalized steering and action signals.
+- Rendering uses Godot's Compatibility renderer to target a broad Android device range.
 
-## Planned layers
+## Runtime layers
 
-### Platform
-Window lifecycle, input events, audio device access, timing, and platform file locations. SDL3 is the initial integration layer.
+### Application and UI
+`scenes/main.tscn` composes the world, player, entity containers and HUD. The HUD owns the touch joystick, action buttons, cargo panel, galaxy selector and recovery overlay.
 
-### Engine core
-Application lifecycle, logging, frame timing, memory arenas/pools, resource handles, and configuration.
+### Persistent state
+`scripts/autoload/game_state.gd` owns inventory, credits, ship state, FTL rules, system state and versioned local save data. It exposes signals rather than reaching into scene nodes.
 
-### Renderer
-A custom 2D sprite renderer. The initial compatibility target is OpenGL ES 2.0 on Android. Renderer interfaces must not leak graphics API types into gameplay code.
+### Content
+`scripts/autoload/content_database.gd` validates and indexes JSON definitions for items, ship designs, NPC roles and star systems.
 
-### Simulation
-Entity/component storage, transforms, movement, collision detection, combat, and AI. Simulation uses a fixed update step; rendering may interpolate between simulation states.
+### Gameplay
+- Player ship: movement, acceleration, armour, hull, energy and weapon firing.
+- NPC ship: role-specific navigation, cargo manifest, combat and salvage.
+- Projectile: lifetime, travel and collision-driven damage.
+- World: system loading, asteroid and planetary obstacles, NPC population and salvage persistence.
 
-### World
-Sector loading, local entity simulation, procedural content, stations, asteroids, and exploration.
+### Data and assets
+Definitions belong in `data/`; reusable scenes and scripts belong in `scenes/` and `scripts/`. Art is imported as Godot resources and referenced through stable resource paths.
 
-### Game systems
-Player progression, spacecraft modules, weapons, cargo, economy, missions, factions, and save/load.
+## Code standards
 
-## Current source modules
+- Use typed variables, parameters and return types for public APIs.
+- Keep scripts focused on one responsibility.
+- Use signals for cross-layer communication.
+- Validate external data before indexing or applying it.
+- Avoid per-frame node creation and unbounded collections.
+- Keep gameplay input touch-only.
+- Do not introduce native extensions until profiling demonstrates a concrete need.
 
-- `main.c`: SDL lifecycle, fixed-step clock, touch/mouse event routing and on-screen controls.
-- `game.c`: deterministic simulation, ship movement, combat, NPC behavior, salvage and trading rules.
-- `world.c`: data and queries for star-system definitions.
-- `render.c`: camera-space world drawing, HUD, sprite rendering and cargo-panel presentation.
-- `assets.c`: bounded PNG decoding, SDL texture creation, pixel-art scaling and resource cleanup.
-- `game.h`, `render.h`, and `assets.h`: narrow interfaces between those modules.
+## Runtime flow
 
-Keep the simulation library independent of SDL. Split additional gameplay systems into their own modules when the public interfaces and ownership boundaries are clear; avoid empty placeholder files.
-
-## Initial prototype
-
-1. SDL3 application shell.
-2. Input and fixed-step timing.
-3. Pixel-art camera and sprite renderer.
-4. Player ship movement.
-5. Asteroids and collision.
-6. One weapon and projectile pool.
-7. One enemy and basic combat.
-8. Local save/load.
-
-## Platform strategy
-
-Android is the primary shipping platform. Desktop builds are useful for faster iteration and debugging. Platform-specific code must remain isolated so the same gameplay source can be compiled for each target.
+1. Godot loads the project and autoloads.
+2. The content database validates JSON data.
+3. The main scene restores local player state and loads the current system.
+4. The player and local actors run in the active scene only.
+5. System transitions persist local state and consume FTL fuel.
+6. Saves are written to the application user-data directory.
