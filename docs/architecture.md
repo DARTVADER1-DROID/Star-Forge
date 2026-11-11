@@ -28,9 +28,16 @@ Sector loading, local entity simulation, procedural content, stations, asteroids
 ### Game systems
 Player progression, spacecraft modules, weapons, cargo, economy, missions, factions, and save/load.
 
-## Initial repository modules
+## Current source modules
 
-The directories will be introduced as their implementations become real. Avoid creating empty placeholder modules solely to make the tree look complete.
+- `main.c`: SDL lifecycle, fixed-step clock, touch/mouse event routing and on-screen controls.
+- `game.c`: deterministic simulation, ship movement, combat, NPC behavior, salvage and trading rules.
+- `world.c`: data and queries for star-system definitions.
+- `render.c`: camera-space world drawing, HUD, sprite rendering and cargo-panel presentation.
+- `assets.c`: bounded PNG decoding, SDL texture creation, pixel-art scaling and resource cleanup.
+- `game.h`, `render.h`, and `assets.h`: narrow interfaces between those modules.
+
+Keep the simulation library independent of SDL. Split additional gameplay systems into their own modules when the public interfaces and ownership boundaries are clear; avoid empty placeholder files.
 
 ## Initial prototype
 
