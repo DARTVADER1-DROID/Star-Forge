@@ -317,14 +317,6 @@ static void draw_touch_controls(
     SDL_RenderDebugText(renderer, 293.0f, 124.0f, "L");
     SDL_RenderDebugText(renderer, 259.0f, 124.0f, "FTL");
 
-    {
-        char status[96];
-        (void)snprintf(status, sizeof(status), "%s H%.0f A%.0f E%.0f",
-                       sf_game_system_name(game->current_system),
-                       game->player.hull, game->player.armor, game->player.energy);
-        (void)SDL_SetRenderDrawColor(renderer, 220, 232, 245, 255);
-        SDL_RenderDebugText(renderer, 5.0f, 5.0f, status);
-    }
 }
 
 int main(int argc, char **argv)
@@ -429,19 +421,6 @@ int main(int argc, char **argv)
 
         }
 
-        if (ftl_transition_timer > 0.0f) {
-            ftl_transition_timer -= (float)SF_FIXED_STEP;
-            if (ftl_transition_timer <= 0.0f && ftl_destination >= 0) {
-                if (sf_game_jump_to_system(&game, ftl_destination)) {
-                    arrival_effect_timer = 1.0f;
-                }
-                ftl_destination = -1;
-            }
-        }
-        if (arrival_effect_timer > 0.0f) {
-            arrival_effect_timer = fmaxf(0.0f, arrival_effect_timer - (float)SF_FIXED_STEP);
-        }
-
         input.fire = touch.fire_active;
         input.boost = touch.boost_active;
 
@@ -479,8 +458,25 @@ int main(int argc, char **argv)
         accumulator += frame_time;
 
         while (accumulator >= SF_FIXED_STEP) {
-            if (!galaxy_map_open && ftl_transition_timer <= 0.0f) {
-                sf_game_update(&game, &input, (float)SF_FIXED_STEP);
+            if (!galaxy_map_open) {
+                if (ftl_transition_timer > 0.0f) {
+                    ftl_transition_timer -= (float)SF_FIXED_STEP;
+                    if (ftl_transition_timer <= 0.0f && ftl_destination >= 0) {
+                        if (sf_game_jump_to_system(&game, ftl_destination)) {
+                            arrival_effect_timer = 1.0f;
+                        }
+                        ftl_destination = -1;
+                    }
+                } else {
+                    sf_game_update(&game, &input, (float)SF_FIXED_STEP);
+                }
+
+                if (arrival_effect_timer > 0.0f) {
+                    arrival_effect_timer = fmaxf(
+                        0.0f,
+                        arrival_effect_timer - (float)SF_FIXED_STEP
+                    );
+                }
             }
             accumulator -= SF_FIXED_STEP;
         }
@@ -493,7 +489,7 @@ int main(int argc, char **argv)
         if (galaxy_map_open) {
             sf_galaxy_render(renderer, &game, galaxy_selected_system);
         } else {
-            sf_render_world(renderer, &game, &assets, camera_x, camera_y);
+            sf_render_world(\n                renderer, &game, &assets, camera_x, camera_y,\n                ftl_transition_timer <= 0.0f\n            );
             if (ftl_transition_timer > 0.0f) {
                 const float pulse = 1.0f - ftl_transition_timer / 1.45f;
                 (void)SDL_SetRenderDrawColor(renderer, 120, 190, 255, 210);
