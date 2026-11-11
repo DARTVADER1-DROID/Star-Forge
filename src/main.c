@@ -1,3 +1,18 @@
+#include <SDL3/SDL.h>
+
+#include "game.h"
+#include "render.h"
+
+#include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+
+#define SF_WINDOW_WIDTH 960
+#define SF_WINDOW_HEIGHT 540
+#define SF_LOGICAL_WIDTH 320
+#define SF_LOGICAL_HEIGHT 180
+#define SF_FIXED_STEP (1.0 / 60.0)
+
 typedef struct {
     SDL_FingerID joystick_id;
     SDL_FingerID fire_id;
@@ -7,6 +22,7 @@ typedef struct {
     bool boost_active;
     float joystick_x;
     float joystick_y;
+    bool mouse_joystick_active;
 } SfTouchState;
 
 static void update_touch_event(
@@ -240,6 +256,60 @@ int main(int argc, char **argv)
                 event.type == SDL_EVENT_FINGER_UP) {
                 update_touch_event(&event.tfinger, &touch, &game);
             }
+
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+                event.type == SDL_EVENT_MOUSE_BUTTON_UP ||
+                event.type == SDL_EVENT_MOUSE_MOTION) {
+                float pointer_x = 0.0f;
+                float pointer_y = 0.0f;
+                int width = SF_WINDOW_WIDTH;
+                int height = SF_WINDOW_HEIGHT;
+                bool pressed = event.type != SDL_EVENT_MOUSE_BUTTON_UP;
+
+                SDL_GetWindowSize(window, &width, &height);
+                if (event.type == SDL_EVENT_MOUSE_MOTION) {
+                    pointer_x = event.motion.x;
+                    pointer_y = event.motion.y;
+                    pressed = (event.motion.state & SDL_BUTTON_LMASK) != 0;
+                } else {
+                    pointer_x = event.button.x;
+                    pointer_y = event.button.y;
+                }
+
+                if (width > 0 && height > 0) {
+                    pointer_x *= (float)SF_LOGICAL_WIDTH / (float)width;
+                    pointer_y *= (float)SF_LOGICAL_HEIGHT / (float)height;
+                }
+
+                if (pointer_x < 155.0f) {
+                    touch.mouse_joystick_active = pressed;
+                    touch.joystick_active = pressed;
+                    touch.joystick_x = pointer_x;
+                    touch.joystick_y = pointer_y;
+                } else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+                    if (pointer_x > 268.0f && pointer_y > 125.0f) {
+                        touch.fire_active = true;
+                    } else if (pointer_x > 268.0f && pointer_y <= 110.0f) {
+                        touch.boost_active = true;
+                    } else if (pointer_x > 205.0f && pointer_x <= 255.0f &&
+                               pointer_y > 140.0f) {
+                        (void)sf_game_collect_nearest(&game);
+                    } else if (pointer_x > 205.0f && pointer_x <= 255.0f &&
+                               pointer_y > 90.0f && pointer_y <= 130.0f) {
+                        (void)sf_game_jump_to_system(
+                            &game,
+                            (game.current_system + 1) % SF_MAX_SYSTEMS
+                        );
+                    }
+                } else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+                    touch.fire_active = false;
+                    touch.boost_active = false;
+                    if (touch.mouse_joystick_active) {
+                        touch.mouse_joystick_active = false;
+                        touch.joystick_active = false;
+                    }
+                }
+            }
         }
 
         input.fire = touch.fire_active;
@@ -299,9 +369,7 @@ int main(int argc, char **argv)
             sf_render_inventory_panel(renderer, &game);
         }
 
-#ifdef __ANDROID__
         draw_touch_controls(renderer, &touch, &game);
-#endif
 
         SDL_RenderPresent(renderer);
         SDL_Delay(1);
