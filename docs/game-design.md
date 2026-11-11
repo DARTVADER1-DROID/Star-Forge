@@ -243,7 +243,22 @@ The player can deliberately eject cargo from their own ship to free cargo capaci
 
 This enables tactical inventory decisions during salvage: for example, the player may discard some low-value metal to make room for a rare weapon discovered in another floating cargo module. The player should be able to inspect available salvage before deciding what to jettison.
 
-### 10.5 Reputation and consequences
+### 10.5 NPC salvage and piracy simulation
+
+NPC ships participate in the same cargo-container world as the player.
+
+- NPC ships can be pirates, cargo haulers, traders, or other roles. Pirate NPCs can attack and destroy cargo NPCs; destroyed ships produce salvage using the same wreck/cargo rules as player-caused destruction.
+- NPCs can detect, approach, and collect eligible cargo modules in space. This can include cargo deliberately jettisoned by the player and cargo dropped by destroyed NPC ships.
+- Add a player-facing gameplay setting that controls NPC cargo collection/salvage behavior. When enabled, NPCs may collect eligible crates according to their role, awareness, proximity, capacity, and risk. When disabled, NPCs do not collect these floating cargo modules, leaving them available for the player to recover.
+- This setting controls NPC collection behavior only; it does not disable NPC piracy, combat, destruction, or the creation of wrecks and cargo drops.
+- NPC salvage decisions should use the same capacity and item-transfer rules as player collection. NPCs must not duplicate cargo or exceed their cargo capacity.
+- The player can exploit conflicts between NPCs: for example, wait for a pirate to destroy a fuel hauler/cargo ship, then approach the wreck and collect its fuel before escaping or before other ships claim it.
+- When NPC collection is enabled, salvage can become contested. Nearby NPCs may reach it first, and the player may need to assess threats and timing before looting.
+- NPC behavior should be simulated efficiently: prioritize nearby/relevant ships and containers rather than running expensive full-world searches on low-memory devices.
+
+The exact setting label/default, NPC detection rules, collection priorities, faction hostility, and whether NPCs can collect from containers belonging to hostile/friendly factions remain to be designed.
+
+### 10.6 Reputation and consequences
 
 The existence of piracy is agreed, but its wider consequences are not yet specified. Possible systems include faction or local-security hostility, wanted status, patrol response, bounty/reputation changes, and restrictions at ports. Do not treat any of these as approved mechanics until designed.
 
