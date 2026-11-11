@@ -30,6 +30,12 @@ jobs:
           chmod +x "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
           sudo ln -sf "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" /usr/local/bin/godot
 
+      - name: Restore original art assets
+        run: |
+          mkdir -p assets
+          unzip -q StarForge_Asset_Pack.zip -d "$RUNNER_TEMP/starforge-assets"
+          cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/assets/." assets/
+
       - name: Import project resources
         run: godot --headless --editor --path . --import --quit
 
