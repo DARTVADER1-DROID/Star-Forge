@@ -24,6 +24,20 @@ int main(void)
            game.npcs[0].cargo[SF_ITEM_FOOD] +
            game.npcs[0].cargo[SF_ITEM_METAL] == 100);
 
+    /* Speed caps apply to total velocity, including diagonal movement. */
+    sf_game_init(&game);
+    game.player.vx = 190.0f;
+    game.player.vy = 190.0f;
+    sf_game_update(&game, &idle, 1.0f / 60.0f);
+    assert(hypotf(game.player.vx, game.player.vy) <= 190.001f);
+
+    /* A destroyed player ship cannot fire or spend energy. */
+    sf_game_init(&game);
+    game.player.alive = false;
+    sf_game_fire_player(&game);
+    assert(game.player.energy == game.player.max_energy);
+    assert(!game.projectiles[0].active);
+
     /* Boost increases acceleration without consuming ship energy. */
     {
         SfInput boost_input = { .thrust = true, .boost = true };
