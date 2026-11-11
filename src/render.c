@@ -383,7 +383,8 @@ void sf_render_world(
     const SfGame *game,
     const SfAssets *assets,
     int camera_x,
-    int camera_y
+    int camera_y,
+    bool draw_player
 )
 {
     SDL_FRect station_rectangle;
