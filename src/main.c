@@ -258,8 +258,11 @@ static void draw_hud(SDL_Renderer *renderer, const SfGame *game)
     (void)snprintf(
         text,
         sizeof(text),
-        "STAR-FORGE v0.1  HP %.0f  CREDITS %d",
-        game->player.hp,
+        "STAR-FORGE  SYS %s  ARM %.0f HULL %.0f EN %.0f  CR %d",
+        sf_game_system_name(game->current_system),
+        game->player.armor,
+        game->player.hull,
+        game->player.energy,
         game->credits
     );
 
@@ -300,7 +303,7 @@ static void draw_hud(SDL_Renderer *renderer, const SfGame *game)
         renderer,
         5.0f,
         165.0f,
-        "1-5 item +/- qty T sell near station F3 NPC salvage I cargo"
+        "1-5 item +/- qty T sell F3 salvage I cargo G FTL jump"
     );
 }
 
@@ -582,8 +585,8 @@ static void draw_touch_controls(
         (void)snprintf(
             energy_text,
             sizeof(energy_text),
-            "BOOST %.0f%%",
-            game->boost_energy
+            "ENERGY %.0f%%",
+            game->player.energy
         );
         SDL_RenderDebugText(renderer, 5.0f, 41.0f, energy_text);
     }
@@ -647,6 +650,13 @@ static void handle_key_press(
             if (game->selected_quantity > 1) {
                 game->selected_quantity -= 1;
             }
+            break;
+
+        case SDL_SCANCODE_G:
+            (void)sf_game_jump_to_system(
+                game,
+                (game->current_system + 1) % SF_MAX_SYSTEMS
+            );
             break;
 
         case SDL_SCANCODE_I:
