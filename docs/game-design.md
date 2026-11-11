@@ -1,0 +1,171 @@
+# Star-Forge — Game Design Foundations
+
+**Status:** Design draft based on currently agreed direction. Numerical balance, individual weapon definitions, and detailed galaxy generation rules remain open.
+
+## 1. Core concept
+
+Star-Forge is an original, offline-first, top-down 2D pixel-art space sandbox RPG. The player explores a galaxy, travels between star systems using faster-than-light (FTL) travel, visits planets, trades commodities, acquires and customizes ships, and eventually engages with combat and other RPG systems.
+
+The galaxy is composed of distinct star systems. Ordinary interstellar travel is not available: reaching another system requires FTL travel. Each system contains at least two landable planets.
+
+## 2. Ship taxonomy
+
+Ships have two independent classification dimensions:
+
+- **Type:** the hull archetype. It defines the ship's basic scale, structural envelope, mass/capacity potential, and baseline performance.
+- **Class:** the operational specialization. It changes how the hull is configured and what trade-offs it makes.
+
+The combination produces 18 initial type/class combinations (6 types × 3 classes). These are configurations of a shared system, not 18 separate hard-coded ship implementations.
+
+### 2.1 Ship types
+
+The six agreed ship types are:
+
+1. **Runner** — prioritizes speed and agility; suited to rapid travel, courier work, scouting, and evasion.
+2. **Destroyer** — a combat-oriented hull with substantial weapons and defensive potential.
+3. **Corvette** — a smaller, relatively agile combat-capable hull.
+4. **Frigate** — a medium multipurpose hull with room for a useful mix of equipment and weapons.
+5. **Battleship** — a large capital hull with high structural strength and substantial weapon capacity.
+6. **Flagship** — a strategic command-scale hull with extensive equipment and systems capacity.
+
+These are role descriptions, not final numerical specifications. Exact hull sizes, masses, hardpoint layouts, and baseline statistics are to be defined during balancing.
+
+### 2.2 Ship classes
+
+**Civilian**
+- Optimized for speed and fuel efficiency.
+- General-purpose civilian equipment and useful cargo capacity.
+- Limited combat capability and less protection than a military fit.
+
+**Cargo**
+- Strong emphasis on available cargo volume for transporting commodities between systems.
+- Sacrifices armor and hull strength.
+- Generally slower than comparable civilian or military configurations.
+- Cargo capacity is a primary identity, not a minor bonus.
+
+**Military**
+- Optimized for weapon-layout capability, speed, and strength.
+- Better combat protection and weapon support.
+- Poor fuel efficiency and medium cargo capacity.
+- Weapon mounting capability depends on the hull's actual hardpoints and supported mount sizes.
+
+Class descriptions are design intent. Exact modifiers and restrictions are not yet locked.
+
+## 3. Ship statistics
+
+The ship-stat model should keep these concerns distinct:
+
+| Group | Candidate statistics |
+|---|---|
+| Mobility | Maximum speed, acceleration, turn rate, maneuverability |
+| Structure | Hull integrity, armor, shield capacity |
+| Logistics | Cargo volume, fuel capacity, fuel consumption / efficiency |
+| Weapons | Hardpoint count, mount size/type compatibility, weapon power budget |
+| Engineering | Power generation, power consumption, module capacity |
+| Operations | Crew capacity, maintenance and operating costs |
+
+Important distinctions:
+- Hull integrity is the amount of structural damage a ship can sustain.
+- Armor mitigates incoming damage to the hull.
+- Shields absorb damage before it reaches armor and hull.
+- Cargo volume is not the same as cargo mass. Heavy cargo may affect ship mass, acceleration, and fuel use.
+- A hardpoint is a physical attachment location; it is not itself a weapon or a damage statistic.
+
+### 3.1 Stat composition
+
+The planned model is data-driven:
+
+1. Load the hull type's baseline characteristics.
+2. Apply the selected ship class's modifiers and restrictions.
+3. Apply the individual ship model's specific values and hardpoint layout.
+4. Apply installed upgrades and equipment.
+5. Calculate derived runtime values, such as acceleration, effective speed, and fuel consumption.
+
+Earlier illustrative class multipliers and 1–10 archetype ratings are provisional examples only. They are **not approved balance values** and must not be treated as final game data.
+
+## 4. Ship upgrades
+
+Ships are upgradeable. Upgrades have distinctive, humorous/in-universe names and improve one or more ship statistics by a defined percentage.
+
+Upgrade definitions should be data-driven and identify:
+- Stable upgrade ID and display name.
+- Applicable ship systems or compatible ship types/classes.
+- Statistics affected.
+- Percentage change for each affected statistic.
+- Installation constraints, slot/power requirements, and costs (to be designed).
+- Whether multiple copies or upgrade tiers can stack.
+
+The percentage modifier should be explicit and inspectable in the ship configuration/UI. Stacking rules and whether modifiers are additive or multiplicative remain to be decided. Upgrades must respect hull limits so they improve a ship without erasing its archetype.
+
+## 5. Galaxy and star systems
+
+- The game world is an open galaxy made up of multiple star systems.
+- Inter-system access requires FTL travel.
+- Each star system contains two or more landable planets.
+- Each planet has a population and a set of characteristics.
+- Planet characteristics influence which commodities are available, produced, consumed, scarce, or desirable.
+- Planets in the same system should be distinct places with their own economic and population profiles.
+
+The exact FTL mechanics, map representation, travel costs/times, system generation, and planet trait catalogue have not yet been specified.
+
+## 6. Planetary economy and commodities
+
+The initial commodity categories are:
+
+1. Medicine
+2. Food
+3. Equipment
+4. Metal
+5. Luxury goods
+
+Each planet has:
+- A population value.
+- Planetary characteristics/traits.
+- Commodity availability and market prices.
+
+Commodity prices may differ from planet to planet based on their characteristics and economic conditions. This creates the basis for inter-system and interplanetary trading.
+
+A future economy model can account for local production, consumption, population demand, scarcity, and trade supply. These are candidate pricing inputs, not finalized formulas. The initial design should keep commodity definitions separate from each planet's market stock and price.
+
+## 7. Weapons market and ship mounting
+
+- Weapons are purchasable through a weapons market.
+- Weapons are attachable equipment, installed at compatible ship hardpoints.
+- A ship's artwork and hardpoint metadata determine where a weapon is visually attached.
+- Hull hardpoint definitions determine which weapon mount types/sizes can be installed.
+- Weapon gameplay statistics and balancing are separate from sprite artwork and attachment coordinates.
+
+The user will provide/document the weapon catalogue and weapon details later. Therefore, this document intentionally does not define individual weapons, damage values, firing rates, projectile properties, or final weapon-market rules.
+
+## 8. Asset and data separation
+
+The implementation should separate:
+- **Visual asset metadata:** sprite path, dimensions, pivot, animation frames, hardpoint coordinates, engine attachment points, and collision geometry.
+- **Hull/type data:** baseline ship characteristics and structural limits.
+- **Class data:** class modifiers and equipment restrictions.
+- **Upgrade data:** named percentage-based improvements and compatibility.
+- **Weapon data:** weapon behaviour, statistics, price, and mount requirements.
+- **World/economy data:** systems, planets, population, traits, commodity stock, and prices.
+
+The engine should combine these definitions at runtime rather than embedding individual ships, planets, or weapon values in C source code. Sprite coordinates use the convention in [Asset Pipeline](asset-pipeline.md).
+
+## 9. Open design decisions
+
+The following are deliberately left open:
+- Exact baseline statistics and balance values for all six ship types.
+- Exact numerical class modifiers and class/type restrictions.
+- Upgrade names, upgrade catalogue, stacking rules, costs, and installation slots.
+- FTL navigation, range, fuel/cost, and travel-time rules.
+- Galaxy scale and system/planet generation.
+- Planet characteristic/trait catalogue.
+- Commodity production, consumption, stock simulation, and pricing formula.
+- Weapons catalogue, weapon statistics, market rules, and mount-size taxonomy.
+- Whether and how population changes over time.
+
+## 10. Design constraints
+
+- Preserve the offline-first requirement; the core galaxy, trading, and ship systems must not require a server.
+- Keep content definitions data-driven and versionable.
+- Avoid hardcoding numerical balance in engine code.
+- Make the system efficient for low-memory Android devices; do not simulate every distant planet and system at full detail.
+- Treat all numerical examples as provisional until explicitly approved and playtested.
