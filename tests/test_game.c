@@ -102,6 +102,15 @@ int main(void)
         assert(game.player.energy >= energy_before);
     }
 
+    /* A full projectile pool must not consume weapon energy or cooldown. */
+    sf_game_init(&game);
+    for (int i = 0; i < SF_MAX_PROJECTILES; ++i) {
+        game.projectiles[i].active = true;
+    }
+    sf_game_fire_player(&game);
+    assert(game.player.energy == game.player.max_energy);
+    assert(game.player.fire_cooldown == 0.0f);
+
     /* Inter-system travel requires an FTL drive and five fuel units. */
     sf_game_init(&game);
     assert(sf_game_jump_to_system(&game, 1));
