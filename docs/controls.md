@@ -18,6 +18,7 @@ The joystick is analog in touch position, with a dead zone around its center. Th
 | A / Left | Turn left |
 | D / Right | Turn right |
 | Space | Fire |
+| Left Shift | Boost |
 | E | Collect nearest salvage |
 | J | Jettison selected commodity |
 | T | Sell selected commodity at station |
