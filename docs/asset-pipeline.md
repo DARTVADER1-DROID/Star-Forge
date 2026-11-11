@@ -1,26 +1,28 @@
 # Godot Asset Pipeline
 
-## Import
-- Keep source artwork in `assets/` and use PNG for runtime pixel art.
-- Godot imports source files into its generated resource cache; never commit the generated `.godot/` directory.
-- The cloud workflows extract the archived art pack into `assets/` before Godot imports resources. For local editor use, open `tools/import_asset_pack.gd` in Godot and run the EditorScript once. The JSON files already in `data/` remain the authoritative gameplay definitions.
-- Prefer nearest-neighbor filtering for pixel art.
-- Use the Compatibility renderer and ETC2/ASTC texture compression for Android exports.
-- Keep editable Pixelorama/Aseprite files alongside runtime exports where practical.
+## Source-of-truth policy
 
-## Structure
+- Individual source assets live in the tracked `assets/` tree; the ZIP is retained only as an original source archive/recovery copy.
+- Do not make a build depend on runtime ZIP extraction. Godot must import the tracked source files directly.
+- Never commit generated `.godot/` import cache files.
+- Keep gameplay definitions in `data/`, separate from artwork.
+- Use explicit `preload()` references in `scripts/autoload/asset_library.gd` for assets needed by Android exports. Do not discover exported textures by scanning loose source directories at runtime.
+
+## Directory ownership
+
 ```text
 assets/
-  ships/
-  weapons/
-  projectiles/
-  effects/
-  asteroids/
-  stations/
-  backgrounds/
-  ui/
-  audio/
-  fonts/
+  backgrounds/   nebulae, starfields, parallax layers
+  ships/         player and NPC hull sprites
+  stations/      stations and dock structures
+  planets/       terrestrial, gas giant and moon sprites
+  asteroids/     asteroid variants, ore and wreckage
+  salvage/       cargo crates and recoverable goods
+  projectiles/   lasers and other weapon projectiles
+  effects/       thrusters, explosions, impacts
+  ui/            HUD controls, panels, icons and indicators
+  audio/         sound effects and music
+  fonts/         bitmap or licensed fonts
 data/
   items.json
   ship_designs.json
@@ -28,15 +30,15 @@ data/
   systems.json
 ```
 
-## Sprite conventions
-- Source origin is top-left; X increases right and Y increases down.
-- Configure pivots in the imported Sprite2D or scene, not by changing source artwork.
-- Ship artwork should face up unless the asset explicitly defines another orientation.
-- Use stable lowercase snake_case filenames and stable content IDs.
-- Atlas related small sprites when it reduces texture switches without making updates difficult.
+## Import and naming rules
 
-## Memory
-- Prefer appropriately sized textures over large source sheets at runtime.
-- Avoid loading unused art in every scene.
-- Release system-specific resources when leaving a system.
-- Profile texture memory and compression on actual Android devices.
+- Keep runtime pixel art as PNG and use nearest-neighbor filtering.
+- Use lowercase snake_case filenames; do not encode mutable gameplay stats in filenames.
+- Keep original editable Aseprite/Pixelorama projects in a clearly named `source/` subfolder when available.
+- Preserve source dimensions and transparent padding; configure pivots in Godot scenes.
+- Use the Compatibility renderer and Android ETC2/ASTC import settings.
+- Prefer appropriately sized textures; do not load unrelated system art into active scenes.
+
+## Validation
+
+The CI workflow extracts the original archive only as a migration/bootstrap step, tracks the extracted files on the development branch, imports the tracked assets, and runs the scene/gameplay checks. Once the extracted source tree is committed, normal editor and build workflows use `assets/` directly.

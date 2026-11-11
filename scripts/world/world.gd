@@ -212,9 +212,7 @@ func _on_hud_action(action: String, value: String = "") -> void:
         "FTL":
             hud.show_galaxy_map()
         "JUMP":
-            if GameState.jump_to_system(value):
-                hud.hide_galaxy_map()
-                _apply_player_state()
+            _begin_ftl_jump(value)
         "BAG":
             hud.toggle_inventory()
         "SAVE":
@@ -243,6 +241,19 @@ func _on_hud_action(action: String, value: String = "") -> void:
             player.velocity = Vector2.ZERO
             _update_player_state()
             GameState.save_game()
+
+func _begin_ftl_jump(destination: String) -> void:
+    if not GameState.can_jump_to(destination):
+        return
+    player.visible = false
+    player.set_physics_process(false)
+    await hud.play_ftl_transition()
+    var completed := GameState.jump_to_system(destination)
+    if completed:
+        _apply_player_state()
+    await hud.finish_ftl_transition()
+    player.visible = true
+    player.set_physics_process(true)
 
 func _jettison_item(item_id: String, quantity: int) -> void:
     if not GameState.remove_item(item_id,quantity):

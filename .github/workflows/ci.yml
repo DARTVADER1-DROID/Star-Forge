@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   godot-validation:
@@ -35,6 +35,17 @@ jobs:
           mkdir -p assets
           unzip -q StarForge_Asset_Pack.zip -d "$RUNNER_TEMP/starforge-assets"
           cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/assets/." assets/
+
+      - name: Organize and track source art assets
+        if: github.event_name == 'push'
+        run: |
+          git add assets
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Organize source art assets"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
 
       - name: Import project resources
         run: godot --headless --editor --path . --import --quit

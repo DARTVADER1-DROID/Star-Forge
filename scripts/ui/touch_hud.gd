@@ -12,6 +12,7 @@ const JOYSTICK_BOTTOM_MARGIN := 112.0
 const JOYSTICK_DEADZONE := 0.12
 const JOYSTICK_ZONE_WIDTH := 0.44
 const JOYSTICK_ZONE_TOP_RATIO := 0.34
+const GALAXY_MAP_SCRIPT: Script = preload("res://scripts/ui/galaxy_map.gd")
 
 var _active_touch := -1
 var _joystick_origin := Vector2.ZERO
@@ -21,7 +22,9 @@ var _inventory_panel: PanelContainer
 var _galaxy_panel: PanelContainer
 var _recovery_panel: PanelContainer
 var _inventory_rows: VBoxContainer
-var _galaxy_buttons: VBoxContainer
+var _galaxy_map: Control
+var _galaxy_hint: Label
+var _transit_overlay: ColorRect
 var _selected_system := ""
 var _jump_button: Button
 var _selected_item_id := "metal"
@@ -292,11 +295,16 @@ func _build_galaxy() -> void:
     var built := _make_panel("GALAXY NAVIGATION",Vector2(500,360))
     _galaxy_panel = built.panel
     var content: VBoxContainer = built.content
-    var hint := Label.new()
-    hint.text = "Select a connected system. Each jump costs 5 Fuel. Available: %d" % int(GameState.inventory.get("fuel",0))
-    content.add_child(hint)
-    _galaxy_buttons = VBoxContainer.new()
-    content.add_child(_galaxy_buttons)
+    _galaxy_hint = Label.new()
+    _galaxy_hint.text = "Choose an adjacent star system · 5 Fuel per jump"
+    _galaxy_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    content.add_child(_galaxy_hint)
+    _galaxy_map = GALAXY_MAP_SCRIPT.new() as Control
+    _galaxy_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _galaxy_map.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _galaxy_map.custom_minimum_size = Vector2(460,220)
+    _galaxy_map.system_selected.connect(_on_map_system_selected)
+    content.add_child(_galaxy_map)
     var actions := HBoxContainer.new()
     content.add_child(actions)
     var jump := Button.new()
@@ -311,26 +319,22 @@ func _build_galaxy() -> void:
     _refresh_galaxy(GameState.current_system_id)
 
 func _refresh_galaxy(_system_id: String) -> void:
-    if not is_instance_valid(_galaxy_buttons):
+    if not is_instance_valid(_galaxy_map):
         return
-    for child: Node in _galaxy_buttons.get_children():
-        child.queue_free()
-    var current := ContentDatabase.get_system(GameState.current_system_id)
-    for id: String in ContentDatabase.systems:
-        var definition := ContentDatabase.get_system(id)
-        var button := Button.new()
-        var connected := Array(current.get("links",[])).has(id)
-        button.text = "%s%s" % [definition.get("name",id),"  • CURRENT" if id==GameState.current_system_id else ""]
-        button.disabled = not connected
-        button.button_pressed = id == _selected_system
-        button.toggle_mode = true
-        button.pressed.connect(func():
-            _selected_system = id
-            _refresh_galaxy(GameState.current_system_id)
-        )
-        _galaxy_buttons.add_child(button)
+    var fuel := int(GameState.inventory.get("fuel",0))
+    _galaxy_hint.text = "CURRENT: %s    ·    FUEL: %d    ·    JUMP COST: %d" % [
+        str(ContentDatabase.get_system(GameState.current_system_id).get("name",GameState.current_system_id)),
+        fuel,
+        GameState.FTL_FUEL_COST
+    ]
+    _galaxy_map.set("systems",ContentDatabase.systems)
+    _galaxy_map.call("configure",GameState.current_system_id,_selected_system)
     if is_instance_valid(_jump_button):
         _jump_button.disabled = not GameState.can_jump_to(_selected_system)
+
+func _on_map_system_selected(system_id: String) -> void:
+    _selected_system = system_id
+    _refresh_galaxy(GameState.current_system_id)
 
 func show_galaxy_map() -> void:
     _close_panels()
@@ -367,6 +371,31 @@ func show_recovery_panel() -> void:
     fire_changed.emit(false)
     boost_changed.emit(false)
     steering_changed.emit(Vector2.ZERO)
+
+func play_ftl_transition() -> void:
+    _close_panels()
+    _gameplay_blocked = true
+    _transit_overlay = ColorRect.new()
+    _transit_overlay.color = Color(0.01,0.02,0.07,0.0)
+    _transit_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _transit_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+    _transit_overlay.z_index = 120
+    add_child(_transit_overlay)
+    var fade_in := create_tween()
+    fade_in.tween_property(_transit_overlay,"color",Color(0.01,0.02,0.07,1.0),0.48).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+    await fade_in.finished
+    await get_tree().create_timer(0.22).timeout
+
+func finish_ftl_transition() -> void:
+    if not is_instance_valid(_transit_overlay):
+        _gameplay_blocked = false
+        return
+    var fade_out := create_tween()
+    fade_out.tween_property(_transit_overlay,"color",Color(0.01,0.02,0.07,0.0),0.62).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+    await fade_out.finished
+    _transit_overlay.queue_free()
+    _transit_overlay = null
+    _gameplay_blocked = false
 
 func _close_panels() -> void:
     if _active_touch != -1:
