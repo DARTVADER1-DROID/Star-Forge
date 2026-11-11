@@ -8,7 +8,7 @@ static const char *const paths[SF_ASSET_COUNT]={
 "assets/stations/station_ring_hub.png","assets/planets/planet_terran_64.png","assets/planets/planet_gas_96.png",
 "assets/planets/planet_moon_32.png","assets/asteroids/asteroid_large_01.png","assets/salvage/salvage_metal.png",
 "assets/salvage/salvage_fuel.png","assets/salvage/salvage_food.png","assets/salvage/salvage_medicine.png",
-"assets/salvage/salvage_weapon.png"};
+"assets/salvage/salvage_weapon.png",\n"assets/ui/ui_btn_fire_up.png",\n"assets/ui/ui_btn_fire_down.png",\n"assets/ui/ui_btn_boost_up.png",\n"assets/ui/ui_btn_boost_down.png",\n"assets/ui/ui_btn_loot_up.png",\n"assets/ui/ui_btn_loot_down.png",\n"assets/ui/ui_joystick_base.png",\n"assets/ui/ui_joystick_knob.png"};
 static SDL_Texture *load_one(SDL_Renderer *r,const char *path){
 size_t size=0;void *file=SDL_LoadFile(path,&size);int w=0,h=0,n=0;unsigned char *pixels;SDL_Surface *surface;SDL_Texture *texture;
 if(!file||size>(size_t)INT_MAX){SDL_free(file);SDL_Log("Missing sprite %s",path);return NULL;}

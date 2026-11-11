@@ -106,7 +106,8 @@ static void draw_touch_ring(SDL_Renderer *renderer, float center_x, float center
 static void draw_touch_controls(
     SDL_Renderer *renderer,
     const SfTouchState *touch,
-    const SfGame *game
+    const SfGame *game,
+    const SfAssets *assets
 )
 {
     SDL_FRect fire = { 268.0f, 125.0f, 43.0f, 43.0f };
@@ -130,20 +131,34 @@ static void draw_touch_controls(
         knob_y += dy;
     }
 
-    draw_touch_ring(renderer, 48.0f, 132.0f, 31.0f);
-    draw_touch_ring(renderer, knob_x, knob_y, 12.0f);
+    {
+        SDL_Texture *base = sf_assets_get(assets, SF_ASSET_JOYSTICK_BASE);
+        SDL_Texture *knob = sf_assets_get(assets, SF_ASSET_JOYSTICK_KNOB);
+        SDL_Texture *fire_texture = sf_assets_get(
+            assets,
+            touch->fire_active ? SF_ASSET_FIRE_DOWN : SF_ASSET_FIRE_UP
+        );
+        SDL_Texture *boost_texture = sf_assets_get(
+            assets,
+            touch->boost_active ? SF_ASSET_BOOST_DOWN : SF_ASSET_BOOST_UP
+        );
+        SDL_Texture *loot_texture = sf_assets_get(assets, SF_ASSET_LOOT_UP);
+        SDL_FRect base_rect = { 16.0f, 100.0f, 64.0f, 64.0f };
+        SDL_FRect knob_rect = { knob_x - 13.0f, knob_y - 13.0f, 26.0f, 26.0f };
 
-    set_draw_color(renderer, 30, 70, 115);
-    SDL_RenderFillRect(renderer, &fire);
-    SDL_RenderFillRect(renderer, &boost);
-    SDL_RenderFillRect(renderer, &loot);
-    SDL_RenderFillRect(renderer, &ftl);
-
-    set_draw_color(renderer, 125, 195, 245);
-    SDL_RenderRect(renderer, &fire);
-    SDL_RenderRect(renderer, &boost);
-    SDL_RenderRect(renderer, &loot);
-    SDL_RenderRect(renderer, &ftl);
+        if (base) (void)SDL_RenderTexture(renderer, base, NULL, &base_rect);
+        else draw_touch_ring(renderer, 48.0f, 132.0f, 31.0f);
+        if (knob) (void)SDL_RenderTexture(renderer, knob, NULL, &knob_rect);
+        else draw_touch_ring(renderer, knob_x, knob_y, 12.0f);
+        if (fire_texture) (void)SDL_RenderTexture(renderer, fire_texture, NULL, &fire);
+        else { set_draw_color(renderer, 30, 70, 115); SDL_RenderFillRect(renderer, &fire); }
+        if (boost_texture) (void)SDL_RenderTexture(renderer, boost_texture, NULL, &boost);
+        else { set_draw_color(renderer, 30, 70, 115); SDL_RenderFillRect(renderer, &boost); }
+        if (loot_texture) (void)SDL_RenderTexture(renderer, loot_texture, NULL, &loot);
+        else { set_draw_color(renderer, 30, 70, 115); SDL_RenderFillRect(renderer, &loot); }
+        set_draw_color(renderer, 30, 70, 115);
+        SDL_RenderFillRect(renderer, &ftl);
+    }
 
     set_draw_color(renderer, 245, 245, 255);
     SDL_RenderDebugText(renderer, 276.0f, 141.0f, "FIRE");
@@ -372,7 +387,7 @@ int main(int argc, char **argv)
             sf_render_inventory_panel(renderer, &game);
         }
 
-        draw_touch_controls(renderer, &touch, &game);
+        draw_touch_controls(renderer, &touch, &game, &assets);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(1);
