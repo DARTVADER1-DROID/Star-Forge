@@ -8,6 +8,10 @@ func _run_tests() -> void:
     _test_content_database(failures)
     _test_asset_library(failures)
     _test_asset_manifest(failures)
+    _test_galaxy_map_pan(failures)
+    _test_audio_manager(failures)
+    _test_npc_docking_rules(failures)
+    _test_station_interaction(failures)
     _test_cargo_capacity(failures)
     _test_fuel_purchase(failures)
     _test_armour_damage(failures)
@@ -39,6 +43,10 @@ func _test_asset_library(failures: Array[String]) -> void:
         failures.append("Player ship sprite is missing from the imported asset pack.")
     if not AssetLibrary.has_asset("bg_nebula_320x180.png"):
         failures.append("Nebula background is missing from the imported asset pack.")
+    if AssetLibrary.get_asset_count() != 126:
+        failures.append("Asset registry must include all 126 source textures.")
+    if not AssetLibrary.has_asset("stars_far_128.png") or not AssetLibrary.has_asset("stars_near_128.png"):
+        failures.append("Parallax starfield textures are not registered.")
 
 func _test_asset_manifest(failures: Array[String]) -> void:
     var file := FileAccess.open("res://assets/asset_manifest.json",FileAccess.READ)
@@ -52,6 +60,56 @@ func _test_asset_manifest(failures: Array[String]) -> void:
     for entry: Variant in parsed.get("assets",[]):
         if not entry is Dictionary or not ResourceLoader.exists("res://"+str(entry.get("path",""))):
             failures.append("Manifest references a missing asset: " + str(entry.get("path","invalid")))
+    for failure: String in AssetLibrary.validate_manifest(parsed):
+        failures.append(failure)
+
+func _test_galaxy_map_pan(failures: Array[String]) -> void:
+    var map := (load("res://scripts/ui/galaxy_map.gd") as Script).new() as GalaxyMapView
+    map.size = Vector2(460,220)
+    map.systems = ContentDatabase.systems
+    map.configure("solace","")
+    var original: Vector2 = map.get("_pan_offset")
+    map.pan_by(Vector2(35.0,-20.0))
+    if map.get("_pan_offset") == original:
+        failures.append("Galaxy map touch pan did not change the map offset.")
+    map.set_zoom(1.5,Vector2(220,110))
+    if not is_equal_approx(float(map.get("_zoom")),1.5):
+        failures.append("Galaxy map pinch zoom did not change scale.")
+    map.reset_view()
+    if map.get("_pan_offset") != Vector2.ZERO or not is_equal_approx(float(map.get("_zoom")),1.0):
+        failures.append("Galaxy map reset did not restore overview.")
+    map.free()
+
+func _test_audio_manager(failures: Array[String]) -> void:
+    if AudioManager.get_registered_sound_count() != 0:
+        failures.append("Audio manager should initialize with no bundled audio files.")
+    AudioManager.play_sound("unregistered_sound")
+
+func _test_npc_docking_rules(failures: Array[String]) -> void:
+    var hauler := NPCShip.new()
+    hauler.role_id = "cargo_hauler"
+    hauler.station_position = Vector2(100,100)
+    hauler.position = Vector2(100,100)
+    hauler._update_station_docking(0.016)
+    if not hauler.is_docked:
+        failures.append("Cargo hauler should dock when inside the station approach radius.")
+    var pirate := NPCShip.new()
+    pirate.role_id = "pirate"
+    pirate.station_position = Vector2.ZERO
+    pirate.target = hauler
+    pirate.position = Vector2(160,100)
+    if pirate.can_engage_target():
+        failures.append("Pirates must not fire at docked station traffic.")
+    hauler.free()
+    pirate.free()
+
+func _test_station_interaction(failures: Array[String]) -> void:
+    var station := StationBody.new()
+    station.position = Vector2(20,20)
+    var interaction := WorldInteractionService.find_nearest(Vector2(20,20),[station])
+    if str(interaction.get("action","")) != "DOCK":
+        failures.append("Orbital station must expose a DOCK interaction.")
+    station.free()
 
 func _test_cargo_capacity(failures: Array[String]) -> void:
     GameState.inventory = {"metal":0,"fuel":0,"food":0,"medicine":0,"weapon_salvage":0}

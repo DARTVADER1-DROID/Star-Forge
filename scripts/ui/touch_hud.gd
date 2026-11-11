@@ -39,8 +39,11 @@ var _land_button: Button
 var _planet_services_panel: PanelContainer
 var _planet_title_label: Label
 var _planet_result_label: Label
+var _planet_description_label: Label
+var _planet_header_label: Label
 var _nearby_planet_id := ""
 var _nearby_planet_name := ""
+var _nearby_action := ""
 var _gameplay_blocked := false
 var _station_access := false
 
@@ -74,7 +77,7 @@ func _build_controls() -> void:
     var ftl := _button("FTL",Vector2(-108,-184),Vector2(96,60),true)
     _land_button = _button("LAND",Vector2(-218,-184),Vector2(96,60),true)
     _land_button.visible = false
-    _land_button.pressed.connect(func(): action_requested.emit("LAND",_nearby_planet_id))
+    _land_button.pressed.connect(func(): action_requested.emit(_nearby_action,_nearby_planet_id))
     var bag := _button("BAG",Vector2(-100,134),Vector2(88,52),true,true)
     var save := _button("SAVE",Vector2(-100,194),Vector2(88,52),true,true)
     boost.button_down.connect(func(): boost_changed.emit(true))
@@ -411,25 +414,31 @@ func hide_galaxy_map() -> void:
         _galaxy_panel.hide()
     _gameplay_blocked = false
 
-func set_nearby_planet(planet_id: String, planet_name: String) -> void:
-    _nearby_planet_id = planet_id
-    _nearby_planet_name = planet_name
+func set_nearby_interaction(action: String, body_id: String, body_name: String) -> void:
+    _nearby_action = action
+    _nearby_planet_id = body_id
+    _nearby_planet_name = body_name
     if is_instance_valid(_land_button):
-        _land_button.visible = not planet_id.is_empty()
-        _land_button.tooltip_text = "Land at " + planet_name if not planet_id.is_empty() else ""
+        _land_button.text = "DOCK" if action == "DOCK" else "LAND"
+        _land_button.visible = not action.is_empty() and not body_id.is_empty()
+        _land_button.tooltip_text = ("Dock at " if action == "DOCK" else "Land at ") + body_name if not body_id.is_empty() else ""
+
+func set_nearby_planet(planet_id: String, planet_name: String) -> void:
+    set_nearby_interaction("LAND" if not planet_id.is_empty() else "",planet_id,planet_name)
 
 func _build_planet_services() -> void:
     var built := _make_panel("PLANETARY SERVICES",Vector2(470,340))
     _planet_services_panel = built.panel
     _planet_services_panel.name = "PlanetServicesPanel"
     var content: VBoxContainer = built.content
+    _planet_header_label = content.get_child(0) as Label
     _planet_title_label = Label.new()
     _planet_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     content.add_child(_planet_title_label)
-    var description := Label.new()
-    description.text = "Choose a service while docked on this world."
-    description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    content.add_child(description)
+    _planet_description_label = Label.new()
+    _planet_description_label.text = "Choose a service while docked on this world."
+    _planet_description_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    content.add_child(_planet_description_label)
     var services := GridContainer.new()
     services.columns = 2
     content.add_child(services)
@@ -453,10 +462,18 @@ func _build_planet_services() -> void:
     content.add_child(close)
 
 func show_planet_services(planet_id: String, planet_name: String) -> void:
+    _show_service_panel("PLANETARY SERVICES",planet_id,planet_name,"Choose a service while docked on this world.")
+
+func show_station_services(station_name: String) -> void:
+    _show_service_panel("SPACE STATION SERVICES","station",station_name,"Docked safely at the orbital station.")
+
+func _show_service_panel(header: String, body_id: String, body_name: String, description: String) -> void:
     _close_panels()
-    _nearby_planet_id = planet_id
-    _nearby_planet_name = planet_name
-    _planet_title_label.text = planet_name
+    _nearby_planet_id = body_id
+    _nearby_planet_name = body_name
+    _planet_header_label.text = header
+    _planet_title_label.text = body_name
+    _planet_description_label.text = description
     _planet_result_label.text = ""
     _planet_services_panel.show()
     _gameplay_blocked = true

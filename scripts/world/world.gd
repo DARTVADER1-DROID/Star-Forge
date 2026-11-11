@@ -2,10 +2,7 @@ extends Node2D
 class_name StarForgeWorld
 
 const STAR_COUNT := 110
-const ASTEROID_SCENE: PackedScene = preload("res://scenes/asteroid.tscn")
-const PLANET_SCENE: PackedScene = preload("res://scenes/planet_body.tscn")
 const NPC_SCENE: PackedScene = preload("res://scenes/npc_ship.tscn")
-const STATION_SCENE: PackedScene = preload("res://scenes/station.tscn")
 const DROP_SCENE: PackedScene = preload("res://scenes/cargo_drop.tscn")
 
 @onready var player: PlayerShip = $PlayerShip
@@ -15,23 +12,11 @@ const DROP_SCENE: PackedScene = preload("res://scenes/cargo_drop.tscn")
 @onready var obstacle_container: Node2D = $Obstacles
 @onready var drop_container: Node2D = $CargoDrops
 
-var _stars := PackedVector2Array()
 var _system_id := ""
 var npc_salvage_enabled := false
-var _background_sprite: Sprite2D
 
 func _ready() -> void:
-    get_viewport().size_changed.connect(queue_redraw)
-    _create_star_field()
-    var background_texture := AssetLibrary.load_texture("bg_nebula_320x180.png")
-    if background_texture != null:
-        _background_sprite = Sprite2D.new()
-        _background_sprite.texture = background_texture
-        _background_sprite.position = Vector2.ZERO
-        _background_sprite.scale = Vector2(24.0,24.0)
-        _background_sprite.z_index = -1
-        _background_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-        add_child(_background_sprite)
+    # ParallaxStarfield owns background rendering independently from world logic.
     player.projectile_pool = projectile_pool
     hud.steering_changed.connect(player.set_steering)
     hud.boost_changed.connect(player.set_boosting)
@@ -49,35 +34,12 @@ func _process(_delta: float) -> void:
     var station_position := Vector2(float(station_data[0]),float(station_data[1]))
     var station_distance := player.global_position.distance_to(station_position)
     hud.update_ship_status(player.hull,player.max_hull,player.armour,player.max_armour,player.energy,player.max_energy,GameState.credits,GameState.inventory,int(GameState.inventory.get("fuel",0)),str(ContentDatabase.get_system(_system_id).get("name",_system_id)),station_distance)
-    _update_planet_proximity()
+    _update_world_interaction()
     hud.update_system_map(player.position)
 
-func _update_planet_proximity() -> void:
-    var nearest_id := ""
-    var nearest_name := ""
-    var nearest_distance := INF
-    for node: Node in obstacle_container.get_children():
-        if not node is PlanetBody:
-            continue
-        var planet := node as PlanetBody
-        var distance := player.global_position.distance_to(planet.global_position)
-        if distance <= planet.interaction_radius and distance < nearest_distance:
-            nearest_distance = distance
-            nearest_id = planet.body_id
-            nearest_name = planet.body_name
-    hud.set_nearby_planet(nearest_id,nearest_name)
-
-func _draw() -> void:
-    for star: Vector2 in _stars:
-        draw_circle(star, 1.0, Color(0.55,0.67,0.86,0.72))
-
-func _create_star_field() -> void:
-    var random := RandomNumberGenerator.new()
-    random.seed = 73421
-    # Stars are distributed around the system origin so the camera can travel
-    # without exposing an empty screen immediately outside the starting view.
-    for _i in range(STAR_COUNT):
-        _stars.append(Vector2(random.randf_range(-6000.0,6000.0),random.randf_range(-6000.0,6000.0)))
+func _update_world_interaction() -> void:
+    var interaction := WorldInteractionService.find_nearest(player.global_position,obstacle_container.get_children())
+    hud.set_nearby_interaction(str(interaction.get("action","")),str(interaction.get("id","")),str(interaction.get("name","")))
 
 func _apply_player_state() -> void:
     var saved: Dictionary = GameState.player_ship_state
@@ -112,45 +74,8 @@ func _load_system(id: String) -> void:
         child.queue_free()
 
     var definition := ContentDatabase.get_system(id)
-    var station_data: Array = definition.get("station_position",[480,270])
-    var station := Vector2(float(station_data[0]),float(station_data[1]))
-    if bool(definition.get("has_asteroids",false)):
-        var asteroid_positions: Array[Vector2] = [Vector2(520,250),Vector2(680,420),Vector2(860,310),Vector2(740,160)]
-        for point: Vector2 in asteroid_positions:
-            var asteroid := ASTEROID_SCENE.instantiate()
-            obstacle_container.add_child(asteroid)
-            asteroid.position = point
-
-    var planets := int(definition.get("planet_count",2))
-    var moon_count := int(definition.get("moon_count",0))
-    var planet_positions: Array[Vector2] = []
-    for index in range(planets):
-        var planet_position := Vector2(150.0 + float(index)*280.0,100.0 + float(index%2)*330.0)
-        planet_positions.append(planet_position)
-        var body := PLANET_SCENE.instantiate() as PlanetBody
-        body.position = planet_position
-        body.body_id = "%s_planet_%02d" % [_system_id,index+1]
-        body.body_name = "%s %d" % [str(definition.get("name",_system_id)),index+1]
-        body.body_radius = 30.0 + float(index%3)*12.0
-        body.interaction_radius = body.body_radius + 76.0
-        obstacle_container.add_child(body)
-    for moon_index in range(moon_count):
-        if planet_positions.is_empty():
-            break
-        var parent_position: Vector2 = planet_positions[moon_index % planet_positions.size()]
-        var orbit_angle := float(moon_index) * 2.399
-        var moon := PLANET_SCENE.instantiate() as PlanetBody
-        moon.position = parent_position + Vector2(cos(orbit_angle),sin(orbit_angle))*76.0
-        moon.body_id = "%s_moon_%02d" % [_system_id,moon_index+1]
-        moon.body_name = "%s Moon %d" % [str(definition.get("name",_system_id)),moon_index+1]
-        moon.body_radius = 11.0 + float(moon_index % 3)*3.0
-        moon.interaction_radius = moon.body_radius + 76.0
-        moon.body_color = Color(0.48,0.52,0.60)
-        obstacle_container.add_child(moon)
-
-    var station_body := STATION_SCENE.instantiate()
-    obstacle_container.add_child(station_body)
-    station_body.position = station
+    var build_result := SystemContentBuilder.build_system(obstacle_container,id,definition)
+    var station: Vector2 = build_result.station_position
     _restore_or_spawn_npcs(station)
     _restore_system_drops()
 
@@ -158,6 +83,12 @@ func _find_planet(planet_id: String) -> PlanetBody:
     for node: Node in obstacle_container.get_children():
         if node is PlanetBody and (node as PlanetBody).body_id == planet_id:
             return node as PlanetBody
+    return null
+
+func _find_station() -> StationBody:
+    for node: Node in obstacle_container.get_children():
+        if node is StationBody:
+            return node as StationBody
     return null
 
 func _restore_or_spawn_npcs(station: Vector2) -> void:
@@ -244,9 +175,20 @@ func _on_hud_action(action: String, value: String = "") -> void:
             if is_instance_valid(planet) and player.global_position.distance_to(planet.global_position) <= planet.interaction_radius:
                 player.velocity = Vector2.ZERO
                 hud.show_planet_services(planet.body_id,planet.body_name)
+        "DOCK":
+            var station := _find_station()
+            if is_instance_valid(station) and player.global_position.distance_to(station.global_position) <= station.interaction_radius:
+                player.velocity = Vector2.ZERO
+                hud.show_station_services(station.body_name)
         "REFUEL":
-            var planet := _find_planet(value)
-            if is_instance_valid(planet) and player.global_position.distance_to(planet.global_position) <= planet.interaction_radius:
+            var can_refuel := false
+            if value == "station":
+                var station := _find_station()
+                can_refuel = is_instance_valid(station) and player.global_position.distance_to(station.global_position) <= station.interaction_radius
+            else:
+                var planet := _find_planet(value)
+                can_refuel = is_instance_valid(planet) and player.global_position.distance_to(planet.global_position) <= planet.interaction_radius
+            if can_refuel:
                 var purchased := GameState.buy_fuel(10)
                 if purchased:
                     GameState.save_game()
