@@ -69,7 +69,6 @@ void sf_galaxy_render(
 
     (void)SDL_SetRenderDrawColor(renderer, 110, 145, 190, 255);
     SDL_RenderDebugText(renderer, 9.0f, 7.0f, "GALAXY NAVIGATION");
-    SDL_RenderDebugText(renderer, 9.0f, 19.0f, "Select a connected system");
 
     for (i = 0; i < SF_MAX_SYSTEMS; ++i) {
         for (j = i + 1; j < SF_MAX_SYSTEMS; ++j) {
@@ -109,7 +108,7 @@ void sf_galaxy_render(
 
     (void)SDL_SetRenderDrawColor(renderer, 210, 225, 245, 255);
     if (!game->player.alive) {
-        SDL_RenderDebugText(renderer, 9.0f, 31.0f, "SHIP DESTROYED");
+        SDL_RenderDebugText(renderer, 9.0f, 19.0f, "SHIP DESTROYED");
     } else if (!game->player.has_ftl_drive) {
         SDL_RenderDebugText(renderer, 9.0f, 31.0f, "FTL DRIVE REQUIRED");
     } else if (game->inventory[SF_ITEM_FUEL] < SF_FTL_FUEL_COST) {
