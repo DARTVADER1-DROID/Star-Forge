@@ -300,7 +300,7 @@ static void initialize_system_npcs(SfGame *game)
     cargo_ship->has_ftl_drive = true;
     cargo_ship->cargo[SF_ITEM_FUEL] = 60;
     cargo_ship->cargo[SF_ITEM_FOOD] = 24;
-    cargo_ship->cargo[SF_ITEM_METAL] = 18;
+    cargo_ship->cargo[SF_ITEM_METAL] = 16;
 
     pirate_ship->alive = true;
     pirate_ship->role = SF_ROLE_PIRATE;
@@ -617,6 +617,11 @@ static void update_cargo_drops(SfGame *game, float dt)
             continue;
         }
 
+        if (drop->item < 0 || drop->item >= SF_ITEM_COUNT || drop->quantity <= 0) {
+            drop->active = false;
+            continue;
+        }
+
         drop->x += drop->vx * dt;
         drop->y += drop->vy * dt;
         drop->vx *= powf(0.94f, dt * 60.0f);
@@ -627,8 +632,14 @@ static void update_cargo_drops(SfGame *game, float dt)
 
             for (j = 0; j < SF_MAX_NPCS; ++j) {
                 SfShip *npc = &game->npcs[j];
-                const int added_volume = drop->quantity *
-                    (drop->item == SF_ITEM_WEAPON ? 2 : 1);
+                const int volume_per_item = drop->item == SF_ITEM_WEAPON ? 2 : 1;
+                int added_volume;
+
+                if (drop->quantity > 100 / volume_per_item) {
+                    continue;
+                }
+
+                added_volume = drop->quantity * volume_per_item;
 
                 if (!npc->alive) {
                     continue;
@@ -692,6 +703,10 @@ bool sf_game_collect_nearest(SfGame *game)
 
         if (!drop->active || drop->item < 0 || drop->item >= SF_ITEM_COUNT ||
             drop->quantity <= 0) {
+            continue;
+        }
+
+        if (drop->quantity > (drop->item == SF_ITEM_WEAPON ? 50 : 100)) {
             continue;
         }
 
