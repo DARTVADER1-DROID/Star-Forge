@@ -88,7 +88,8 @@ static void handle_ui_tap(
 static void update_touch_event(
     const SDL_TouchFingerEvent *finger,
     SfTouchState *touch,
-    SfGame *game
+    SfGame *game,
+    bool *inventory_open
 )
 {
     const float x = finger->x * (float)SF_LOGICAL_WIDTH;
