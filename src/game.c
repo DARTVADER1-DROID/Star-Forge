@@ -1,5 +1,4 @@
 #include "game.h"
-#include "galaxy.h"
 
 #include <math.h>
 #include <string.h>
@@ -13,6 +12,25 @@
 #define SF_FTL_FUEL_COST 5
 #define SF_WEAPON_ENERGY_COST 8.0f
 #define SF_ENERGY_REGEN_RATE 12.0f
+
+static const bool system_links[SF_MAX_SYSTEMS][SF_MAX_SYSTEMS] = {
+    { false, true,  true,  false },
+    { true,  false, true,  true  },
+    { true,  true,  false, true  },
+    { false, true,  true,  false }
+};
+
+bool sf_game_systems_connected(int from_system, int to_system)
+{
+    if (from_system < 0 || from_system >= SF_MAX_SYSTEMS ||
+        to_system < 0 || to_system >= SF_MAX_SYSTEMS ||
+        from_system == to_system) {
+        return false;
+    }
+
+    return system_links[from_system][to_system];
+}
+
 
 static const float asteroid_x[SF_ASTEROID_COUNT] = {
     520.0f, 680.0f, 860.0f, 1040.0f, 1280.0f, 1510.0f, 1740.0f, 1980.0f
@@ -369,7 +387,7 @@ bool sf_game_jump_to_system(SfGame *game, int destination_system)
         destination_system < 0 ||
         destination_system >= SF_MAX_SYSTEMS ||
         destination_system == game->current_system ||
-        !sf_galaxy_is_connected(game->current_system, destination_system) ||
+        !sf_game_systems_connected(game->current_system, destination_system) ||
         game->inventory[SF_ITEM_FUEL] < SF_FTL_FUEL_COST) {
         return false;
     }
