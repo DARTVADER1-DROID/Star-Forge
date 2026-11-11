@@ -112,14 +112,16 @@ void sf_galaxy_render(
         SDL_RenderDebugText(renderer, 9.0f, 139.0f, "SHIP DESTROYED");
     } else if (!game->player.has_ftl_drive) {
         SDL_RenderDebugText(renderer, 9.0f, 139.0f, "FTL DRIVE REQUIRED");
-    } else if (game->inventory[SF_ITEM_FUEL] < 5) {
-        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "NEED 5 FUEL TO JUMP");
+    } else if (game->inventory[SF_ITEM_FUEL] < SF_FTL_FUEL_COST) {
+        char warning[48];
+        (void)SDL_snprintf(warning, sizeof(warning), "NEED %d FUEL TO JUMP", SF_FTL_FUEL_COST);
+        SDL_RenderDebugText(renderer, 9.0f, 139.0f, warning);
     } else if (selected_system >= 0 && selected_system < SF_MAX_SYSTEMS) {
         char detail[72];
         (void)SDL_snprintf(
-            detail, sizeof(detail), "%s  FUEL %d/5",
+            detail, sizeof(detail), "%s  FUEL %d/%d",
             sf_game_system_name(selected_system),
-            game->inventory[SF_ITEM_FUEL]
+            game->inventory[SF_ITEM_FUEL], SF_FTL_FUEL_COST
         );
         SDL_RenderDebugText(renderer, 9.0f, 139.0f, detail);
     } else {
