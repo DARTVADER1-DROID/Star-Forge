@@ -1,9 +1,11 @@
 #include "assets.h"
 
 #include <limits.h>
+#include <stddef.h>
 #include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
+#define SF_ASSET_PIXEL_BUDGET (8u * 1024u * 1024u)
 #include "stb_image.h"
 
 static const char *const asset_paths[SF_ASSET_COUNT] = {
@@ -31,7 +33,11 @@ static const char *const asset_paths[SF_ASSET_COUNT] = {
     "assets/ui/ui_joystick_knob.png"
 };
 
-static SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path)
+static SDL_Texture *load_texture(
+    SDL_Renderer *renderer,
+    const char *path,
+    size_t *remaining_pixel_budget
+)
 {
     size_t file_size = 0;
     void *file_data;
@@ -41,6 +47,12 @@ static SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path)
     int source_channels = 0;
     SDL_Surface *surface;
     SDL_Texture *texture;
+    size_t pixel_count;
+
+    if (remaining_pixel_budget == NULL || *remaining_pixel_budget == 0) {
+        SDL_Log("Skipped sprite '%s': texture memory budget exhausted", path);
+        return NULL;
+    }
 
     file_data = SDL_LoadFile(path, &file_size);
 
@@ -61,6 +73,13 @@ static SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path)
         width > 2048 || height > 2048 ||
         (size_t)width * (size_t)height > 4u * 1024u * 1024u) {
         SDL_Log("Rejected invalid or oversized sprite '%s'", path);
+        SDL_free(file_data);
+        return NULL;
+    }
+
+    pixel_count = (size_t)width * (size_t)height;
+    if (pixel_count > *remaining_pixel_budget) {
+        SDL_Log("Skipped sprite '%s': texture memory budget would be exceeded", path);
         SDL_free(file_data);
         return NULL;
     }
@@ -108,12 +127,14 @@ static SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path)
         SDL_Log("Could not set pixel-art scaling for '%s': %s", path, SDL_GetError());
     }
 
+    *remaining_pixel_budget -= pixel_count;
     return texture;
 }
 
 bool sf_assets_init(SfAssets *assets, SDL_Renderer *renderer)
 {
     int loaded_count = 0;
+    size_t remaining_pixel_budget = SF_ASSET_PIXEL_BUDGET;
     int i;
 
     if (assets == NULL || renderer == NULL) {
@@ -123,14 +144,21 @@ bool sf_assets_init(SfAssets *assets, SDL_Renderer *renderer)
     memset(assets, 0, sizeof(*assets));
 
     for (i = 0; i < SF_ASSET_COUNT; ++i) {
-        assets->textures[i] = load_texture(renderer, asset_paths[i]);
+        assets->textures[i] = load_texture(
+            renderer, asset_paths[i], &remaining_pixel_budget
+        );
 
         if (assets->textures[i] != NULL) {
             ++loaded_count;
         }
     }
 
-    SDL_Log("Loaded %d of %d game sprites", loaded_count, SF_ASSET_COUNT);
+    SDL_Log(
+        "Loaded %d of %d game sprites; texture budget remaining: %zu MiB",
+        loaded_count,
+        SF_ASSET_COUNT,
+        remaining_pixel_budget / (1024u * 1024u)
+    );
 
     return loaded_count == SF_ASSET_COUNT;
 }

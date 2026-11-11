@@ -6,7 +6,7 @@
 int main(void)
 {
     SfGame game;
-    SfInput idle = { false, false, false, false, false, false };
+    SfInput idle = { 0 };
     bool fuel_drop_found = false;
 
     sf_game_init(&game);
@@ -24,14 +24,44 @@ int main(void)
            game.npcs[0].cargo[SF_ITEM_FOOD] +
            game.npcs[0].cargo[SF_ITEM_METAL] == 100);
 
+    /* Speed caps apply to total velocity, including diagonal movement. */
+    sf_game_init(&game);
+    game.player.vx = 190.0f;
+    game.player.vy = 190.0f;
+    sf_game_update(&game, &idle, 1.0f / 60.0f);
+    assert(hypotf(game.player.vx, game.player.vy) <= 190.001f);
+
+    /* A destroyed player ship cannot fire or spend energy. */
+    sf_game_init(&game);
+    game.player.alive = false;
+    sf_game_fire_player(&game);
+    assert(game.player.energy == game.player.max_energy);
+    assert(!game.projectiles[0].active);
+
     /* Boost increases acceleration without consuming ship energy. */
+    sf_game_init(&game);
     {
-        SfInput boost_input = { true, false, false, false, false, true };
+        SfInput boost_input = { .thrust = true, .boost = true };
 
         sf_game_update(&game, &boost_input, 1.0f / 60.0f);
         assert(game.player.energy == 100.0f);
         assert(game.player.vx > 4.0f);
         assert(game.npcs[2].ai_phase > 0.0f);
+    }
+
+    /* Analog steering turns toward the thumb direction and scales thrust. */
+    sf_game_init(&game);
+    {
+        SfInput steering_input = {
+            .steering_x = 0.0f,
+            .steering_y = -1.0f,
+            .steering_strength = 0.75f
+        };
+
+        sf_game_update(&game, &steering_input, 1.0f / 60.0f);
+        assert(game.player.angle < 0.0f);
+        assert(game.player.vy < 0.0f);
+        assert(game.player.energy == game.player.max_energy);
     }
 
     game.selected_item = SF_ITEM_METAL;
@@ -53,6 +83,32 @@ int main(void)
     game.player.y = 250.0f;
     sf_game_update(&game, &idle, 1.0f / 60.0f);
     assert(sf_distance_squared(game.player.x, game.player.y, 520.0f, 250.0f) >= 34.0f * 34.0f);
+
+    /* Projectiles must collide with asteroids instead of passing through them. */
+    sf_game_init(&game);
+    for (int i = 0; i < SF_MAX_NPCS; ++i) {
+        game.npcs[i].alive = false;
+    }
+    game.projectiles[0].active = true;
+    game.projectiles[0].from_player = true;
+    game.projectiles[0].x = 520.0f;
+    game.projectiles[0].y = 250.0f;
+    game.projectiles[0].life = 1.0f;
+    sf_game_update(&game, &idle, 1.0f / 60.0f);
+    assert(!game.projectiles[0].active);
+
+    /* Cargo crates cannot drift outside the navigable system bounds. */
+    sf_game_init(&game);
+    game.npc_salvage_enabled = false;
+    game.drops[0].active = true;
+    game.drops[0].item = SF_ITEM_METAL;
+    game.drops[0].quantity = 1;
+    game.drops[0].x = 2399.0f;
+    game.drops[0].y = 1200.0f;
+    game.drops[0].vx = 100.0f;
+    sf_game_update(&game, &idle, 1.0f / 60.0f);
+    assert(game.drops[0].x <= 2392.0f);
+    assert(game.drops[0].vx == 0.0f);
 
     /* Destroying a cargo NPC creates physical drops from its actual manifest. */
     sf_game_init(&game);
@@ -99,7 +155,7 @@ int main(void)
     sf_game_fire_player(&game);
     assert(!game.projectiles[1].active);
     {
-        SfInput move_input = { true, false, true, false, false, false };
+        SfInput move_input = { .thrust = true, .turn_left = true };
         const float energy_before = game.player.energy;
         sf_game_update(&game, &move_input, 1.0f / 60.0f);
         assert(game.player.energy >= energy_before);
@@ -143,6 +199,18 @@ int main(void)
     sf_game_fire_player(&game);
     assert(game.player.energy == game.player.max_energy);
     assert(game.player.fire_cooldown == 0.0f);
+
+    /* Galaxy routes are bidirectional and only adjacent systems are reachable. */
+    assert(sf_game_systems_connected(0, 1));
+    assert(sf_game_systems_connected(1, 0));
+    assert(sf_game_systems_connected(0, 2));
+    assert(!sf_game_systems_connected(0, 3));
+    assert(!sf_game_systems_connected(0, 0));
+    assert(!sf_game_systems_connected(-1, 0));
+    assert(!sf_game_systems_connected(0, SF_MAX_SYSTEMS));
+
+    sf_game_init(&game);
+    assert(!sf_game_jump_to_system(&game, 3));
 
     /* Inter-system travel requires an FTL drive and five fuel units. */
     sf_game_init(&game);

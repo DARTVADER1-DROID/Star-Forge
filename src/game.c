@@ -9,9 +9,27 @@
 #define SF_WORLD_SIZE 2400.0f
 #define SF_ASTEROID_COUNT 8
 #define SF_PLAYER_RADIUS 12.0f
-#define SF_FTL_FUEL_COST 5
 #define SF_WEAPON_ENERGY_COST 8.0f
 #define SF_ENERGY_REGEN_RATE 12.0f
+
+static const bool system_links[SF_MAX_SYSTEMS][SF_MAX_SYSTEMS] = {
+    { false, true,  true,  false },
+    { true,  false, true,  true  },
+    { true,  true,  false, true  },
+    { false, true,  true,  false }
+};
+
+bool sf_game_systems_connected(int from_system, int to_system)
+{
+    if (from_system < 0 || from_system >= SF_MAX_SYSTEMS ||
+        to_system < 0 || to_system >= SF_MAX_SYSTEMS ||
+        from_system == to_system) {
+        return false;
+    }
+
+    return system_links[from_system][to_system];
+}
+
 
 static const float asteroid_x[SF_ASTEROID_COUNT] = {
     520.0f, 680.0f, 860.0f, 1040.0f, 1280.0f, 1510.0f, 1740.0f, 1980.0f
@@ -25,6 +43,19 @@ static const float asteroid_radius[SF_ASTEROID_COUNT] = {
     22.0f, 30.0f, 18.0f, 34.0f, 25.0f, 28.0f, 20.0f, 32.0f
 };
 
+
+static void limit_ship_speed(SfShip *ship, float maximum_speed)
+{
+    const float speed_squared = ship->vx * ship->vx + ship->vy * ship->vy;
+    const float maximum_speed_squared = maximum_speed * maximum_speed;
+
+    if (speed_squared > maximum_speed_squared) {
+        const float speed = sqrtf(speed_squared);
+        const float scale = maximum_speed / speed;
+        ship->vx *= scale;
+        ship->vy *= scale;
+    }
+}
 
 static float clampf(float value, float minimum, float maximum)
 {
@@ -260,7 +291,7 @@ void sf_game_fire_player(SfGame *game)
 
     ship = &game->player;
 
-    if (ship->fire_cooldown > 0.0f ||
+    if (!ship->alive || ship->fire_cooldown > 0.0f ||
         ship->energy < ship->weapon_energy_cost) {
         return;
     }
@@ -368,6 +399,7 @@ bool sf_game_jump_to_system(SfGame *game, int destination_system)
         destination_system < 0 ||
         destination_system >= SF_MAX_SYSTEMS ||
         destination_system == game->current_system ||
+        !sf_game_systems_connected(game->current_system, destination_system) ||
         game->inventory[SF_ITEM_FUEL] < SF_FTL_FUEL_COST) {
         return false;
     }
@@ -430,13 +462,35 @@ void sf_game_init(SfGame *game)
 static void update_player(SfGame *game, const SfInput *input, float dt)
 {
     SfShip *ship = &game->player;
+    const float steering_strength = clampf(
+        input->steering_strength,
+        0.0f,
+        1.0f
+    );
 
-    if (input->turn_left) {
-        ship->angle -= 2.8f * dt;
-    }
+    if (steering_strength > 0.05f) {
+        const float desired_angle = atan2f(
+            input->steering_y,
+            input->steering_x
+        );
+        float angle_delta = desired_angle - ship->angle;
 
-    if (input->turn_right) {
-        ship->angle += 2.8f * dt;
+        while (angle_delta > SF_PI) {
+            angle_delta -= 2.0f * SF_PI;
+        }
+        while (angle_delta < -SF_PI) {
+            angle_delta += 2.0f * SF_PI;
+        }
+
+        ship->angle += clampf(angle_delta, -4.2f * dt, 4.2f * dt);
+    } else {
+        if (input->turn_left) {
+            ship->angle -= 2.8f * dt;
+        }
+
+        if (input->turn_right) {
+            ship->angle += 2.8f * dt;
+        }
     }
 
     if (ship->angle > SF_PI) {
@@ -452,7 +506,12 @@ static void update_player(SfGame *game, const SfInput *input, float dt)
         const float acceleration = boosting ? 340.0f : 190.0f;
         const float maximum_speed = boosting ? 270.0f : 190.0f;
 
-        if (input->thrust) {
+        if (steering_strength > 0.05f) {
+            ship->vx += cosf(ship->angle) * acceleration *
+                steering_strength * dt;
+            ship->vy += sinf(ship->angle) * acceleration *
+                steering_strength * dt;
+        } else if (input->thrust) {
             ship->vx += cosf(ship->angle) * acceleration * dt;
             ship->vy += sinf(ship->angle) * acceleration * dt;
         }
@@ -462,16 +521,9 @@ static void update_player(SfGame *game, const SfInput *input, float dt)
             ship->vy -= sinf(ship->angle) * 123.5f * dt;
         }
 
-        ship->vx = clampf(
-            ship->vx * powf(0.985f, dt * 60.0f),
-            -maximum_speed,
-            maximum_speed
-        );
-        ship->vy = clampf(
-            ship->vy * powf(0.985f, dt * 60.0f),
-            -maximum_speed,
-            maximum_speed
-        );
+        ship->vx *= powf(0.985f, dt * 60.0f);
+        ship->vy *= powf(0.985f, dt * 60.0f);
+        limit_ship_speed(ship, maximum_speed);
     }
 
     ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
@@ -595,8 +647,9 @@ static void update_npcs(SfGame *game, float dt)
             update_patrol(game, ship, dt);
         }
 
-        ship->vx = clampf(ship->vx * powf(0.992f, dt * 60.0f), -105.0f, 105.0f);
-        ship->vy = clampf(ship->vy * powf(0.992f, dt * 60.0f), -105.0f, 105.0f);
+        ship->vx *= powf(0.992f, dt * 60.0f);
+        ship->vy *= powf(0.992f, dt * 60.0f);
+        limit_ship_speed(ship, 105.0f);
 
         ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
         ship->y = clampf(ship->y + ship->vy * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
@@ -612,6 +665,33 @@ static void update_npcs(SfGame *game, float dt)
             ship->energy = ship->max_energy;
         }
     }
+}
+
+static bool projectile_hits_asteroid(
+    const SfProjectile *projectile,
+    int system_index
+)
+{
+    int i;
+
+    if (projectile == NULL || !sf_game_system_has_asteroids(system_index)) {
+        return false;
+    }
+
+    for (i = 0; i < SF_ASTEROID_COUNT; ++i) {
+        const float collision_radius = asteroid_radius[i] + 2.0f;
+
+        if (sf_distance_squared(
+                projectile->x,
+                projectile->y,
+                asteroid_x[i],
+                asteroid_y[i]
+            ) < collision_radius * collision_radius) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 static void update_projectiles(SfGame *game, float dt)
@@ -630,6 +710,11 @@ static void update_projectiles(SfGame *game, float dt)
         projectile->life -= dt;
 
         if (projectile->life <= 0.0f) {
+            projectile->active = false;
+            continue;
+        }
+
+        if (projectile_hits_asteroid(projectile, game->current_system)) {
             projectile->active = false;
             continue;
         }
@@ -689,6 +774,22 @@ static void update_cargo_drops(SfGame *game, float dt)
         drop->y += drop->vy * dt;
         drop->vx *= powf(0.94f, dt * 60.0f);
         drop->vy *= powf(0.94f, dt * 60.0f);
+
+        if (drop->x < 8.0f) {
+            drop->x = 8.0f;
+            drop->vx = 0.0f;
+        } else if (drop->x > SF_WORLD_SIZE - 8.0f) {
+            drop->x = SF_WORLD_SIZE - 8.0f;
+            drop->vx = 0.0f;
+        }
+
+        if (drop->y < 8.0f) {
+            drop->y = 8.0f;
+            drop->vy = 0.0f;
+        } else if (drop->y > SF_WORLD_SIZE - 8.0f) {
+            drop->y = SF_WORLD_SIZE - 8.0f;
+            drop->vy = 0.0f;
+        }
 
         if (game->npc_salvage_enabled) {
             int j;

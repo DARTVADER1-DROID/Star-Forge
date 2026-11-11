@@ -8,6 +8,7 @@
 #define SF_MAX_PROJECTILES 96
 #define SF_ITEM_COUNT 5
 #define SF_MAX_SYSTEMS 4
+#define SF_FTL_FUEL_COST 5
 
 typedef enum {
     SF_ITEM_METAL,
@@ -71,6 +72,9 @@ typedef struct {
     bool turn_right;
     bool fire;
     bool boost;
+    float steering_x;
+    float steering_y;
+    float steering_strength;
 } SfInput;
 
 typedef struct {
@@ -90,6 +94,7 @@ typedef struct {
     unsigned int destroyed_npcs;
 } SfGame;
 
+bool sf_game_systems_connected(int from_system, int to_system);
 void sf_game_init(SfGame *game);
 void sf_game_update(SfGame *game, const SfInput *input, float dt);
 void sf_game_fire_player(SfGame *game);

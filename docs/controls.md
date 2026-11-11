@@ -1,16 +1,18 @@
 # Controls
 
-Star-Forge uses on-screen controls only. Keyboard gameplay bindings are intentionally not supported.
+Star-Forge is designed around touch controls. Gameplay has no keyboard or mouse bindings.
 
 ## Flight
-- Drag the virtual joystick to turn and thrust.
+- Touch the lower-left flight zone to summon a floating joystick under your thumb.
+- Drag in the direction you want the ship to face; farther movement applies more thrust.
+- Release the joystick to stop steering and thrusting. The ship coasts with its existing momentum.
 - Hold **BOOST** for increased acceleration and speed.
 - Hold **FIRE** to shoot while sufficient weapon energy is available.
 
 ## World interaction
 - Tap **LOOT** to collect the nearest eligible salvage crate.
-- Tap **FTL** to jump to the next star system. Each jump consumes 5 Fuel.
-- Tap **CARGO** to open the cargo panel.
+- Tap **FTL** to open the galaxy map. Select a directly connected system and tap **JUMP**. Each jump consumes 5 Fuel.
+- Tap **BAG** to open the cargo panel.
 
 ## Cargo panel
 - Select a commodity using its item button.
@@ -20,4 +22,4 @@ Star-Forge uses on-screen controls only. Keyboard gameplay bindings are intentio
 - Toggle **NPC LOOT ON/OFF** to allow or prevent nearby NPCs from collecting salvage.
 - Tap **X** to close the panel.
 
-The same control layout is available on Android and desktop. On desktop, click and drag the virtual joystick and click/hold the action buttons.
+The landscape layout adapts to the available display aspect ratio. Gameplay remains touch-first; desktop builds are intended for development and verification, not keyboard or mouse gameplay.

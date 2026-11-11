@@ -3,16 +3,12 @@
 #include "game.h"
 #include "render.h"
 #include "assets.h"
+#include "ui_layout.h"
 
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 
-#define SF_WINDOW_WIDTH 960
-#define SF_WINDOW_HEIGHT 540
-#define SF_LOGICAL_WIDTH 320
-#define SF_LOGICAL_HEIGHT 180
-#define SF_FIXED_STEP (1.0 / 60.0)
 
 static void set_draw_color(
     SDL_Renderer *renderer,
@@ -95,7 +91,8 @@ static void draw_asteroids(
     const SfGame *game,
     const SfAssets *assets,
     int camera_x,
-    int camera_y
+    int camera_y,
+    int viewport_width
 )
 {
     if (!sf_game_system_has_asteroids(game->current_system)) {
@@ -121,9 +118,9 @@ static void draw_asteroids(
         const int radius = asteroid_radius[i];
 
         if (screen_x + radius < 0 ||
-            screen_x - radius >= SF_LOGICAL_WIDTH ||
+            screen_x - radius >= viewport_width ||
             screen_y + radius < 0 ||
-            screen_y - radius >= SF_LOGICAL_HEIGHT) {
+            screen_y - radius >= SF_UI_LOGICAL_HEIGHT) {
             continue;
         }
 
@@ -156,11 +153,11 @@ static void draw_cargo_drops(
         const SfCargoDrop *drop = &game->drops[i];
         SDL_FRect rectangle;
 
-        if (!drop->active) {
+        if (!drop->active || drop->quantity <= 0) {
             continue;
         }
 
-        {
+        if (drop->item >= 0 && drop->item < SF_ITEM_COUNT) {
             static const SfAssetId salvage_ids[SF_ITEM_COUNT] = {
                 SF_ASSET_METAL, SF_ASSET_FUEL, SF_ASSET_FOOD,
                 SF_ASSET_MEDICINE, SF_ASSET_WEAPON
@@ -272,60 +269,20 @@ static void draw_npcs(
 
 static void draw_hud(SDL_Renderer *renderer, const SfGame *game)
 {
-    char text[160];
-
-    set_draw_color(renderer, 220, 230, 245);
+    char text[96];
 
     (void)snprintf(
         text,
         sizeof(text),
-        "STAR-FORGE  SYS %s  ARM %.0f HULL %.0f EN %.0f  CR %d",
+        "%s  HULL %.0f  ARM %.0f  ENERGY %.0f",
         sf_game_system_name(game->current_system),
-        game->player.armor,
         game->player.hull,
-        game->player.energy,
-        game->credits
+        game->player.armor,
+        game->player.energy
     );
 
+    set_draw_color(renderer, 205, 220, 238);
     SDL_RenderDebugText(renderer, 5.0f, 5.0f, text);
-
-    (void)snprintf(
-        text,
-        sizeof(text),
-        "METAL %d FUEL %d FOOD %d MED %d WEAPON %d",
-        game->inventory[SF_ITEM_METAL],
-        game->inventory[SF_ITEM_FUEL],
-        game->inventory[SF_ITEM_FOOD],
-        game->inventory[SF_ITEM_MEDICINE],
-        game->inventory[SF_ITEM_WEAPON]
-    );
-
-    SDL_RenderDebugText(renderer, 5.0f, 17.0f, text);
-
-    (void)snprintf(
-        text,
-        sizeof(text),
-        "SELECT %s x%d | NPC SALVAGE %s",
-        sf_item_name(game->selected_item),
-        game->selected_quantity,
-        game->npc_salvage_enabled ? "ON" : "OFF"
-    );
-
-    SDL_RenderDebugText(renderer, 5.0f, 29.0f, text);
-
-    SDL_RenderDebugText(
-        renderer,
-        5.0f,
-        153.0f,
-        "Use on-screen controls"
-    );
-
-    SDL_RenderDebugText(
-        renderer,
-        5.0f,
-        165.0f,
-        "CARGO button opens inventory"
-    );
 }
 
 
@@ -423,7 +380,9 @@ void sf_render_world(
     const SfGame *game,
     const SfAssets *assets,
     int camera_x,
-    int camera_y
+    int camera_y,
+    bool draw_player,
+    int viewport_width
 )
 {
     SDL_FRect station_rectangle;
@@ -439,8 +398,8 @@ void sf_render_world(
         const int screen_x = world_x - camera_x;
         const int screen_y = world_y - camera_y;
 
-        if (screen_x >= 0 && screen_x < SF_LOGICAL_WIDTH &&
-            screen_y >= 0 && screen_y < SF_LOGICAL_HEIGHT) {
+        if (screen_x >= 0 && screen_x < viewport_width &&
+            screen_y >= 0 && screen_y < SF_UI_LOGICAL_HEIGHT) {
             set_draw_color(
                 renderer,
                 (Uint8)(70 + (i % 4) * 30),
@@ -457,7 +416,7 @@ void sf_render_world(
     }
 
     draw_system_bodies(renderer, game, assets, camera_x, camera_y);
-    draw_asteroids(renderer, game, assets, camera_x, camera_y);
+    draw_asteroids(renderer, game, assets, camera_x, camera_y, viewport_width);
 
     {
         SDL_Texture *texture = sf_assets_get(assets, SF_ASSET_STATION);
@@ -486,72 +445,36 @@ void sf_render_world(
     draw_projectiles(renderer, game, camera_x, camera_y);
     draw_npcs(renderer, game, assets, camera_x, camera_y);
 
-    draw_ship(
-        renderer,
-        assets,
-        SF_ASSET_PLAYER,
-        game->player.x,
-        game->player.y,
-        game->player.angle,
-        camera_x,
-        camera_y,
-        100,
-        235,
-        150
-    );
+    if (draw_player && game->player.alive) {
+        draw_ship(
+            renderer,
+            assets,
+            SF_ASSET_PLAYER,
+            game->player.x,
+            game->player.y,
+            game->player.angle,
+            camera_x,
+            camera_y,
+            100,
+            235,
+            150
+        );
+    }
 
     draw_hud(renderer, game);
 }
 
-void sf_render_hover_info(
-    SDL_Renderer *renderer,
-    const SfGame *game,
-    float mouse_x,
-    float mouse_y,
-    int camera_x,
-    int camera_y
-)
-{
-    int i;
-
-    for (i = 0; i < SF_MAX_DROPS; ++i) {
-        const SfCargoDrop *drop = &game->drops[i];
-        char text[96];
-
-        if (!drop->active) {
-            continue;
-        }
-
-        if (sf_distance_squared(
-                mouse_x + (float)camera_x,
-                mouse_y + (float)camera_y,
-                drop->x,
-                drop->y
-            ) < 18.0f * 18.0f) {
-            (void)snprintf(
-                text,
-                sizeof(text),
-                "%s x%d | LOOT button to collect",
-                sf_item_name(drop->item),
-                drop->quantity
-            );
-
-            set_draw_color(renderer, 255, 235, 150);
-            SDL_RenderDebugText(renderer, 5.0f, 43.0f, text);
-            return;
-        }
-    }
-}
-
 void sf_render_inventory_panel(
     SDL_Renderer *renderer,
-    const SfGame *game
+    const SfGame *game,
+    int viewport_width
 )
 {
     static const char *const labels[SF_ITEM_COUNT] = {
         "METAL", "FUEL", "FOOD", "MED", "WEAPON"
     };
-    SDL_FRect panel = { 40.0f, 45.0f, 240.0f, 88.0f };
+    const float panel_offset = ((float)viewport_width - 320.0f) * 0.5f;
+    SDL_FRect panel = { 40.0f + panel_offset, 45.0f, 240.0f, 88.0f };
     char text[96];
     const int selected_item = game->selected_item >= 0 &&
         game->selected_item < SF_ITEM_COUNT ? game->selected_item : SF_ITEM_METAL;
@@ -563,12 +486,12 @@ void sf_render_inventory_panel(
     SDL_RenderRect(renderer, &panel);
 
     set_draw_color(renderer, 240, 240, 245);
-    SDL_RenderDebugText(renderer, 50.0f, 52.0f, "CARGO HOLD");
-    SDL_RenderDebugText(renderer, 250.0f, 52.0f, "X");
+    SDL_RenderDebugText(renderer, 50.0f + panel_offset, 52.0f, "CARGO HOLD");
+    SDL_RenderDebugText(renderer, 250.0f + panel_offset, 52.0f, "X");
 
     for (i = 0; i < SF_ITEM_COUNT; ++i) {
         SDL_FRect item_button = {
-            48.0f + (float)i * 45.0f,
+            48.0f + panel_offset + (float)i * 45.0f,
             64.0f,
             42.0f,
             17.0f
@@ -598,15 +521,15 @@ void sf_render_inventory_panel(
         game->inventory[selected_item]
     );
     set_draw_color(renderer, 240, 240, 245);
-    SDL_RenderDebugText(renderer, 50.0f, 87.0f, text);
-    SDL_RenderDebugText(renderer, 52.0f, 101.0f, "- QTY");
-    SDL_RenderDebugText(renderer, 115.0f, 101.0f, "+ QTY");
+    SDL_RenderDebugText(renderer, 50.0f + panel_offset, 87.0f, text);
+    SDL_RenderDebugText(renderer, 52.0f + panel_offset, 101.0f, "- QTY");
+    SDL_RenderDebugText(renderer, 115.0f + panel_offset, 101.0f, "+ QTY");
     SDL_RenderDebugText(
         renderer,
-        190.0f,
+        190.0f + panel_offset,
         101.0f,
         game->npc_salvage_enabled ? "NPC LOOT ON" : "NPC LOOT OFF"
     );
-    SDL_RenderDebugText(renderer, 52.0f, 117.0f, "JETTISON");
-    SDL_RenderDebugText(renderer, 178.0f, 117.0f, "SELL AT STATION");
+    SDL_RenderDebugText(renderer, 52.0f + panel_offset, 117.0f, "JETTISON");
+    SDL_RenderDebugText(renderer, 178.0f + panel_offset, 117.0f, "SELL AT STATION");
 }
