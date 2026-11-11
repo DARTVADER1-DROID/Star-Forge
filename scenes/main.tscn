@@ -20,11 +20,17 @@ shape = SubResource("CircleShape2D_player")
 
 [node name="ProjectilePool" type="Node2D" parent="."]
 script = ExtResource("4_pool")
+
 [node name="NPCs" type="Node2D" parent="."]
+
 [node name="Obstacles" type="Node2D" parent="."]
+
 [node name="CargoDrops" type="Node2D" parent="."]
 
-[node name="HUD" type="Control" parent="."]
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="HUD" type="Control" parent="HUDLayer"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
