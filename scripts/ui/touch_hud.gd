@@ -39,6 +39,7 @@ var _gameplay_blocked := false
 var _station_access := false
 
 func _ready() -> void:
+    set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_IGNORE
     z_index = 100
     _build_status()
@@ -80,6 +81,8 @@ func _button(caption: String, offset: Vector2, dimensions: Vector2, right: bool,
     control.name = caption + "Button"
     control.text = caption
     control.focus_mode = Control.FOCUS_NONE
+    control.mouse_filter = Control.MOUSE_FILTER_STOP
+    control.custom_minimum_size = dimensions
     control.anchor_left = 1.0 if right else 0.0
     control.anchor_right = control.anchor_left
     control.anchor_top = 0.0 if top else 1.0
