@@ -19,8 +19,8 @@ var _fire_timer := 0.0
 var _phase := 0.0
 
 func _ready() -> void:
-    var role := ContentDatabase.npc_roles.get(role_id, {})
-    var design := ContentDatabase.ship_designs.get(ship_design_id, {})
+    var role: Dictionary = ContentDatabase.npc_roles.get(role_id, {})
+    var design: Dictionary = ContentDatabase.ship_designs.get(ship_design_id, {})
     if role.is_empty() or design.is_empty():
         push_error("NPC has unknown role/design: %s/%s" % [role_id,ship_design_id])
         queue_free()
