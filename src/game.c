@@ -652,25 +652,31 @@ static void update_cargo_drops(SfGame *game, float dt)
                 const int volume_per_item = drop->item == SF_ITEM_WEAPON ? 2 : 1;
                 int added_volume;
 
-                if (drop->quantity > 100 / volume_per_item) {
-                    continue;
-                }
-
-                added_volume = drop->quantity * volume_per_item;
+                int free_volume;
+                int quantity_to_collect;
 
                 if (!npc->alive) {
                     continue;
                 }
 
-                if (cargo_used(npc->cargo) + added_volume <= 100 &&
+                free_volume = 100 - cargo_used(npc->cargo);
+                quantity_to_collect = free_volume / volume_per_item;
+                if (quantity_to_collect > drop->quantity) {
+                    quantity_to_collect = drop->quantity;
+                }
+
+                if (quantity_to_collect > 0 &&
                     sf_distance_squared(
                         drop->x,
                         drop->y,
                         npc->x,
                         npc->y
                     ) < 26.0f * 26.0f) {
-                    npc->cargo[drop->item] += drop->quantity;
-                    drop->active = false;
+                    npc->cargo[drop->item] += quantity_to_collect;
+                    drop->quantity -= quantity_to_collect;
+                    if (drop->quantity <= 0) {
+                        drop->active = false;
+                    }
                     break;
                 }
             }
@@ -707,35 +713,35 @@ bool sf_game_collect_nearest(SfGame *game)
 {
     int best_index = -1;
     float best_distance_squared = 38.0f * 38.0f;
+    int free_volume;
     int i;
 
     if (game == NULL || !game->player.alive) {
         return false;
     }
 
+    free_volume = 100 - cargo_used(game->inventory);
+
+    if (free_volume <= 0) {
+        return false;
+    }
+
     for (i = 0; i < SF_MAX_DROPS; ++i) {
-        SfCargoDrop *drop = &game->drops[i];
-        int added_volume;
-        float distance_squared;
-
-        if (!drop->active || drop->item < 0 || drop->item >= SF_ITEM_COUNT ||
-            drop->quantity <= 0) {
-            continue;
-        }
-
-        if (drop->quantity > (drop->item == SF_ITEM_WEAPON ? 50 : 100)) {
-            continue;
-        }
-
-        added_volume = drop->quantity * (drop->item == SF_ITEM_WEAPON ? 2 : 1);
-        distance_squared = sf_distance_squared(
+        const SfCargoDrop *drop = &game->drops[i];
+        const int volume_per_item = drop->item == SF_ITEM_WEAPON ? 2 : 1;
+        const float distance_squared = sf_distance_squared(
             game->player.x,
             game->player.y,
             drop->x,
             drop->y
         );
 
-        if (cargo_used(game->inventory) + added_volume > 100) {
+        if (!drop->active || drop->item < 0 || drop->item >= SF_ITEM_COUNT ||
+            drop->quantity <= 0) {
+            continue;
+        }
+
+        if (free_volume / volume_per_item <= 0) {
             continue;
         }
 
@@ -751,9 +757,19 @@ bool sf_game_collect_nearest(SfGame *game)
 
     {
         SfCargoDrop *drop = &game->drops[best_index];
+        const int volume_per_item = drop->item == SF_ITEM_WEAPON ? 2 : 1;
+        int quantity_to_collect = free_volume / volume_per_item;
 
-        game->inventory[drop->item] += drop->quantity;
-        drop->active = false;
+        if (quantity_to_collect > drop->quantity) {
+            quantity_to_collect = drop->quantity;
+        }
+
+        game->inventory[drop->item] += quantity_to_collect;
+        drop->quantity -= quantity_to_collect;
+
+        if (drop->quantity <= 0) {
+            drop->active = false;
+        }
     }
 
     return true;
