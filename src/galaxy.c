@@ -117,13 +117,13 @@ void sf_galaxy_render(
     } else if (selected_system >= 0 && selected_system < SF_MAX_SYSTEMS) {
         char detail[72];
         (void)SDL_snprintf(
-            detail, sizeof(detail), "%s  |  FUEL: %d (5 REQUIRED)",
+            detail, sizeof(detail), "%s  FUEL %d/5",
             sf_game_system_name(selected_system),
             game->inventory[SF_ITEM_FUEL]
         );
         SDL_RenderDebugText(renderer, 9.0f, 139.0f, detail);
     } else {
-        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "Select a highlighted connected system");
+        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "SELECT CONNECTED SYSTEM");
     }
     SDL_RenderDebugText(renderer, 9.0f, 157.0f, "GREEN: CURRENT  BLUE: REACHABLE");
     SDL_RenderDebugText(renderer, 9.0f, 169.0f, "Tap a blue node, then JUMP. X: CLOSE");
