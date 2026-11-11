@@ -281,7 +281,6 @@ static void draw_touch_ring(SDL_Renderer *renderer, float center_x, float center
 static void draw_touch_controls(
     SDL_Renderer *renderer,
     const SfTouchState *touch,
-    const SfGame *game,
     const SfAssets *assets,
     const SfUiLayout *layout
 )
@@ -455,6 +454,7 @@ int main(int argc, char **argv)
             if (next_width > SF_UI_MAX_LOGICAL_WIDTH) next_width = SF_UI_MAX_LOGICAL_WIDTH;
             if (next_width != logical_width) {
                 logical_width = next_width;
+                release_touch_controls(&touch);
                 (void)SDL_SetRenderLogicalPresentation(
                     renderer, logical_width, SF_UI_LOGICAL_HEIGHT,
                     SDL_LOGICAL_PRESENTATION_LETTERBOX
@@ -579,7 +579,7 @@ int main(int argc, char **argv)
         }
 
         if (!galaxy_map_open && !inventory_open) {
-            draw_touch_controls(renderer, &touch, &game, &assets, &layout);
+            draw_touch_controls(renderer, &touch, &assets, &layout);
         }
 
         SDL_RenderPresent(renderer);
