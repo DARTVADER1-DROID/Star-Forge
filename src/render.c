@@ -38,10 +38,56 @@ static void draw_ship(
     Uint8 blue
 )
 {
-    SDL_Texture *texture=sf_assets_get(assets,sprite);
-    SDL_FRect dst={x-(float)camera_x-12.0f,y-(float)camera_y-12.0f,24.0f,24.0f};
-    if(texture){(void)SDL_RenderTextureRotated(renderer,texture,NULL,&dst,(double)angle*57.29577951308232+90.0,NULL,SDL_FLIP_NONE);}
-    else {static const float px[3]={15,-10,-7},py[3]={0,-9,0};float sx[3],sy[3],c=cosf(angle),sn=sinf(angle);for(int i=0;i<3;i++){sx[i]=x+px[i]*c-py[i]*sn-(float)camera_x;sy[i]=y+px[i]*sn+py[i]*c-(float)camera_y;}set_draw_color(renderer,red,green,blue);for(int i=0;i<3;i++){int j=(i+1)%3;SDL_RenderLine(renderer,sx[i],sy[i],sx[j],sy[j]);}}
+    SDL_Texture *texture = sf_assets_get(assets, sprite);
+    SDL_FRect destination = {
+        x - (float)camera_x - 12.0f,
+        y - (float)camera_y - 12.0f,
+        24.0f,
+        24.0f
+    };
+
+    if (texture != NULL) {
+        const double degrees = (double)angle * 57.29577951308232 + 90.0;
+
+        (void)SDL_RenderTextureRotated(
+            renderer,
+            texture,
+            NULL,
+            &destination,
+            degrees,
+            NULL,
+            SDL_FLIP_NONE
+        );
+    } else {
+        static const float local_x[3] = { 15.0f, -10.0f, -7.0f };
+        static const float local_y[3] = { 0.0f, -9.0f, 0.0f };
+        float screen_x[3];
+        float screen_y[3];
+        const float cosine = cosf(angle);
+        const float sine = sinf(angle);
+        int i;
+
+        for (i = 0; i < 3; ++i) {
+            screen_x[i] = x + local_x[i] * cosine - local_y[i] * sine -
+                (float)camera_x;
+            screen_y[i] = y + local_x[i] * sine + local_y[i] * cosine -
+                (float)camera_y;
+        }
+
+        set_draw_color(renderer, red, green, blue);
+
+        for (i = 0; i < 3; ++i) {
+            const int next = (i + 1) % 3;
+
+            SDL_RenderLine(
+                renderer,
+                screen_x[i],
+                screen_y[i],
+                screen_x[next],
+                screen_y[next]
+            );
+        }
+    }
 }
 
 static void draw_asteroids(
@@ -352,7 +398,22 @@ static void draw_system_bodies(
         const float moon_x = center_x + cosf(angle) * orbit;
         const float moon_y = center_y + sinf(angle) * orbit;
 
-        { SDL_Texture *texture=sf_assets_get(assets,SF_ASSET_MOON); SDL_FRect dst={moon_x-6.0f,moon_y-6.0f,12.0f,12.0f}; if(texture)(void)SDL_RenderTexture(renderer,texture,NULL,&dst); else {set_draw_color(renderer,155,155,165);draw_filled_circle(renderer,moon_x,moon_y,6);} }
+        {
+            SDL_Texture *texture = sf_assets_get(assets, SF_ASSET_MOON);
+            SDL_FRect destination = {
+                moon_x - 6.0f,
+                moon_y - 6.0f,
+                12.0f,
+                12.0f
+            };
+
+            if (texture != NULL) {
+                (void)SDL_RenderTexture(renderer, texture, NULL, &destination);
+            } else {
+                set_draw_color(renderer, 155, 155, 165);
+                draw_filled_circle(renderer, moon_x, moon_y, 6);
+            }
+        }
     }
 }
 
@@ -397,7 +458,28 @@ void sf_render_world(
     draw_system_bodies(renderer, game, assets, camera_x, camera_y);
     draw_asteroids(renderer, game, assets, camera_x, camera_y);
 
-    {SDL_Texture *t=sf_assets_get(assets,SF_ASSET_STATION);station_rectangle=(SDL_FRect){game->station_x-(float)camera_x-16.0f,game->station_y-(float)camera_y-16.0f,32.0f,32.0f};if(t)(void)SDL_RenderTexture(renderer,t,NULL,&station_rectangle);else{set_draw_color(renderer,55,110,150);SDL_RenderRect(renderer,&station_rectangle);}}
+    {
+        SDL_Texture *texture = sf_assets_get(assets, SF_ASSET_STATION);
+
+        station_rectangle = (SDL_FRect) {
+            game->station_x - (float)camera_x - 16.0f,
+            game->station_y - (float)camera_y - 16.0f,
+            32.0f,
+            32.0f
+        };
+
+        if (texture != NULL) {
+            (void)SDL_RenderTexture(
+                renderer,
+                texture,
+                NULL,
+                &station_rectangle
+            );
+        } else {
+            set_draw_color(renderer, 55, 110, 150);
+            SDL_RenderRect(renderer, &station_rectangle);
+        }
+    }
 
     draw_cargo_drops(renderer, game, assets, camera_x, camera_y);
     draw_projectiles(renderer, game, camera_x, camera_y);
@@ -470,6 +552,8 @@ void sf_render_inventory_panel(
     };
     SDL_FRect panel = { 40.0f, 45.0f, 240.0f, 88.0f };
     char text[96];
+    const int selected_item = game->selected_item >= 0 &&
+        game->selected_item < SF_ITEM_COUNT ? game->selected_item : SF_ITEM_METAL;
     int i;
 
     set_draw_color(renderer, 12, 20, 38);
@@ -491,9 +575,9 @@ void sf_render_inventory_panel(
 
         set_draw_color(
             renderer,
-            game->selected_item == i ? 55 : 30,
-            game->selected_item == i ? 105 : 55,
-            game->selected_item == i ? 155 : 85
+            selected_item == i ? 55 : 30,
+            selected_item == i ? 105 : 55,
+            selected_item == i ? 155 : 85
         );
         SDL_RenderFillRect(renderer, &item_button);
         set_draw_color(renderer, 230, 235, 245);
@@ -510,7 +594,7 @@ void sf_render_inventory_panel(
         sizeof(text),
         "QTY %d   HOLD %d",
         game->selected_quantity,
-        game->inventory[game->selected_item]
+        game->inventory[selected_item]
     );
     set_draw_color(renderer, 240, 240, 245);
     SDL_RenderDebugText(renderer, 50.0f, 87.0f, text);
