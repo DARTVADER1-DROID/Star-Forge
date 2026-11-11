@@ -217,8 +217,8 @@ static void draw_npcs(
         const Uint8 red = ship->role == SF_ROLE_PIRATE ? 235 : 90;
         const Uint8 green = ship->role == SF_ROLE_PIRATE ? 80 : 190;
         const Uint8 blue = ship->role == SF_ROLE_PIRATE ? 85 : 220;
-        const float health_ratio = ship->max_hp > 0.0f
-            ? ship->hp / ship->max_hp
+        const float health_ratio = ship->max_hull > 0.0f
+            ? ship->hull / ship->max_hull
             : 0.0f;
 
         if (!ship->alive) {
