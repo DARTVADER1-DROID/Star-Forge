@@ -21,6 +21,13 @@
 - [ ] Weapon and projectile pool
 - [ ] Basic enemy behavior
 
+## Design documentation
+- [x] Document ship types and classes, ship-stat model, upgrade direction, galaxy/system/planet structure, initial commodities, and weapons-market boundary in `docs/game-design.md`
+- [ ] Define and balance numerical ship statistics
+- [ ] Define FTL travel and galaxy/system data model
+- [ ] Define planetary traits and commodity market simulation
+- [ ] Add the weapon catalogue after weapon specifications are supplied
+
 ## Milestone 3 — Sandbox foundations
 - [ ] Sector representation and streaming
 - [ ] Stations and docking
