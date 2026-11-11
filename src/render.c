@@ -446,19 +446,19 @@ void sf_render_world(
     draw_projectiles(renderer, game, camera_x, camera_y);
     draw_npcs(renderer, game, assets, camera_x, camera_y);
 
-    draw_ship(
-        renderer,
-        assets,
-        SF_ASSET_PLAYER,
-        game->player.x,
-        game->player.y,
-        game->player.angle,
-        camera_x,
-        camera_y,
-        100,
-        235,
-        150
-    );
+    if (draw_player) {
+            renderer,
+            assets,
+            SF_ASSET_PLAYER,
+            game->player.x,
+            game->player.y,
+            game->player.angle,
+            camera_x,
+            camera_y,
+            100,
+            235,
+            150
+    }
 
     draw_hud(renderer, game);
 }
