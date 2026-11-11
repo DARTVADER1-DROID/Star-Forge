@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "systems": [
+    {"id":"solace","name":"Solace","links":["vesper","kestrel"],"planet_count":3,"moon_count":5,"has_asteroids":true,"station_position":[220,180]},
+    {"id":"vesper","name":"Vesper","links":["solace","kestrel","ironwake"],"planet_count":2,"moon_count":3,"has_asteroids":false,"station_position":[360,260]},
+    {"id":"kestrel","name":"Kestrel","links":["solace","vesper","ironwake"],"planet_count":4,"moon_count":7,"has_asteroids":true,"station_position":[180,420]},
+    {"id":"ironwake","name":"Ironwake","links":["vesper","kestrel"],"planet_count":2,"moon_count":2,"has_asteroids":false,"station_position":[480,340]}
+  ]
+}
