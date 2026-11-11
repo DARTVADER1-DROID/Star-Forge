@@ -123,7 +123,7 @@ int main(void)
     sf_game_init(&game);
     for (int i = 0; i < SF_MAX_DROPS; ++i) {
         game.drops[i].active = true;
-        game.drops[i].item = SF_ITEM_FUEL;
+        game.drops[i].item = SF_ITEM_METAL;
         game.drops[i].quantity = 1;
     }
     game.selected_item = SF_ITEM_METAL;
