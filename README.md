@@ -1,21 +1,22 @@
 # Star Forge
 
-Star Forge is an original, offline-first, top-down 2D pixel-art space sandbox RPG.
+Star Forge is an original, offline-first, top-down 2D pixel-art space sandbox RPG built exclusively for Android phones and tablets.
 
 ## Technology
 
 - **Engine:** Godot 4.7.2 stable
 - **Language:** typed GDScript
 - **Renderer:** Compatibility (OpenGL ES)
-- **Primary platform:** Android, landscape orientation
-- **Input:** touch-only gameplay; no keyboard or mouse gameplay bindings
-- **Cloud builds:** GitHub Actions
+- **Target platform:** Android only
+- **Display:** landscape orientation, scalable 960 × 540 logical canvas
+- **Input:** touchscreen only; no keyboard or mouse gameplay support
+- **Builds:** cloud-based Android APK export through GitHub Actions
 
-This is a Godot-native project. Scenes, scripts, content definitions, validation and Android packaging are maintained as one engine project.
+The Godot editor may be used as a development tool, but the game itself is an Android-only product. There are no desktop game targets or desktop gameplay controls.
 
-## Open the project
+## Development
 
-Open this repository's root directory in Godot 4.7.2. The entry scene is `scenes/main.tscn`. The project uses a 960 × 540 logical canvas with canvas-item stretching and the Compatibility renderer.
+Open this repository's root directory in Godot 4.7.2 to edit the project. The entry scene is `scenes/main.tscn`. The project uses a 960 × 540 logical canvas with canvas-item stretching and the Compatibility renderer.
 
 ## Current playable systems
 
@@ -34,7 +35,7 @@ The game is still being iterated. This is a playable foundation, not a claim tha
 
 ## Cloud Android APK
 
-No desktop installation is required to produce a debug APK.
+No local Android SDK or desktop build setup is required to produce a debug APK.
 
 1. Open the repository's Actions tab.
 2. Select **Build Star Forge Android APK**.
@@ -49,7 +50,7 @@ The CI workflow installs Godot headlessly, imports the project and runs the proj
 
 ## Project layout
 
-- `project.godot` — engine, renderer, display and autoload settings
+- `project.godot` — engine, renderer, Android display and autoload settings
 - `scenes/` — reusable gameplay scenes
 - `scripts/autoload/` — content database and persistent game state
 - `scripts/player/` — player ship simulation
@@ -60,6 +61,6 @@ The CI workflow installs Godot headlessly, imports the project and runs the proj
 - `data/` — JSON content definitions
 - `assets/` — source art and imported runtime resources
 - `tests/` — headless project and gameplay regression tests
-- `.github/workflows/` — Godot CI and Android export
+- `.github/workflows/` — Godot validation and Android APK export
 
 See `docs/architecture.md`, `docs/gameplay-mechanics.md` and `docs/performance.md`.
