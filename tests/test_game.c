@@ -1,5 +1,6 @@
 #include "../src/game.h"
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 
 int main(void)
@@ -18,7 +19,7 @@ int main(void)
     assert(game.npcs[0].role == SF_ROLE_CARGO);
     assert(game.npcs[1].role == SF_ROLE_PIRATE);
 
-    /* Boost consumes energy and increases acceleration. */
+    /* Boost increases acceleration without consuming ship energy. */
     {
         SfInput boost_input = { true, false, false, false, false, true };
 
@@ -112,6 +113,26 @@ int main(void)
     game.player.has_ftl_drive = true;
     game.inventory[SF_ITEM_FUEL] = 4;
     assert(!sf_game_jump_to_system(&game, 2));
+
+    /* Public simulation entry points safely reject null and invalid time inputs. */
+    {
+        const float old_x = game.player.x;
+        const float old_y = game.player.y;
+
+        sf_game_update(NULL, &idle, 1.0f / 60.0f);
+        sf_game_update(&game, &idle, NAN);
+        sf_game_update(&game, &idle, INFINITY);
+        sf_game_update(&game, &idle, -1.0f);
+        sf_game_init(NULL);
+        sf_game_fire_player(NULL);
+
+        assert(game.player.x == old_x);
+        assert(game.player.y == old_y);
+        assert(!sf_game_collect_nearest(NULL));
+        assert(!sf_game_jettison_selected(NULL));
+        assert(!sf_game_sell_selected(NULL));
+        assert(!sf_game_jump_to_system(NULL, 1));
+    }
 
     puts("Star-Forge simulation tests passed.");
     return 0;
