@@ -5,8 +5,11 @@
 
 #define SF_PI 3.14159265358979323846f
 #define SF_WORLD_SIZE 2400.0f
-#define SF_PLAYER_RADIUS 12.0f
 #define SF_ASTEROID_COUNT 8
+#define SF_PLAYER_RADIUS 12.0f
+#define SF_FTL_FUEL_COST 5
+#define SF_WEAPON_ENERGY_COST 8.0f
+#define SF_ENERGY_REGEN_RATE 12.0f
 
 static const float asteroid_x[SF_ASTEROID_COUNT] = {
     520.0f, 680.0f, 860.0f, 1040.0f, 1280.0f, 1510.0f, 1740.0f, 1980.0f
@@ -19,6 +22,59 @@ static const float asteroid_y[SF_ASTEROID_COUNT] = {
 static const float asteroid_radius[SF_ASTEROID_COUNT] = {
     22.0f, 30.0f, 18.0f, 34.0f, 25.0f, 28.0f, 20.0f, 32.0f
 };
+
+typedef struct {
+    const char *name;
+    int planet_count;
+    int moon_count;
+    bool has_asteroids;
+    float station_x;
+    float station_y;
+} SfSystemDefinition;
+
+static const SfSystemDefinition systems[SF_MAX_SYSTEMS] = {
+    { "Solace", 3, 5, true, 220.0f, 180.0f },
+    { "Vesper", 2, 3, false, 360.0f, 260.0f },
+    { "Kestrel", 4, 7, true, 180.0f, 420.0f },
+    { "Ironwake", 2, 2, false, 480.0f, 340.0f }
+};
+
+const char *sf_game_system_name(int system_index)
+{
+    if (system_index < 0 || system_index >= SF_MAX_SYSTEMS) {
+        return "Unknown";
+    }
+
+    return systems[system_index].name;
+}
+
+int sf_game_system_planet_count(int system_index)
+{
+    if (system_index < 0 || system_index >= SF_MAX_SYSTEMS) {
+        return 0;
+    }
+
+    return systems[system_index].planet_count;
+}
+
+int sf_game_system_moon_count(int system_index)
+{
+    if (system_index < 0 || system_index >= SF_MAX_SYSTEMS) {
+        return 0;
+    }
+
+    return systems[system_index].moon_count;
+}
+
+bool sf_game_system_has_asteroids(int system_index)
+{
+    if (system_index < 0 || system_index >= SF_MAX_SYSTEMS) {
+        return false;
+    }
+
+    return systems[system_index].has_asteroids;
+}
+
 
 static float clampf(float value, float minimum, float maximum)
 {
@@ -103,9 +159,13 @@ static int cargo_used(const int cargo[SF_ITEM_COUNT])
     return total;
 }
 
-static void resolve_asteroid_collisions(SfShip *ship)
+static void resolve_asteroid_collisions(SfShip *ship, int system_index)
 {
     int i;
+
+    if (!sf_game_system_has_asteroids(system_index)) {
+        return;
+    }
 
     for (i = 0; i < SF_ASTEROID_COUNT; ++i) {
         const float dx = ship->x - asteroid_x[i];
@@ -220,7 +280,8 @@ void sf_game_fire_player(SfGame *game)
 {
     SfShip *ship = &game->player;
 
-    if (ship->fire_cooldown > 0.0f) {
+    if (ship->fire_cooldown > 0.0f ||
+        ship->energy < ship->weapon_energy_cost) {
         return;
     }
 
@@ -233,7 +294,61 @@ void sf_game_fire_player(SfGame *game)
         360.0f
     );
 
+    ship->energy -= ship->weapon_energy_cost;
     ship->fire_cooldown = 0.22f;
+}
+
+
+static void apply_ship_damage(SfShip *ship, float damage)
+{
+    if (damage <= 0.0f || !ship->alive) {
+        return;
+    }
+
+    if (ship->armor > 0.0f) {
+        const float absorbed = damage < ship->armor ? damage : ship->armor;
+
+        ship->armor -= absorbed;
+        damage -= absorbed;
+    }
+
+    if (damage > 0.0f) {
+        ship->hull -= damage;
+    }
+
+    if (ship->hull <= 0.0f) {
+        ship->hull = 0.0f;
+        ship->alive = false;
+    }
+}
+
+bool sf_game_jump_to_system(SfGame *game, int destination_system)
+{
+    if (!game->player.alive ||
+        !game->player.has_ftl_drive ||
+        destination_system < 0 ||
+        destination_system >= SF_MAX_SYSTEMS ||
+        destination_system == game->current_system ||
+        game->inventory[SF_ITEM_FUEL] < SF_FTL_FUEL_COST) {
+        return false;
+    }
+
+    game->inventory[SF_ITEM_FUEL] -= SF_FTL_FUEL_COST;
+    game->current_system = destination_system;
+
+    game->player.x = 300.0f;
+    game->player.y = 300.0f;
+    game->player.vx = 0.0f;
+    game->player.vy = 0.0f;
+
+    game->station_x = systems[destination_system].station_x;
+    game->station_y = systems[destination_system].station_y;
+
+    memset(game->npcs, 0, sizeof(game->npcs));
+    memset(game->drops, 0, sizeof(game->drops));
+    memset(game->projectiles, 0, sizeof(game->projectiles));
+
+    return true;
 }
 
 void sf_game_init(SfGame *game)
@@ -248,8 +363,14 @@ void sf_game_init(SfGame *game)
     game->player.x = 300.0f;
     game->player.y = 300.0f;
     game->player.angle = 0.0f;
-    game->player.hp = 100.0f;
-    game->player.max_hp = 100.0f;
+    game->player.armor = 60.0f;
+    game->player.max_armor = 60.0f;
+    game->player.hull = 100.0f;
+    game->player.max_hull = 100.0f;
+    game->player.energy = 100.0f;
+    game->player.max_energy = 100.0f;
+    game->player.weapon_energy_cost = SF_WEAPON_ENERGY_COST;
+    game->player.has_ftl_drive = true;
     game->player.alive = true;
 
     game->inventory[SF_ITEM_METAL] = 12;
@@ -257,10 +378,10 @@ void sf_game_init(SfGame *game)
     game->selected_item = SF_ITEM_METAL;
     game->selected_quantity = 5;
     game->credits = 120;
-    game->boost_energy = 100.0f;
+    game->current_system = 0;
     game->npc_salvage_enabled = true;
-    game->station_x = 220.0f;
-    game->station_y = 180.0f;
+    game->station_x = systems[0].station_x;
+    game->station_y = systems[0].station_y;
 
     cargo_ship = &game->npcs[0];
     cargo_ship->alive = true;
@@ -268,8 +389,14 @@ void sf_game_init(SfGame *game)
     cargo_ship->x = 720.0f;
     cargo_ship->y = 360.0f;
     cargo_ship->angle = SF_PI;
-    cargo_ship->hp = 65.0f;
-    cargo_ship->max_hp = 65.0f;
+    cargo_ship->armor = 20.0f;
+    cargo_ship->max_armor = 20.0f;
+    cargo_ship->hull = 65.0f;
+    cargo_ship->max_hull = 65.0f;
+    cargo_ship->energy = 60.0f;
+    cargo_ship->max_energy = 60.0f;
+    cargo_ship->weapon_energy_cost = 10.0f;
+    cargo_ship->has_ftl_drive = true;
     cargo_ship->cargo[SF_ITEM_FUEL] = 60;
     cargo_ship->cargo[SF_ITEM_FOOD] = 24;
     cargo_ship->cargo[SF_ITEM_METAL] = 18;
@@ -280,8 +407,14 @@ void sf_game_init(SfGame *game)
     pirate_ship->x = 910.0f;
     pirate_ship->y = 340.0f;
     pirate_ship->angle = SF_PI;
-    pirate_ship->hp = 85.0f;
-    pirate_ship->max_hp = 85.0f;
+    pirate_ship->armor = 35.0f;
+    pirate_ship->max_armor = 35.0f;
+    pirate_ship->hull = 85.0f;
+    pirate_ship->max_hull = 85.0f;
+    pirate_ship->energy = 100.0f;
+    pirate_ship->max_energy = 100.0f;
+    pirate_ship->weapon_energy_cost = 10.0f;
+    pirate_ship->has_ftl_drive = true;
     pirate_ship->cargo[SF_ITEM_FUEL] = 8;
 }
 
@@ -306,21 +439,9 @@ static void update_player(SfGame *game, const SfInput *input, float dt)
     }
 
     {
-        const bool boosting = input->boost && game->boost_energy > 0.0f;
+        const bool boosting = input->boost;
         const float acceleration = boosting ? 340.0f : 190.0f;
         const float maximum_speed = boosting ? 270.0f : 190.0f;
-
-        if (boosting) {
-            game->boost_energy -= 38.0f * dt;
-            if (game->boost_energy < 0.0f) {
-                game->boost_energy = 0.0f;
-            }
-        } else {
-            game->boost_energy += 16.0f * dt;
-            if (game->boost_energy > 100.0f) {
-                game->boost_energy = 100.0f;
-            }
-        }
 
         if (input->thrust) {
             ship->vx += cosf(ship->angle) * acceleration * dt;
@@ -347,10 +468,15 @@ static void update_player(SfGame *game, const SfInput *input, float dt)
     ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
     ship->y = clampf(ship->y + ship->vy * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
 
-    resolve_asteroid_collisions(ship);
+    resolve_asteroid_collisions(ship, game->current_system);
 
     if (ship->fire_cooldown > 0.0f) {
         ship->fire_cooldown -= dt;
+    }
+
+    ship->energy += SF_ENERGY_REGEN_RATE * dt;
+    if (ship->energy > ship->max_energy) {
+        ship->energy = ship->max_energy;
     }
 
     if (input->fire) {
@@ -393,7 +519,9 @@ static void update_pirate(SfGame *game, SfShip *ship, float dt)
         ship->vy -= sinf(ship->angle) * 45.0f * dt;
     }
 
-    if (distance < 330.0f && ship->fire_cooldown <= 0.0f) {
+    if (distance < 330.0f &&
+        ship->fire_cooldown <= 0.0f &&
+        ship->energy >= ship->weapon_energy_cost) {
         spawn_projectile(
             game,
             ship->x + cosf(ship->angle) * 17.0f,
@@ -403,6 +531,7 @@ static void update_pirate(SfGame *game, SfShip *ship, float dt)
             230.0f
         );
 
+        ship->energy -= ship->weapon_energy_cost;
         ship->fire_cooldown = 0.85f;
     }
 }
@@ -442,10 +571,15 @@ static void update_npcs(SfGame *game, float dt)
         ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
         ship->y = clampf(ship->y + ship->vy * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
 
-        resolve_asteroid_collisions(ship);
+        resolve_asteroid_collisions(ship, game->current_system);
 
         if (ship->fire_cooldown > 0.0f) {
             ship->fire_cooldown -= dt;
+        }
+
+        ship->energy += SF_ENERGY_REGEN_RATE * dt;
+        if (ship->energy > ship->max_energy) {
+            ship->energy = ship->max_energy;
         }
     }
 }
@@ -483,10 +617,10 @@ static void update_projectiles(SfGame *game, float dt)
                         ship->x,
                         ship->y
                     ) < 22.0f * 22.0f) {
-                    ship->hp -= 24.0f;
+                    apply_ship_damage(ship, 24.0f);
                     projectile->active = false;
 
-                    if (ship->hp <= 0.0f) {
+                    if (!ship->alive) {
                         destroy_npc_ship(game, ship);
                     }
 
@@ -499,12 +633,8 @@ static void update_projectiles(SfGame *game, float dt)
                        game->player.x,
                        game->player.y
                    ) < SF_PLAYER_RADIUS * SF_PLAYER_RADIUS) {
-            game->player.hp -= 8.0f;
+            apply_ship_damage(&game->player, 8.0f);
             projectile->active = false;
-
-            if (game->player.hp < 0.0f) {
-                game->player.hp = 0.0f;
-            }
         }
     }
 }
@@ -563,7 +693,7 @@ void sf_game_update(SfGame *game, const SfInput *input, float dt)
         dt = 0.05f;
     }
 
-    if (game->player.hp > 0.0f) {
+    if (game->player.alive) {
         update_player(game, input, dt);
     }
 
