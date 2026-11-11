@@ -109,13 +109,13 @@ void sf_galaxy_render(
 
     (void)SDL_SetRenderDrawColor(renderer, 210, 225, 245, 255);
     if (!game->player.alive) {
-        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "SHIP DESTROYED");
+        SDL_RenderDebugText(renderer, 9.0f, 31.0f, "SHIP DESTROYED");
     } else if (!game->player.has_ftl_drive) {
-        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "FTL DRIVE REQUIRED");
+        SDL_RenderDebugText(renderer, 9.0f, 31.0f, "FTL DRIVE REQUIRED");
     } else if (game->inventory[SF_ITEM_FUEL] < SF_FTL_FUEL_COST) {
         char warning[48];
         (void)SDL_snprintf(warning, sizeof(warning), "NEED %d FUEL TO JUMP", SF_FTL_FUEL_COST);
-        SDL_RenderDebugText(renderer, 9.0f, 139.0f, warning);
+        SDL_RenderDebugText(renderer, 9.0f, 31.0f, warning);
     } else if (selected_system >= 0 && selected_system < SF_MAX_SYSTEMS) {
         char detail[72];
         (void)SDL_snprintf(
@@ -123,9 +123,9 @@ void sf_galaxy_render(
             sf_game_system_name(selected_system),
             game->inventory[SF_ITEM_FUEL], SF_FTL_FUEL_COST
         );
-        SDL_RenderDebugText(renderer, 9.0f, 139.0f, detail);
+        SDL_RenderDebugText(renderer, 9.0f, 31.0f, detail);
     } else {
-        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "SELECT CONNECTED SYSTEM");
+        SDL_RenderDebugText(renderer, 9.0f, 31.0f, "SELECT CONNECTED SYSTEM");
     }
     SDL_RenderDebugText(renderer, 9.0f, 157.0f, "GREEN: CURRENT  BLUE: REACHABLE");
     SDL_RenderDebugText(renderer, 9.0f, 169.0f, "Tap a blue node, then JUMP. X: CLOSE");
