@@ -34,7 +34,7 @@ jobs:
         run: godot --headless --editor --path . --import --quit
 
       - name: Run scene smoke test
-        run: godot --headless --path . --script res://tests/godot_smoke_test.gd
+        run: godot --headless --path . res://tests/test_runner.tscn
 
       - name: Run gameplay regression tests
         run: godot --headless --path . --script res://tests/godot_gameplay_test.gd
