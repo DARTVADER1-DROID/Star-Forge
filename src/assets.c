@@ -10,6 +10,7 @@ static const char *const asset_paths[SF_ASSET_COUNT] = {
     "assets/ships/ship_player_runner.png",
     "assets/ships/ship_cargo_hauler.png",
     "assets/ships/ship_pirate_interceptor.png",
+    "assets/ships/ship_military_destroyer.png",
     "assets/stations/station_ring_hub.png",
     "assets/planets/planet_terran_64.png",
     "assets/planets/planet_gas_96.png",
