@@ -7,6 +7,8 @@ signal fire_changed(active: bool)
 signal action_requested(action: String, value: String)
 
 const JOYSTICK_RADIUS := 54.0
+const JOYSTICK_CENTER_X := 126.0
+const JOYSTICK_BOTTOM_MARGIN := 112.0
 const JOYSTICK_DEADZONE := 0.12
 
 var _active_touch := -1
@@ -29,6 +31,7 @@ var _station_access := false
 
 func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_IGNORE
+    z_index = 100
     _build_status()
     _build_controls()
     _build_inventory()
@@ -133,11 +136,12 @@ func _input(event: InputEvent) -> void:
 func _start_joystick(id: int, point: Vector2) -> void:
     if _active_touch != -1:
         return
+    var center := _joystick_center()
     var zone := Rect2(Vector2(0,size.y*0.34),Vector2(size.x*0.44,size.y*0.66))
     if not zone.has_point(point):
         return
     _active_touch = id
-    _joystick_origin = point
+    _joystick_origin = center
     _move_joystick(point)
 
 func _move_joystick(point: Vector2) -> void:
@@ -366,17 +370,20 @@ func _close_panels() -> void:
     if is_instance_valid(_recovery_panel): _recovery_panel.hide()
     _gameplay_blocked = false
 
+func _joystick_center() -> Vector2:
+    return Vector2(JOYSTICK_CENTER_X,size.y-JOYSTICK_BOTTOM_MARGIN)
+
 func _draw() -> void:
-    if _active_touch == -1:
-        return
     var base_texture := AssetLibrary.load_texture("ui_joystick_base.png")
     var knob_texture := AssetLibrary.load_texture("ui_joystick_knob.png")
+    var base_position := _joystick_center() if _active_touch == -1 else _joystick_origin
+    var joystick_vector := Vector2.ZERO if _active_touch == -1 else _joystick_vector
     if base_texture != null:
-        draw_texture_rect(base_texture,Rect2(_joystick_origin-Vector2(64,64),Vector2(128,128)),false)
+        draw_texture_rect(base_texture,Rect2(base_position-Vector2(64,64),Vector2(128,128)),false)
     else:
-        draw_circle(_joystick_origin,JOYSTICK_RADIUS,Color(0.18,0.38,0.56,0.22))
-        draw_arc(_joystick_origin,JOYSTICK_RADIUS,0.0,TAU,48,Color(0.48,0.74,0.94,0.78),3.0)
-    var knob_position := _joystick_origin+_joystick_vector*JOYSTICK_RADIUS
+        draw_circle(base_position,JOYSTICK_RADIUS,Color(0.18,0.38,0.56,0.22))
+        draw_arc(base_position,JOYSTICK_RADIUS,0.0,TAU,48,Color(0.48,0.74,0.94,0.78),3.0)
+    var knob_position := base_position+joystick_vector*JOYSTICK_RADIUS
     if knob_texture != null:
         draw_texture_rect(knob_texture,Rect2(knob_position-Vector2(24,24),Vector2(48,48)),false)
     else:
