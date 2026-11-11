@@ -15,15 +15,6 @@ void sf_render_world(
     bool draw_player
 );
 
-void sf_render_hover_info(
-    SDL_Renderer *renderer,
-    const SfGame *game,
-    float pointer_x,
-    float pointer_y,
-    int camera_x,
-    int camera_y
-);
-
 void sf_render_inventory_panel(
     SDL_Renderer *renderer,
     const SfGame *game
