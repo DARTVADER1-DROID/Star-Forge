@@ -52,6 +52,10 @@ if(NOT MSVC)
     target_link_libraries(star_forge_sim PUBLIC m)
 endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/assets")
+    file(COPY "${CMAKE_SOURCE_DIR}/assets" DESTINATION "${CMAKE_BINARY_DIR}")
+endif()
+
 if(STARFORGE_BUILD_GAME)
     if(STARFORGE_FETCH_SDL3)
         include(FetchContent)
