@@ -108,10 +108,16 @@ void sf_galaxy_render(
     }
 
     (void)SDL_SetRenderDrawColor(renderer, 210, 225, 245, 255);
-    if (selected_system >= 0 && selected_system < SF_MAX_SYSTEMS) {
+    if (!game->player.alive) {
+        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "SHIP DESTROYED");
+    } else if (!game->player.has_ftl_drive) {
+        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "FTL DRIVE REQUIRED");
+    } else if (game->inventory[SF_ITEM_FUEL] < 5) {
+        SDL_RenderDebugText(renderer, 9.0f, 139.0f, "NEED 5 FUEL TO JUMP");
+    } else if (selected_system >= 0 && selected_system < SF_MAX_SYSTEMS) {
         char detail[72];
         (void)SDL_snprintf(
-            detail, sizeof(detail), "%s  |  FUEL: %d / 5",
+            detail, sizeof(detail), "%s  |  FUEL: %d (5 REQUIRED)",
             sf_game_system_name(selected_system),
             game->inventory[SF_ITEM_FUEL]
         );
