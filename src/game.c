@@ -1,4 +1,5 @@
 #include "game.h"
+#include "galaxy.h"
 
 #include <math.h>
 #include <string.h>
@@ -368,6 +369,7 @@ bool sf_game_jump_to_system(SfGame *game, int destination_system)
         destination_system < 0 ||
         destination_system >= SF_MAX_SYSTEMS ||
         destination_system == game->current_system ||
+        !sf_galaxy_is_connected(game->current_system, destination_system) ||
         game->inventory[SF_ITEM_FUEL] < SF_FTL_FUEL_COST) {
         return false;
     }
