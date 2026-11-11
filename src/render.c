@@ -466,46 +466,6 @@ void sf_render_world(
     draw_hud(renderer, game);
 }
 
-void sf_render_hover_info(
-    SDL_Renderer *renderer,
-    const SfGame *game,
-    float mouse_x,
-    float mouse_y,
-    int camera_x,
-    int camera_y
-)
-{
-    int i;
-
-    for (i = 0; i < SF_MAX_DROPS; ++i) {
-        const SfCargoDrop *drop = &game->drops[i];
-        char text[96];
-
-        if (!drop->active) {
-            continue;
-        }
-
-        if (sf_distance_squared(
-                mouse_x + (float)camera_x,
-                mouse_y + (float)camera_y,
-                drop->x,
-                drop->y
-            ) < 18.0f * 18.0f) {
-            (void)snprintf(
-                text,
-                sizeof(text),
-                "%s x%d | LOOT button to collect",
-                sf_item_name(drop->item),
-                drop->quantity
-            );
-
-            set_draw_color(renderer, 255, 235, 150);
-            SDL_RenderDebugText(renderer, 5.0f, 43.0f, text);
-            return;
-        }
-    }
-}
-
 void sf_render_inventory_panel(
     SDL_Renderer *renderer,
     const SfGame *game
