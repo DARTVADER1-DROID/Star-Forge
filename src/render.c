@@ -270,14 +270,14 @@ static void draw_hud(SDL_Renderer *renderer, const SfGame *game)
         renderer,
         5.0f,
         153.0f,
-        "W/S thrust A/D turn SPACE fire E loot J jettison"
+        "Use on-screen controls"
     );
 
     SDL_RenderDebugText(
         renderer,
         5.0f,
         165.0f,
-        "1-5 item +/- qty T sell F3 salvage I cargo G FTL jump"
+        "CARGO button opens inventory"
     );
 }
 
