@@ -47,6 +47,7 @@ static void draw_ship(
 static void draw_asteroids(
     SDL_Renderer *renderer,
     const SfGame *game,
+    const SfAssets *assets,
     int camera_x,
     int camera_y
 )
@@ -81,34 +82,25 @@ static void draw_asteroids(
             continue;
         }
 
-        set_draw_color(renderer, 75, 85, 105);
-
-        for (y = -radius; y <= radius; ++y) {
-            const int half_width = (int)sqrt(
-                (double)(radius * radius - y * y)
-            );
-
-            SDL_RenderLine(
-                renderer,
-                (float)(screen_x - half_width),
-                (float)(screen_y + y),
-                (float)(screen_x + half_width),
-                (float)(screen_y + y)
-            );
+        {
+            SDL_Texture *texture = sf_assets_get(assets, SF_ASSET_ASTEROID);
+            SDL_FRect destination = {
+                (float)screen_x - (float)radius,
+                (float)screen_y - (float)radius,
+                (float)radius * 2.0f,
+                (float)radius * 2.0f
+            };
+            if (texture != NULL) {
+                (void)SDL_RenderTexture(renderer, texture, NULL, &destination);
+            }
         }
-
-        set_draw_color(renderer, 105, 115, 135);
-        SDL_RenderPoint(
-            renderer,
-            (float)(screen_x - 4),
-            (float)(screen_y - 3)
-        );
     }
 }
 
 static void draw_cargo_drops(
     SDL_Renderer *renderer,
     const SfGame *game,
+    const SfAssets *assets,
     int camera_x,
     int camera_y
 )
@@ -123,26 +115,22 @@ static void draw_cargo_drops(
             continue;
         }
 
-        switch (drop->item) {
-            case SF_ITEM_METAL:
-                set_draw_color(renderer, 160, 170, 180);
-                break;
-
-            case SF_ITEM_FUEL:
-                set_draw_color(renderer, 80, 190, 230);
-                break;
-
-            case SF_ITEM_FOOD:
-                set_draw_color(renderer, 110, 190, 90);
-                break;
-
-            case SF_ITEM_MEDICINE:
-                set_draw_color(renderer, 220, 220, 240);
-                break;
-
-            default:
-                set_draw_color(renderer, 245, 190, 65);
-                break;
+        {
+            static const SfAssetId salvage_ids[SF_ITEM_COUNT] = {
+                SF_ASSET_METAL, SF_ASSET_FUEL, SF_ASSET_FOOD,
+                SF_ASSET_MEDICINE, SF_ASSET_WEAPON
+            };
+            SDL_Texture *texture = sf_assets_get(assets, salvage_ids[drop->item]);
+            SDL_FRect sprite = {
+                drop->x - (float)camera_x - 5.0f,
+                drop->y - (float)camera_y - 5.0f,
+                10.0f,
+                10.0f
+            };
+            if (texture != NULL) {
+                (void)SDL_RenderTexture(renderer, texture, NULL, &sprite);
+                continue;
+            }
         }
 
         rectangle = (SDL_FRect) {
@@ -334,22 +322,24 @@ static void draw_system_bodies(
         const float x = planet_x[i] - (float)camera_x;
         const float y = planet_y[i] - (float)camera_y;
 
-        set_draw_color(
-            renderer,
-            (Uint8)(75 + i * 24),
-            (Uint8)(90 + i * 17),
-            (Uint8)(135 + i * 18)
-        );
-        draw_filled_circle(renderer, x, y, planet_radius[i]);
-
-        set_draw_color(renderer, 150, 165, 190);
-        SDL_RenderLine(
-            renderer,
-            x - (float)planet_radius[i] * 0.7f,
-            y - (float)planet_radius[i] * 0.25f,
-            x + (float)planet_radius[i] * 0.55f,
-            y - (float)planet_radius[i] * 0.25f
-        );
+        {
+            SDL_Texture *texture = sf_assets_get(
+                assets,
+                (i % 2) == 0 ? SF_ASSET_TERRAN : SF_ASSET_GAS
+            );
+            SDL_FRect destination = {
+                x - (float)planet_radius[i],
+                y - (float)planet_radius[i],
+                (float)planet_radius[i] * 2.0f,
+                (float)planet_radius[i] * 2.0f
+            };
+            if (texture != NULL) {
+                (void)SDL_RenderTexture(renderer, texture, NULL, &destination);
+            } else {
+                set_draw_color(renderer, 85, 100, 145);
+                draw_filled_circle(renderer, x, y, planet_radius[i]);
+            }
+        }
     }
 
     for (i = 0; i < moon_count && i < 7; ++i) {
@@ -361,8 +351,7 @@ static void draw_system_bodies(
         const float moon_x = center_x + cosf(angle) * orbit;
         const float moon_y = center_y + sinf(angle) * orbit;
 
-        set_draw_color(renderer, 155, 155, 165);
-        draw_filled_circle(renderer, moon_x, moon_y, 5 + (i % 3));
+        { SDL_Texture *texture=sf_assets_get(assets,SF_ASSET_MOON); SDL_FRect dst={moon_x-6.0f,moon_y-6.0f,12.0f,12.0f}; if(texture)(void)SDL_RenderTexture(renderer,texture,NULL,&dst); else {set_draw_color(renderer,155,155,165);draw_filled_circle(renderer,moon_x,moon_y,6);} }
     }
 }
 
@@ -405,11 +394,11 @@ void sf_render_world(
     }
 
     draw_system_bodies(renderer, game, camera_x, camera_y);
-    draw_asteroids(renderer, game, camera_x, camera_y);
+    draw_asteroids(renderer, game, assets, camera_x, camera_y);
 
     {SDL_Texture *t=sf_assets_get(assets,SF_ASSET_STATION);station_rectangle=(SDL_FRect){game->station_x-(float)camera_x-16.0f,game->station_y-(float)camera_y-16.0f,32.0f,32.0f};if(t)(void)SDL_RenderTexture(renderer,t,NULL,&station_rectangle);else{set_draw_color(renderer,55,110,150);SDL_RenderRect(renderer,&station_rectangle);}}
 
-    draw_cargo_drops(renderer, game, camera_x, camera_y);
+    draw_cargo_drops(renderer, game, assets, camera_x, camera_y);
     draw_projectiles(renderer, game, camera_x, camera_y);
     draw_npcs(renderer, game, assets, camera_x, camera_y);
 
