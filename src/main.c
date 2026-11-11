@@ -67,10 +67,14 @@ static void draw_ship(
 
 static void draw_asteroids(
     SDL_Renderer *renderer,
+    const SfGame *game,
     int camera_x,
     int camera_y
 )
 {
+    if (!sf_game_system_has_asteroids(game->current_system)) {
+        return;
+    }
     static const int asteroid_x[8] = {
         520, 680, 860, 1040, 1280, 1510, 1740, 1980
     };
@@ -307,6 +311,79 @@ static void draw_hud(SDL_Renderer *renderer, const SfGame *game)
     );
 }
 
+
+static void draw_filled_circle(
+    SDL_Renderer *renderer,
+    float center_x,
+    float center_y,
+    int radius
+)
+{
+    int y;
+
+    for (y = -radius; y <= radius; ++y) {
+        const float span = sqrtf((float)(radius * radius - y * y));
+
+        SDL_RenderLine(
+            renderer,
+            center_x - span,
+            center_y + (float)y,
+            center_x + span,
+            center_y + (float)y
+        );
+    }
+}
+
+static void draw_system_bodies(
+    SDL_Renderer *renderer,
+    const SfGame *game,
+    int camera_x,
+    int camera_y
+)
+{
+    static const float planet_x[4] = { 720.0f, 1420.0f, 1850.0f, 980.0f };
+    static const float planet_y[4] = { 620.0f, 1180.0f, 540.0f, 1760.0f };
+    static const int planet_radius[4] = { 34, 48, 27, 40 };
+    const int planet_count = sf_game_system_planet_count(game->current_system);
+    const int moon_count = sf_game_system_moon_count(game->current_system);
+    int i;
+
+    for (i = 0; i < planet_count && i < 4; ++i) {
+        const float x = planet_x[i] - (float)camera_x;
+        const float y = planet_y[i] - (float)camera_y;
+
+        set_draw_color(
+            renderer,
+            (Uint8)(75 + i * 24),
+            (Uint8)(90 + i * 17),
+            (Uint8)(135 + i * 18)
+        );
+        draw_filled_circle(renderer, x, y, planet_radius[i]);
+
+        set_draw_color(renderer, 150, 165, 190);
+        SDL_RenderLine(
+            renderer,
+            x - (float)planet_radius[i] * 0.7f,
+            y - (float)planet_radius[i] * 0.25f,
+            x + (float)planet_radius[i] * 0.55f,
+            y - (float)planet_radius[i] * 0.25f
+        );
+    }
+
+    for (i = 0; i < moon_count && i < 7; ++i) {
+        const int parent = i % (planet_count > 0 ? planet_count : 1);
+        const float angle = (float)i * 1.37f;
+        const float orbit = (float)planet_radius[parent] + 18.0f + (float)(i % 3) * 7.0f;
+        const float center_x = planet_x[parent] - (float)camera_x;
+        const float center_y = planet_y[parent] - (float)camera_y;
+        const float moon_x = center_x + cosf(angle) * orbit;
+        const float moon_y = center_y + sinf(angle) * orbit;
+
+        set_draw_color(renderer, 155, 155, 165);
+        draw_filled_circle(renderer, moon_x, moon_y, 5 + (i % 3));
+    }
+}
+
 static void draw_world(
     SDL_Renderer *renderer,
     const SfGame *game,
@@ -344,7 +421,8 @@ static void draw_world(
         }
     }
 
-    draw_asteroids(renderer, camera_x, camera_y);
+    draw_system_bodies(renderer, game, camera_x, camera_y);
+    draw_asteroids(renderer, game, camera_x, camera_y);
 
     set_draw_color(renderer, 55, 110, 150);
 
