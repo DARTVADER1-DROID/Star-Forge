@@ -1,60 +1,65 @@
 # Star Forge
 
-An original, offline-first, top-down 2D pixel-art space sandbox RPG.
+Star Forge is an original, offline-first, top-down 2D pixel-art space sandbox RPG.
 
-## Active development: Godot 4 + GDScript migration
+## Engine and language
 
-The active migration branch is `migration/godot-gdscript`. The project is moving to Godot 4 with typed GDScript to improve iteration speed, scene architecture, UI scaling and maintainability.
+- **Engine:** Godot 4.7.2 stable
+- **Language:** typed GDScript
+- **Renderer:** Compatibility (OpenGL ES)
+- **Primary platform:** Android, landscape orientation
+- **Input:** touch-only gameplay; no keyboard or mouse bindings
+- **Cloud builds:** GitHub Actions
 
-The previous SDL3/C17 implementation is retained temporarily as a reference while mechanics are ported and validated. It is not the active game runtime.
+This repository is Godot-only. Gameplay, tools, validation and Android packaging are implemented around the Godot project. No native C/C++ source or CMake build system is part of the repository.
 
-## Project goals
+## Open the project
 
-- Android is the primary platform; desktop builds are for development and testing.
-- Landscape-only, touch-first gameplay. No keyboard or mouse gameplay bindings.
-- Offline exploration, ship customization, combat, trading, missions, factions and progression.
-- Low-memory Android compatibility is an optimisation target that must be verified on physical devices.
-- Preserve readable, modular, data-driven code.
+Open this repository's root directory in Godot 4.7.2. The entry scene is `scenes/main.tscn`. The project uses a 960 × 540 logical canvas with canvas-item stretching and the Compatibility renderer.
 
-## Technology
+## Current playable systems
 
-| Area | Choice |
-|---|---|
-| Engine | Godot 4.7.2 stable |
-| Main language | Typed GDScript |
-| Native optimisation | Consider C/C++ only after profiling and feature completion |
-| Renderer | Compatibility / OpenGL |
-| Game type | 2D |
-| Android target | arm64-v8a debug APK |
-| Cloud Android builds | GitHub Actions |
-| Content definitions | JSON and Godot resources |
-| Version control | Git + GitHub |
+- Floating touch joystick with rate-limited ship turning and thrust.
+- Dedicated BOOST and FIRE buttons.
+- Hull, armour and energy; movement is free, weapons consume energy.
+- Energy regeneration, weapon cooldown and projectile combat.
+- NPC cargo hauler, pirate interceptor and patrol roles.
+- Asteroid, planet and moon-body collision foundations.
+- Physical cargo drops, collection, cargo capacity and station selling.
+- Four connected star systems with FTL drive and a 5-fuel jump cost.
+- Local save/load and per-system cargo-drop persistence.
+- Emergency recovery after ship destruction.
 
-## Cloud Android build
+The Godot migration is still being iterated. These are implemented foundations, not a claim that every planned RPG feature is complete.
 
-No desktop installation is required. GitHub Actions installs Godot, Android SDK and export templates, imports the project and exports the APK.
+## Cloud Android APK
+
+No desktop installation is required to produce a debug APK.
 
 1. Open the repository's Actions tab.
 2. Select **Build Star Forge Android APK**.
-3. Run the workflow on `migration/godot-gdscript`.
-4. Download the `star-forge-godot-android-debug` artifact after a successful run.
+3. Run it on branch `migration/godot-gdscript`, or push a commit to that branch.
+4. Download the `star-forge-godot-android-debug` artifact after the workflow succeeds.
 
-Pushes to the migration branch also trigger the build. Artifacts are retained for 14 days.
+The APK is arm64-v8a and debug-signed. It is for testing, not Play Store release.
 
-## Initial Godot vertical slice
+## Validation
 
-- Landscape project configuration and adaptive canvas-item scaling.
-- Touch-only floating joystick.
-- Dedicated BOOST and FIRE touch buttons.
-- Top-down ship steering and movement.
-- Hull, armour and energy status.
-- Weapons consume energy; ordinary movement does not.
-- Projectile scene separation.
+The CI workflow installs Godot headlessly, imports the project, parses the scenes/scripts and runs the Godot smoke test. The Android workflow separately exports and uploads the APK. Automated CI does not replace testing on a physical phone.
 
-The first slice uses placeholder vector-drawn visuals. Existing art is retained in the asset pack and will be integrated as the Godot asset pipeline is validated.
+## Project layout
 
-## Migration plan
+- `project.godot` — engine, renderer, display and autoload settings
+- `scenes/` — reusable gameplay scenes
+- `scripts/autoload/` — content database and persistent game state
+- `scripts/player/` — player ship simulation
+- `scripts/npc/` — NPC behavior
+- `scripts/combat/` — projectiles and combat
+- `scripts/world/` — systems, obstacles, planets and cargo drops
+- `scripts/ui/` — touch HUD and panels
+- `data/` — JSON content definitions
+- `assets/` — source asset pack and imported runtime art
+- `tests/` — headless project and gameplay smoke tests
+- `.github/workflows/` — Godot CI and Android export
 
-See [Godot migration notes](docs/godot-migration.md), [game design](docs/game-design.md), [gameplay mechanics](docs/gameplay-mechanics.md) and [performance requirements](docs/performance.md).
-
-The SDL code under `src/` remains reference material until equivalent Godot mechanics are implemented and tested. Do not remove it prematurely.
+See `docs/godot-migration.md`, `docs/architecture.md`, `docs/gameplay-mechanics.md` and `docs/performance.md`.
