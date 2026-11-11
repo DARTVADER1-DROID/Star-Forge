@@ -118,8 +118,9 @@ func _load_system(id: String) -> void:
     _restore_system_drops()
 
 func _restore_or_spawn_npcs(station: Vector2) -> void:
-    var saved: Array = GameState.system_states.get(_system_id,{}).get("npcs",[])
-    if saved.is_empty():
+    var system_state: Dictionary = GameState.system_states.get(_system_id,{})
+    var saved: Array = system_state.get("npcs",[])
+    if not bool(system_state.get("initialized",false)):
         var hauler := _spawn_npc("cargo_hauler","starter_freighter",station+Vector2(160,40),station)
         var pirate := _spawn_npc("pirate","starter_interceptor",station+Vector2(-160,-40),station)
         pirate.target = hauler
@@ -189,7 +190,7 @@ func _save_system_state() -> void:
         if node is CargoDrop:
             var crate := node as CargoDrop
             drops.append({"item_id":crate.item_id,"quantity":crate.quantity,"x":crate.position.x,"y":crate.position.y})
-    GameState.system_states[_system_id] = {"drops":drops,"npcs":npcs}
+    GameState.system_states[_system_id] = {"initialized":true,"drops":drops,"npcs":npcs}
 
 func _on_hud_action(action: String, value: String = "") -> void:
     match action:
