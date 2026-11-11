@@ -155,7 +155,7 @@ static void update_touch_event(
                 galaxy_selected_system = -1;
             } else if (x >= 260.0f && y >= 140.0f) {
                 if (galaxy_selected_system >= 0 &&
-                    sf_galaxy_is_connected(game->current_system, galaxy_selected_system) &&
+                    sf_game_systems_connected(game->current_system, galaxy_selected_system) &&
                     game->player.has_ftl_drive && game->inventory[SF_ITEM_FUEL] >= 5) {
                     ftl_destination = galaxy_selected_system;
                     ftl_transition_timer = 1.45f;
@@ -164,7 +164,7 @@ static void update_touch_event(
                 }
             } else {
                 const int node = sf_galaxy_hit_test(x, y);
-                if (node >= 0 && sf_galaxy_is_connected(game->current_system, node)) {
+                if (node >= 0 && sf_game_systems_connected(game->current_system, node)) {
                     galaxy_selected_system = node;
                 }
             }
@@ -453,7 +453,7 @@ int main(int argc, char **argv)
                         galaxy_selected_system = -1;
                     } else if (pointer_x >= 260.0f && pointer_y >= 140.0f) {
                         if (galaxy_selected_system >= 0 &&
-                            sf_galaxy_is_connected(game.current_system, galaxy_selected_system) &&
+                            sf_game_systems_connected(game.current_system, galaxy_selected_system) &&
                             game.player.has_ftl_drive && game.inventory[SF_ITEM_FUEL] >= 5) {
                             ftl_destination = galaxy_selected_system;
                             ftl_transition_timer = 1.45f;
@@ -462,7 +462,7 @@ int main(int argc, char **argv)
                         }
                     } else {
                         const int node = sf_galaxy_hit_test(pointer_x, pointer_y);
-                        if (node >= 0 && sf_galaxy_is_connected(game.current_system, node)) {
+                        if (node >= 0 && sf_game_systems_connected(game.current_system, node)) {
                             galaxy_selected_system = node;
                         }
                     }
