@@ -1,0 +1,8 @@
+{
+ "schema_version": 1,
+ "roles": [
+  {"id":"cargo_hauler","display_name":"Cargo hauler","ship_design":"starter_freighter","behavior":["follow_trade_route","avoid_hostiles","drop_manifest_on_destruction"],"manifest":{"metal":[8,24],"fuel":[20,80],"food":[0,30]}},
+  {"id":"pirate","display_name":"Pirate","ship_design":"starter_interceptor","behavior":["seek_cargo_targets","attack","salvage_nearby_drops"],"manifest":{"fuel":[0,12]}},
+  {"id":"patrol","display_name":"Patrol","ship_design":"starter_patrol","behavior":["protect_trade_lane","intercept_hostiles","assist_friendly_ships"],"manifest":{}}
+ ]
+}
