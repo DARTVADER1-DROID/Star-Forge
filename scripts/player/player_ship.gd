@@ -24,6 +24,7 @@ var _boosting := false
 var _firing := false
 var _fire_timer := 0.0
 var _facing := Vector2.UP
+var _sprite: Sprite2D
 
 func set_steering(direction: Vector2) -> void:
     _steering = direction.limit_length(1.0)
@@ -33,6 +34,15 @@ func set_boosting(active: bool) -> void:
 
 func set_firing(active: bool) -> void:
     _firing = active
+
+func _ready() -> void:
+    var texture := AssetLibrary.load_texture("ship_player_runner.png")
+    if texture != null:
+        _sprite = Sprite2D.new()
+        _sprite.texture = texture
+        _sprite.scale = Vector2(0.55,0.55)
+        _sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        add_child(_sprite)
 
 func _physics_process(delta: float) -> void:
     if hull <= 0.0:
@@ -78,6 +88,8 @@ func apply_damage(amount: float) -> void:
         GameState.player_destroyed.emit()
 
 func _draw() -> void:
+    if is_instance_valid(_sprite):
+        return
     var points := PackedVector2Array([Vector2(0,-19),Vector2(13,15),Vector2(0,9),Vector2(-13,15)])
     draw_colored_polygon(points,Color(0.42,0.82,1.0))
     draw_polyline(PackedVector2Array([points[0],points[1],points[2],points[3],points[0]]),Color(0.82,0.94,1.0),2.0)
