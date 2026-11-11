@@ -430,13 +430,35 @@ void sf_game_init(SfGame *game)
 static void update_player(SfGame *game, const SfInput *input, float dt)
 {
     SfShip *ship = &game->player;
+    const float steering_strength = clampf(
+        input->steering_strength,
+        0.0f,
+        1.0f
+    );
 
-    if (input->turn_left) {
-        ship->angle -= 2.8f * dt;
-    }
+    if (steering_strength > 0.05f) {
+        const float desired_angle = atan2f(
+            input->steering_y,
+            input->steering_x
+        );
+        float angle_delta = desired_angle - ship->angle;
 
-    if (input->turn_right) {
-        ship->angle += 2.8f * dt;
+        while (angle_delta > SF_PI) {
+            angle_delta -= 2.0f * SF_PI;
+        }
+        while (angle_delta < -SF_PI) {
+            angle_delta += 2.0f * SF_PI;
+        }
+
+        ship->angle += clampf(angle_delta, -4.2f * dt, 4.2f * dt);
+    } else {
+        if (input->turn_left) {
+            ship->angle -= 2.8f * dt;
+        }
+
+        if (input->turn_right) {
+            ship->angle += 2.8f * dt;
+        }
     }
 
     if (ship->angle > SF_PI) {
@@ -452,7 +474,12 @@ static void update_player(SfGame *game, const SfInput *input, float dt)
         const float acceleration = boosting ? 340.0f : 190.0f;
         const float maximum_speed = boosting ? 270.0f : 190.0f;
 
-        if (input->thrust) {
+        if (steering_strength > 0.05f) {
+            ship->vx += cosf(ship->angle) * acceleration *
+                steering_strength * dt;
+            ship->vy += sinf(ship->angle) * acceleration *
+                steering_strength * dt;
+        } else if (input->thrust) {
             ship->vx += cosf(ship->angle) * acceleration * dt;
             ship->vy += sinf(ship->angle) * acceleration * dt;
         }
