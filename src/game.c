@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <stddef.h>
 
 #define SF_PI 3.14159265358979323846f
 #define SF_WORLD_SIZE 2400.0f
@@ -226,7 +227,13 @@ static void spawn_projectile(
 
 void sf_game_fire_player(SfGame *game)
 {
-    SfShip *ship = &game->player;
+    SfShip *ship;
+
+    if (game == NULL) {
+        return;
+    }
+
+    ship = &game->player;
 
     if (ship->fire_cooldown > 0.0f ||
         ship->energy < ship->weapon_energy_cost) {
@@ -272,7 +279,8 @@ static void apply_ship_damage(SfShip *ship, float damage)
 
 bool sf_game_jump_to_system(SfGame *game, int destination_system)
 {
-    if (!game->player.alive ||
+    if (game == NULL ||
+        !game->player.alive ||
         !game->player.has_ftl_drive ||
         destination_system < 0 ||
         destination_system >= SF_MAX_SYSTEMS ||
@@ -303,6 +311,10 @@ void sf_game_init(SfGame *game)
 {
     SfShip *cargo_ship;
     SfShip *pirate_ship;
+
+    if (game == NULL) {
+        return;
+    }
 
     memset(game, 0, sizeof(*game));
 
@@ -633,12 +645,18 @@ static void update_cargo_drops(SfGame *game, float dt)
 
 void sf_game_update(SfGame *game, const SfInput *input, float dt)
 {
-    if (dt <= 0.0f) {
+    static const SfInput idle_input = { 0 };
+
+    if (game == NULL || !isfinite(dt) || dt <= 0.0f) {
         return;
     }
 
     if (dt > 0.05f) {
         dt = 0.05f;
+    }
+
+    if (input == NULL) {
+        input = &idle_input;
     }
 
     if (game->player.alive) {
@@ -656,20 +674,27 @@ bool sf_game_collect_nearest(SfGame *game)
     float best_distance_squared = 38.0f * 38.0f;
     int i;
 
+    if (game == NULL || !game->player.alive) {
+        return false;
+    }
+
     for (i = 0; i < SF_MAX_DROPS; ++i) {
         SfCargoDrop *drop = &game->drops[i];
-        const int added_volume = drop->quantity *
-            (drop->item == SF_ITEM_WEAPON ? 2 : 1);
-        const float distance_squared = sf_distance_squared(
+        int added_volume;
+        float distance_squared;
+
+        if (!drop->active || drop->item < 0 || drop->item >= SF_ITEM_COUNT ||
+            drop->quantity <= 0) {
+            continue;
+        }
+
+        added_volume = drop->quantity * (drop->item == SF_ITEM_WEAPON ? 2 : 1);
+        distance_squared = sf_distance_squared(
             game->player.x,
             game->player.y,
             drop->x,
             drop->y
         );
-
-        if (!drop->active) {
-            continue;
-        }
 
         if (cargo_used(game->inventory) + added_volume > 100) {
             continue;
@@ -697,7 +722,17 @@ bool sf_game_collect_nearest(SfGame *game)
 
 bool sf_game_jettison_selected(SfGame *game)
 {
-    const int item = game->selected_item;
+    int item;
+    int quantity;
+
+    if (game == NULL || !game->player.alive) {
+        return false;
+    }
+
+    item = game->selected_item;
+    quantity = game->selected_quantity;
+
+    /* = game->selected_item;
     const int quantity = game->selected_quantity;
 
     if (item < 0 || item >= SF_ITEM_COUNT || item == SF_ITEM_WEAPON) {
@@ -723,8 +758,14 @@ bool sf_game_jettison_selected(SfGame *game)
 
 bool sf_game_sell_selected(SfGame *game)
 {
-    const int item = game->selected_item;
+    int item;
     int quantity;
+
+    if (game == NULL || !game->player.alive) {
+        return false;
+    }
+
+    item = game->selected_item;
 
     if (item < 0 || item >= SF_ITEM_COUNT) {
         return false;
