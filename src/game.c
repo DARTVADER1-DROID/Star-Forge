@@ -308,6 +308,7 @@ static void initialize_system_npcs(SfGame *game)
 {
     SfShip *cargo_ship = &game->npcs[0];
     SfShip *pirate_ship = &game->npcs[1];
+    SfShip *patrol_ship = &game->npcs[2];
 
     memset(game->npcs, 0, sizeof(game->npcs));
 
@@ -342,6 +343,21 @@ static void initialize_system_npcs(SfGame *game)
     pirate_ship->weapon_energy_cost = 10.0f;
     pirate_ship->has_ftl_drive = true;
     pirate_ship->cargo[SF_ITEM_FUEL] = 8;
+
+    patrol_ship->alive = true;
+    patrol_ship->role = SF_ROLE_PATROL;
+    patrol_ship->x = 470.0f;
+    patrol_ship->y = 500.0f;
+    patrol_ship->angle = 0.0f;
+    patrol_ship->armor = 30.0f;
+    patrol_ship->max_armor = 30.0f;
+    patrol_ship->hull = 80.0f;
+    patrol_ship->max_hull = 80.0f;
+    patrol_ship->energy = 80.0f;
+    patrol_ship->max_energy = 80.0f;
+    patrol_ship->weapon_energy_cost = 10.0f;
+    patrol_ship->has_ftl_drive = true;
+    patrol_ship->cargo[SF_ITEM_FUEL] = 4;
 }
 
 bool sf_game_jump_to_system(SfGame *game, int destination_system)
@@ -529,6 +545,25 @@ static void update_pirate(SfGame *game, SfShip *ship, float dt)
     }
 }
 
+static void update_patrol(SfGame *game, SfShip *ship, float dt)
+{
+    const float orbit_radius = 180.0f;
+    const float orbit_speed = 0.35f;
+    const float target_x = game->station_x + cosf(ship->angle) * orbit_radius;
+    const float target_y = game->station_y + sinf(ship->angle) * orbit_radius;
+    const float dx = target_x - ship->x;
+    const float dy = target_y - ship->y;
+    const float desired_angle = atan2f(dy, dx);
+    const float angle_delta = wrap_angle(desired_angle - ship->angle);
+
+    ship->angle += clampf(angle_delta, -1.8f * dt, 1.8f * dt);
+    ship->vx += cosf(ship->angle) * 55.0f * dt;
+    ship->vy += sinf(ship->angle) * 55.0f * dt;
+
+    /* The patrol follows a stable orbit around its system's station. */
+    ship->angle += orbit_speed * dt;
+}
+
 static void update_cargo_ship(SfGame *game, SfShip *ship, float dt)
 {
     const float dx = game->station_x - ship->x;
@@ -554,8 +589,10 @@ static void update_npcs(SfGame *game, float dt)
 
         if (ship->role == SF_ROLE_PIRATE) {
             update_pirate(game, ship, dt);
-        } else {
+        } else if (ship->role == SF_ROLE_CARGO) {
             update_cargo_ship(game, ship, dt);
+        } else {
+            update_patrol(game, ship, dt);
         }
 
         ship->vx = clampf(ship->vx * powf(0.992f, dt * 60.0f), -105.0f, 105.0f);
