@@ -180,6 +180,7 @@ The initial commodity categories are:
 3. Equipment
 4. Metal
 5. Luxury goods
+6. Fuel
 
 Each planet has:
 - A population value.
