@@ -1,6 +1,6 @@
 extends Node
 
-const DATA_FILES := {
+const DATA_FILES: Dictionary = {
     "items": "res://data/items.json",
     "ships": "res://data/ship_designs.json",
     "roles": "res://data/npc_roles.json",
@@ -18,25 +18,25 @@ func _ready() -> void:
     systems = _load_index("systems")
 
 func _load_index(key: String) -> Dictionary:
-    var file := FileAccess.open(DATA_FILES[key], FileAccess.READ)
+    var file := FileAccess.open(DATA_FILES[key],FileAccess.READ)
     if file == null:
-        push_error("Missing data file: " + DATA_FILES[key])
+        push_error("Missing data file: " + str(DATA_FILES[key]))
         return {}
     var parsed: Variant = JSON.parse_string(file.get_as_text())
-    var collection_key := {"items":"items", "ships":"ship_designs", "roles":"roles", "systems":"systems"}[key]
-    if not parsed is Dictionary or not parsed.get(collection_key) is Array:
-        push_error("Invalid data schema: " + DATA_FILES[key])
+    var collection_key: String = {"items":"items","ships":"ship_designs","roles":"roles","systems":"systems"}[key]
+    if not parsed is Dictionary or not (parsed.get(collection_key) is Array):
+        push_error("Invalid data schema: " + str(DATA_FILES[key]))
         return {}
     var index: Dictionary = {}
     for entry: Variant in parsed[collection_key]:
-        if not entry is Dictionary or not entry.has("id") or index.has(str(entry.id)):
-            push_error("Invalid or duplicate entry in " + DATA_FILES[key])
+        if not entry is Dictionary or not entry.has("id") or index.has(str(entry.get("id",""))):
+            push_error("Invalid or duplicate entry in " + str(DATA_FILES[key]))
             continue
-        index[str(entry.id)] = entry
+        index[str(entry.get("id"))] = entry
     return index
 
 func get_system(id: String) -> Dictionary:
-    return systems.get(id, {})
+    return systems.get(id,{})
 
 func get_item(id: String) -> Dictionary:
-    return items.get(id, {})
+    return items.get(id,{})
