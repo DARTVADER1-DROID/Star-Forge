@@ -1,8 +1,6 @@
 extends CharacterBody2D
 class_name PlayerShip
 
-const PROJECTILE_SCENE: PackedScene = preload("res://scenes/projectile.tscn")
-
 @export var normal_acceleration := 190.0
 @export var boost_acceleration := 340.0
 @export var normal_max_speed := 190.0
@@ -18,7 +16,7 @@ var armour := 60.0
 var max_armour := 60.0
 var energy := 100.0
 var max_energy := 100.0
-var projectile_container: Node2D
+var projectile_pool: ProjectilePool
 var _steering := Vector2.ZERO
 var _boosting := false
 var _firing := false
@@ -69,14 +67,12 @@ func _physics_process(delta: float) -> void:
     queue_redraw()
 
 func _fire_weapon() -> void:
-    if not is_instance_valid(projectile_container):
+    if not is_instance_valid(projectile_pool):
+        return
+    if not projectile_pool.spawn(global_position+_facing*20.0,_facing,true,24.0,360.0):
         return
     energy -= weapon_energy_cost
     _fire_timer = weapon_cooldown
-    var shot := PROJECTILE_SCENE.instantiate() as SpaceProjectile
-    projectile_container.add_child(shot)
-    shot.global_position = global_position+_facing*20.0
-    shot.direction = _facing
 
 func apply_damage(amount: float) -> void:
     if amount <= 0.0 or hull <= 0.0:
