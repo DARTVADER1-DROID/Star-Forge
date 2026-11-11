@@ -1,0 +1,10 @@
+{
+ "schema_version": 1,
+ "items": [
+  {"id":"metal","name":"Metal","category":"commodity","base_price":8,"cargo_units_per_item":1},
+  {"id":"fuel","name":"Fuel","category":"commodity","base_price":14,"cargo_units_per_item":1},
+  {"id":"food","name":"Food","category":"commodity","base_price":5,"cargo_units_per_item":1},
+  {"id":"medicine","name":"Medicine","category":"commodity","base_price":22,"cargo_units_per_item":1},
+  {"id":"weapon_salvage","name":"Weapon salvage","category":"equipment","base_price":75,"cargo_units_per_item":2}
+ ]
+}
