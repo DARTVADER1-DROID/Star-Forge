@@ -25,6 +25,7 @@ var _selected_quantity := 1
 var _quantity_label: Label
 var _npc_loot_button: Button
 var _gameplay_blocked := false
+var _station_access := false
 
 func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -38,8 +39,9 @@ func _ready() -> void:
 
 func _build_status() -> void:
     _status_label = Label.new()
-    _status_label.position = Vector2(18,12)
-    _status_label.add_theme_font_size_override("font_size",16)
+    _status_label.position = Vector2(18,10)
+    _status_label.size = Vector2(700,48)
+    _status_label.add_theme_font_size_override("font_size",13)
     _status_label.add_theme_color_override("font_color",Color(0.78,0.88,1.0))
     _status_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_status_label)
@@ -139,8 +141,13 @@ func _stop_joystick() -> void:
     steering_changed.emit(Vector2.ZERO)
     queue_redraw()
 
-func update_ship_status(hull: float,hull_max: float,armour: float,armour_max: float,energy: float,energy_max: float,credits: int,_inventory: Dictionary) -> void:
-    _status_label.text = "HULL %03d/%03d   ARMOUR %03d/%03d   ENERGY %03d/%03d   CR %d" % [roundi(hull),roundi(hull_max),roundi(armour),roundi(armour_max),roundi(energy),roundi(energy_max),credits]
+func update_ship_status(hull: float,hull_max: float,armour: float,armour_max: float,energy: float,energy_max: float,credits: int,_inventory: Dictionary,fuel: int,system_name: String,station_distance: float) -> void:
+    var can_sell := station_distance <= 90.0
+    if can_sell != _station_access:
+        _station_access = can_sell
+        refresh_inventory()
+    var station_hint := "DOCKED RANGE" if can_sell else "STATION %.0f m" % station_distance
+    _status_label.text = "HULL %03d/%03d   ARMOUR %03d/%03d   ENERGY %03d/%03d\n%s   FUEL %02d   CR %d   %s" % [roundi(hull),roundi(hull_max),roundi(armour),roundi(armour_max),roundi(energy),roundi(energy_max),system_name,fuel,credits,station_hint]
 
 func _make_panel(title: String, dimensions: Vector2) -> Dictionary:
     var panel := PanelContainer.new()
@@ -234,8 +241,8 @@ func refresh_inventory() -> void:
         )
         row.add_child(select)
         var sell := Button.new()
-        sell.text = "SELL"
-        sell.disabled = int(GameState.inventory[id]) <= 0
+        sell.text = "SELL" if _station_access else "DOCK"
+        sell.disabled = int(GameState.inventory[id]) <= 0 or not _station_access
         sell.pressed.connect(func(): action_requested.emit("SELL",id))
         row.add_child(sell)
         _inventory_rows.add_child(row)
@@ -264,7 +271,7 @@ func _build_galaxy() -> void:
     _galaxy_panel = built.panel
     var content: VBoxContainer = built.content
     var hint := Label.new()
-    hint.text = "Select a connected system. Each jump costs 5 Fuel."
+    hint.text = "Select a connected system. Each jump costs 5 Fuel. Available: %d" % int(GameState.inventory.get("fuel",0))
     content.add_child(hint)
     _galaxy_buttons = VBoxContainer.new()
     content.add_child(_galaxy_buttons)
