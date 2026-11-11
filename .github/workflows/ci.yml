@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install SDL3 Linux build dependencies
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxinerama-dev libxkbcommon-dev libwayland-dev libwayland-egl-backend-dev libdecor-0-dev libasound2-dev libpulse-dev libudev-dev libdbus-1-dev libibus-1.0-dev libdrm-dev libgbm-dev libegl1-mesa-dev libgl1-mesa-dev
-      - name: Configure SDL3 desktop game
+      - name: Extract asset pack\n        run: |\n          mkdir -p assets data\n          unzip -q StarForge_Asset_Pack.zip -d "$RUNNER_TEMP/starforge-assets"\n          cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/assets/." assets/\n          cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/data/." data/\n      - name: Configure SDL3 desktop game
         run: cmake -S . -B build-desktop -DSTARFORGE_BUILD_GAME=ON -DSTARFORGE_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
       - name: Build desktop game and tests
         run: cmake --build build-desktop --parallel 2

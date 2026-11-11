@@ -4,10 +4,12 @@
 #include <SDL3/SDL.h>
 
 #include "game.h"
+#include "assets.h"
 
 void sf_render_world(
     SDL_Renderer *renderer,
     const SfGame *game,
+    const SfAssets *assets,
     int camera_x,
     int camera_y
 );

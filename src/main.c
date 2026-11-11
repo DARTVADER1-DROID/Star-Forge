@@ -2,6 +2,7 @@
 
 #include "game.h"
 #include "render.h"
+#include "assets.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -168,6 +169,7 @@ int main(int argc, char **argv)
     SDL_Window *window;
     SDL_Renderer *renderer;
     SfGame game;
+    SfAssets assets;
     bool running = true;
     bool inventory_open = false;
     SfTouchState touch = { 0 };
@@ -228,6 +230,7 @@ int main(int argc, char **argv)
 
     sf_game_init(&game);
     SDL_Log("Star-Forge: game simulation initialized");
+    (void)sf_assets_init(&assets, renderer);
 
     performance_frequency = SDL_GetPerformanceFrequency();
     previous_counter = SDL_GetPerformanceCounter();
@@ -354,7 +357,7 @@ int main(int argc, char **argv)
             mouse_y = mouse_y * (float)SF_LOGICAL_HEIGHT / (float)window_height;
         }
 
-        sf_render_world(renderer, &game, camera_x, camera_y);
+        sf_render_world(renderer, &game, &assets, camera_x, camera_y);
 
         sf_render_hover_info(
             renderer,
@@ -376,6 +379,7 @@ int main(int argc, char **argv)
     }
 
     SDL_Log("Star-Forge: shutting down normally");
+    sf_assets_destroy(&assets);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

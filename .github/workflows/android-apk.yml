@@ -55,10 +55,12 @@ jobs:
             "$GITHUB_WORKSPACE/src/game.h" \
             "$GITHUB_WORKSPACE/src/render.c" \
             "$GITHUB_WORKSPACE/src/render.h" \
+            "$GITHUB_WORKSPACE/src/assets.c" \
+            "$GITHUB_WORKSPACE/src/assets.h" \
             --variant copy \
             --output "$RUNNER_TEMP/starforge-android"
 
-      - name: Build debug APK
+      - name: Extract asset pack\n        run: |\n          mkdir -p assets data\n          unzip -q StarForge_Asset_Pack.zip -d "$RUNNER_TEMP/starforge-assets"\n          cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/assets/." assets/\n          cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/data/." data/\n\n      - name: Package runtime assets\n        run: |\n          mkdir -p "$RUNNER_TEMP/starforge-android/com.starforge.game/app/src/main/assets"\n          cp -a assets data "$RUNNER_TEMP/starforge-android/com.starforge.game/app/src/main/assets/"\n\n      - name: Build debug APK
         working-directory: ${{ runner.temp }}/starforge-android/com.starforge.game
         run: |
           chmod +x ./gradlew

@@ -2,6 +2,7 @@
 
 #include "game.h"
 #include "render.h"
+#include "assets.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -25,6 +26,8 @@ static void set_draw_color(
 
 static void draw_ship(
     SDL_Renderer *renderer,
+    const SfAssets *assets,
+    SfAssetId sprite,
     float x,
     float y,
     float angle,
@@ -35,35 +38,10 @@ static void draw_ship(
     Uint8 blue
 )
 {
-    static const float local_x[3] = { 15.0f, -10.0f, -7.0f };
-    static const float local_y[3] = { 0.0f, -9.0f, 0.0f };
-    float screen_x[3];
-    float screen_y[3];
-    const float cosine = cosf(angle);
-    const float sine = sinf(angle);
-    int i;
-
-    for (i = 0; i < 3; ++i) {
-        const float rotated_x = local_x[i] * cosine - local_y[i] * sine;
-        const float rotated_y = local_x[i] * sine + local_y[i] * cosine;
-
-        screen_x[i] = x + rotated_x - (float)camera_x;
-        screen_y[i] = y + rotated_y - (float)camera_y;
-    }
-
-    set_draw_color(renderer, red, green, blue);
-
-    for (i = 0; i < 3; ++i) {
-        const int next = (i + 1) % 3;
-
-        SDL_RenderLine(
-            renderer,
-            screen_x[i],
-            screen_y[i],
-            screen_x[next],
-            screen_y[next]
-        );
-    }
+    SDL_Texture *texture=sf_assets_get(assets,sprite);
+    SDL_FRect dst={x-(float)camera_x-12.0f,y-(float)camera_y-12.0f,24.0f,24.0f};
+    if(texture){(void)SDL_RenderTextureRotated(renderer,texture,NULL,&dst,(double)angle*57.29577951308232+90.0,NULL,SDL_FLIP_NONE);}
+    else {static const float px[3]={15,-10,-7},py[3]={0,-9,0};float sx[3],sy[3],c=cosf(angle),sn=sinf(angle);for(int i=0;i<3;i++){sx[i]=x+px[i]*c-py[i]*sn-(float)camera_x;sy[i]=y+px[i]*sn+py[i]*c-(float)camera_y;}set_draw_color(renderer,red,green,blue);for(int i=0;i<3;i++){int j=(i+1)%3;SDL_RenderLine(renderer,sx[i],sy[i],sx[j],sy[j]);}}
 }
 
 static void draw_asteroids(
@@ -211,6 +189,7 @@ static void draw_projectiles(
 static void draw_npcs(
     SDL_Renderer *renderer,
     const SfGame *game,
+    const SfAssets *assets,
     int camera_x,
     int camera_y
 )
@@ -232,6 +211,8 @@ static void draw_npcs(
 
         draw_ship(
             renderer,
+            assets,
+            ship->role == SF_ROLE_PIRATE ? SF_ASSET_PIRATE : SF_ASSET_CARGO,
             ship->x,
             ship->y,
             ship->angle,
@@ -388,6 +369,7 @@ static void draw_system_bodies(
 void sf_render_world(
     SDL_Renderer *renderer,
     const SfGame *game,
+    const SfAssets *assets,
     int camera_x,
     int camera_y
 )
@@ -425,23 +407,16 @@ void sf_render_world(
     draw_system_bodies(renderer, game, camera_x, camera_y);
     draw_asteroids(renderer, game, camera_x, camera_y);
 
-    set_draw_color(renderer, 55, 110, 150);
-
-    station_rectangle = (SDL_FRect) {
-        game->station_x - (float)camera_x - 9.0f,
-        game->station_y - (float)camera_y - 9.0f,
-        18.0f,
-        18.0f
-    };
-
-    SDL_RenderRect(renderer, &station_rectangle);
+    {SDL_Texture *t=sf_assets_get(assets,SF_ASSET_STATION);station_rectangle=(SDL_FRect){game->station_x-(float)camera_x-16.0f,game->station_y-(float)camera_y-16.0f,32.0f,32.0f};if(t)(void)SDL_RenderTexture(renderer,t,NULL,&station_rectangle);else{set_draw_color(renderer,55,110,150);SDL_RenderRect(renderer,&station_rectangle);}}
 
     draw_cargo_drops(renderer, game, camera_x, camera_y);
     draw_projectiles(renderer, game, camera_x, camera_y);
-    draw_npcs(renderer, game, camera_x, camera_y);
+    draw_npcs(renderer, game, assets, camera_x, camera_y);
 
     draw_ship(
         renderer,
+        assets,
+        SF_ASSET_PLAYER,
         game->player.x,
         game->player.y,
         game->player.angle,
