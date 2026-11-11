@@ -14,7 +14,7 @@ func _ready() -> void:
     add_child(collision)
 
     var texture_name := "planet_moon_32.png"
-    if body_radius > 55.0:
+    if body_radius >= 50.0:
         texture_name = "planet_gas_96.png"
     elif body_radius > 18.0:
         texture_name = "planet_terran_64.png"
