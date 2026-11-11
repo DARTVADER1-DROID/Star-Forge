@@ -307,6 +307,7 @@ static void draw_filled_circle(
 static void draw_system_bodies(
     SDL_Renderer *renderer,
     const SfGame *game,
+    const SfAssets *assets,
     int camera_x,
     int camera_y
 )
@@ -393,7 +394,7 @@ void sf_render_world(
         }
     }
 
-    draw_system_bodies(renderer, game, camera_x, camera_y);
+    draw_system_bodies(renderer, game, assets, camera_x, camera_y);
     draw_asteroids(renderer, game, assets, camera_x, camera_y);
 
     {SDL_Texture *t=sf_assets_get(assets,SF_ASSET_STATION);station_rectangle=(SDL_FRect){game->station_x-(float)camera_x-16.0f,game->station_y-(float)camera_y-16.0f,32.0f,32.0f};if(t)(void)SDL_RenderTexture(renderer,t,NULL,&station_rectangle);else{set_draw_color(renderer,55,110,150);SDL_RenderRect(renderer,&station_rectangle);}}
