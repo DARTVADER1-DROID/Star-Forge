@@ -165,16 +165,14 @@ func _test_main_scene(failures: Array[String]) -> void:
     var camera := game.get_node("PlayerShip/Camera2D") as Camera2D
     if camera == null or not camera.enabled:
         failures.append("Player ship must own an enabled follow camera.")
-    if player.collision_mask != 0:
-        failures.append("Player ship must not physically collide with world bodies.")
+    if player.collision_layer != 2 or player.collision_mask != 0:
+        failures.append("Player ship must use the non-blocking player collision layer.")
     if hud != null:
-        var land_button := hud.get_node_or_null("LANDB utton")
-        if land_button != null:
-            failures.append("Unexpected malformed LAND control node.")
-    if hud != null:
-        var land_button := hud.get_node_or_null("LANDB utton")
-        if land_button != null:
-            failures.append("Unexpected malformed LAND control node.")
+        var land_button := hud.get_node_or_null("LANDButton") as Button
+        if land_button == null or land_button.visible:
+            failures.append("Contextual LAND button must exist and start hidden.")
+        if hud.get_node_or_null("PlanetServicesPanel") == null:
+            failures.append("Planetary service panel must be registered in the HUD.")
     if pool.get_child_count() != 64:
         failures.append("Projectile pool should preallocate 64 slots.")
     player.energy = 100.0

@@ -421,6 +421,7 @@ func set_nearby_planet(planet_id: String, planet_name: String) -> void:
 func _build_planet_services() -> void:
     var built := _make_panel("PLANETARY SERVICES",Vector2(470,340))
     _planet_services_panel = built.panel
+    _planet_services_panel.name = "PlanetServicesPanel"
     var content: VBoxContainer = built.content
     _planet_title_label = Label.new()
     _planet_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -433,7 +434,7 @@ func _build_planet_services() -> void:
     services.columns = 2
     content.add_child(services)
     var refuel := Button.new()
-    refuel.text = "BUY 10 FUEL · 140 CR"
+    refuel.text = "BUY 10 FUEL · %d CR" % (10 * int(ContentDatabase.get_item("fuel").get("base_price",14)))
     refuel.custom_minimum_size = Vector2(190,58)
     refuel.pressed.connect(func(): action_requested.emit("REFUEL",_nearby_planet_id))
     services.add_child(refuel)

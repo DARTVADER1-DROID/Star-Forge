@@ -35,6 +35,7 @@ func activate(
     global_position = spawn_position
     direction = travel_direction.normalized()
     from_player = fired_by_player
+    collision_mask = 1 if from_player else 2
     damage = projectile_damage
     speed = projectile_speed
     _age = 0.0

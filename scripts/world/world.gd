@@ -141,7 +141,10 @@ func _load_system(id: String) -> void:
         var orbit_angle := float(moon_index) * 2.399
         var moon := PLANET_SCENE.instantiate() as PlanetBody
         moon.position = parent_position + Vector2(cos(orbit_angle),sin(orbit_angle))*76.0
+        moon.body_id = "%s_moon_%02d" % [_system_id,moon_index+1]
+        moon.body_name = "%s Moon %d" % [str(definition.get("name",_system_id)),moon_index+1]
         moon.body_radius = 11.0 + float(moon_index % 3)*3.0
+        moon.interaction_radius = moon.body_radius + 76.0
         moon.body_color = Color(0.48,0.52,0.60)
         obstacle_container.add_child(moon)
 
@@ -245,6 +248,8 @@ func _on_hud_action(action: String, value: String = "") -> void:
             var planet := _find_planet(value)
             if is_instance_valid(planet) and player.global_position.distance_to(planet.global_position) <= planet.interaction_radius:
                 var purchased := GameState.buy_fuel(10)
+                if purchased:
+                    GameState.save_game()
                 hud.show_planet_service_result("Added 10 fuel." if purchased else "Not enough credits or cargo space.")
         "FTL":
             hud.show_galaxy_map()
