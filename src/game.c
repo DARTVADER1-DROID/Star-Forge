@@ -775,6 +775,22 @@ static void update_cargo_drops(SfGame *game, float dt)
         drop->vx *= powf(0.94f, dt * 60.0f);
         drop->vy *= powf(0.94f, dt * 60.0f);
 
+        if (drop->x < 8.0f) {
+            drop->x = 8.0f;
+            drop->vx = 0.0f;
+        } else if (drop->x > SF_WORLD_SIZE - 8.0f) {
+            drop->x = SF_WORLD_SIZE - 8.0f;
+            drop->vx = 0.0f;
+        }
+
+        if (drop->y < 8.0f) {
+            drop->y = 8.0f;
+            drop->vy = 0.0f;
+        } else if (drop->y > SF_WORLD_SIZE - 8.0f) {
+            drop->y = SF_WORLD_SIZE - 8.0f;
+            drop->vy = 0.0f;
+        }
+
         if (game->npc_salvage_enabled) {
             int j;
 
