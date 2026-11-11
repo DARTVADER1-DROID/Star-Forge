@@ -448,6 +448,7 @@ void sf_render_world(
     draw_npcs(renderer, game, assets, camera_x, camera_y);
 
     if (draw_player) {
+        draw_ship(
             renderer,
             assets,
             SF_ASSET_PLAYER,
@@ -459,6 +460,7 @@ void sf_render_world(
             100,
             235,
             150
+        );
     }
 
     draw_hud(renderer, game);
