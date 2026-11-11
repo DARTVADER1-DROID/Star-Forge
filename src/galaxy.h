@@ -5,7 +5,7 @@
 #include <SDL3/SDL.h>
 #include "game.h"
 
-int sf_galaxy_hit_test(float x, float y);
-void sf_galaxy_render(SDL_Renderer *renderer, const SfGame *game, int selected_system);
+int sf_galaxy_hit_test(float x, float y, int viewport_width);
+void sf_galaxy_render(SDL_Renderer *renderer, const SfGame *game, int selected_system, int viewport_width);
 
 #endif
