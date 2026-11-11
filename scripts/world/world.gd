@@ -255,6 +255,12 @@ func _collect_nearest_drop() -> void:
         nearest.queue_free()
         GameState.save_game()
 
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_APPLICATION_PAUSED:
+        _update_player_state()
+        _save_system_state()
+        GameState.save_game()
+
 func _exit_tree() -> void:
     _update_player_state()
     _save_system_state()
