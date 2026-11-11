@@ -45,6 +45,19 @@ func sell_item(id: String, amount: int) -> bool:
     credits_changed.emit()
     return true
 
+func buy_fuel(amount: int) -> bool:
+    if amount <= 0 or not can_add_item("fuel",amount):
+        return false
+    var unit_price := int(ContentDatabase.get_item("fuel").get("base_price",14))
+    var total_cost := unit_price * amount
+    if credits < total_cost:
+        return false
+    credits -= total_cost
+    inventory["fuel"] = int(inventory.get("fuel",0)) + amount
+    credits_changed.emit()
+    inventory_changed.emit()
+    return true
+
 func can_jump_to(id: String) -> bool:
     var current := ContentDatabase.get_system(current_system_id)
     return has_ftl_drive and id != current_system_id and Array(current.get("links", [])).has(id) and int(inventory.fuel) >= FTL_FUEL_COST

@@ -1,8 +1,11 @@
 extends StaticBody2D
 class_name PlanetBody
 
+@export var body_id := "unassigned_planet"
+@export var body_name := "Unknown Planet"
 @export var body_radius := 38.0
 @export var body_color := Color(0.22,0.48,0.68)
+@export var interaction_radius := 110.0
 
 var _sprite: Sprite2D
 

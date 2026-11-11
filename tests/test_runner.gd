@@ -162,6 +162,19 @@ func _test_main_scene(failures: Array[String]) -> void:
                 failures.append("Touch HUD is missing a visible flight/action button: " + button_name)
     var pool := game.get_node("ProjectilePool") as ProjectilePool
     var player := game.get_node("PlayerShip") as PlayerShip
+    var camera := game.get_node("PlayerShip/Camera2D") as Camera2D
+    if camera == null or not camera.enabled:
+        failures.append("Player ship must own an enabled follow camera.")
+    if player.collision_mask != 0:
+        failures.append("Player ship must not physically collide with world bodies.")
+    if hud != null:
+        var land_button := hud.get_node_or_null("LANDB utton")
+        if land_button != null:
+            failures.append("Unexpected malformed LAND control node.")
+    if hud != null:
+        var land_button := hud.get_node_or_null("LANDB utton")
+        if land_button != null:
+            failures.append("Unexpected malformed LAND control node.")
     if pool.get_child_count() != 64:
         failures.append("Projectile pool should preallocate 64 slots.")
     player.energy = 100.0

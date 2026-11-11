@@ -27,8 +27,8 @@ func _ready() -> void:
     if background_texture != null:
         _background_sprite = Sprite2D.new()
         _background_sprite.texture = background_texture
-        _background_sprite.position = Vector2(480.0,270.0)
-        _background_sprite.scale = Vector2(3.0,3.0)
+        _background_sprite.position = Vector2.ZERO
+        _background_sprite.scale = Vector2(24.0,24.0)
         _background_sprite.z_index = -1
         _background_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
         add_child(_background_sprite)
@@ -49,7 +49,23 @@ func _process(_delta: float) -> void:
     var station_position := Vector2(float(station_data[0]),float(station_data[1]))
     var station_distance := player.global_position.distance_to(station_position)
     hud.update_ship_status(player.hull,player.max_hull,player.armour,player.max_armour,player.energy,player.max_energy,GameState.credits,GameState.inventory,int(GameState.inventory.get("fuel",0)),str(ContentDatabase.get_system(_system_id).get("name",_system_id)),station_distance)
+    _update_planet_proximity()
     hud.update_system_map(player.position)
+
+func _update_planet_proximity() -> void:
+    var nearest_id := ""
+    var nearest_name := ""
+    var nearest_distance := INF
+    for node: Node in obstacle_container.get_children():
+        if not node is PlanetBody:
+            continue
+        var planet := node as PlanetBody
+        var distance := player.global_position.distance_to(planet.global_position)
+        if distance <= planet.interaction_radius and distance < nearest_distance:
+            nearest_distance = distance
+            nearest_id = planet.body_id
+            nearest_name = planet.body_name
+    hud.set_nearby_planet(nearest_id,nearest_name)
 
 func _draw() -> void:
     for star: Vector2 in _stars:
@@ -58,9 +74,10 @@ func _draw() -> void:
 func _create_star_field() -> void:
     var random := RandomNumberGenerator.new()
     random.seed = 73421
-    var bounds := get_viewport_rect().size
+    # Stars are distributed around the system origin so the camera can travel
+    # without exposing an empty screen immediately outside the starting view.
     for _i in range(STAR_COUNT):
-        _stars.append(Vector2(random.randf_range(0.0,bounds.x),random.randf_range(0.0,bounds.y)))
+        _stars.append(Vector2(random.randf_range(-6000.0,6000.0),random.randf_range(-6000.0,6000.0)))
 
 func _apply_player_state() -> void:
     var saved: Dictionary = GameState.player_ship_state
@@ -112,7 +129,10 @@ func _load_system(id: String) -> void:
         planet_positions.append(planet_position)
         var body := PLANET_SCENE.instantiate() as PlanetBody
         body.position = planet_position
+        body.body_id = "%s_planet_%02d" % [_system_id,index+1]
+        body.body_name = "%s %d" % [str(definition.get("name",_system_id)),index+1]
         body.body_radius = 30.0 + float(index%3)*12.0
+        body.interaction_radius = body.body_radius + 76.0
         obstacle_container.add_child(body)
     for moon_index in range(moon_count):
         if planet_positions.is_empty():
@@ -130,6 +150,12 @@ func _load_system(id: String) -> void:
     station_body.position = station
     _restore_or_spawn_npcs(station)
     _restore_system_drops()
+
+func _find_planet(planet_id: String) -> PlanetBody:
+    for node: Node in obstacle_container.get_children():
+        if node is PlanetBody and (node as PlanetBody).body_id == planet_id:
+            return node as PlanetBody
+    return null
 
 func _restore_or_spawn_npcs(station: Vector2) -> void:
     var system_state: Dictionary = GameState.system_states.get(_system_id,{})
@@ -210,6 +236,16 @@ func _on_hud_action(action: String, value: String = "") -> void:
     match action:
         "LOOT":
             _collect_nearest_drop()
+        "LAND":
+            var planet := _find_planet(value)
+            if is_instance_valid(planet) and player.global_position.distance_to(planet.global_position) <= planet.interaction_radius:
+                player.velocity = Vector2.ZERO
+                hud.show_planet_services(planet.body_id,planet.body_name)
+        "REFUEL":
+            var planet := _find_planet(value)
+            if is_instance_valid(planet) and player.global_position.distance_to(planet.global_position) <= planet.interaction_radius:
+                var purchased := GameState.buy_fuel(10)
+                hud.show_planet_service_result("Added 10 fuel." if purchased else "Not enough credits or cargo space.")
         "FTL":
             hud.show_galaxy_map()
         "JUMP":

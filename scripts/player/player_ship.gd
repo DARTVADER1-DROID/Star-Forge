@@ -58,10 +58,6 @@ func _physics_process(delta: float) -> void:
     velocity = velocity.limit_length(boost_max_speed if _boosting else normal_max_speed)
     rotation = _facing.angle()+PI/2.0
     move_and_slide()
-    for index in range(get_slide_collision_count()):
-        var collision := get_slide_collision(index)
-        if collision.get_collider() is SpaceAsteroid or collision.get_collider() is PlanetBody:
-            velocity = velocity.bounce(collision.get_normal())*0.25
     if _firing and _fire_timer <= 0.0 and energy >= weapon_energy_cost:
         _fire_weapon()
     queue_redraw()
