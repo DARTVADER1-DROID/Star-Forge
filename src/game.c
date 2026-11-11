@@ -278,6 +278,46 @@ static void apply_ship_damage(SfShip *ship, float damage)
     }
 }
 
+static void initialize_system_npcs(SfGame *game)
+{
+    SfShip *cargo_ship = &game->npcs[0];
+    SfShip *pirate_ship = &game->npcs[1];
+
+    memset(game->npcs, 0, sizeof(game->npcs));
+
+    cargo_ship->alive = true;
+    cargo_ship->role = SF_ROLE_CARGO;
+    cargo_ship->x = 720.0f;
+    cargo_ship->y = 360.0f;
+    cargo_ship->angle = SF_PI;
+    cargo_ship->armor = 20.0f;
+    cargo_ship->max_armor = 20.0f;
+    cargo_ship->hull = 65.0f;
+    cargo_ship->max_hull = 65.0f;
+    cargo_ship->energy = 60.0f;
+    cargo_ship->max_energy = 60.0f;
+    cargo_ship->weapon_energy_cost = 10.0f;
+    cargo_ship->has_ftl_drive = true;
+    cargo_ship->cargo[SF_ITEM_FUEL] = 60;
+    cargo_ship->cargo[SF_ITEM_FOOD] = 24;
+    cargo_ship->cargo[SF_ITEM_METAL] = 18;
+
+    pirate_ship->alive = true;
+    pirate_ship->role = SF_ROLE_PIRATE;
+    pirate_ship->x = 910.0f;
+    pirate_ship->y = 340.0f;
+    pirate_ship->angle = SF_PI;
+    pirate_ship->armor = 35.0f;
+    pirate_ship->max_armor = 35.0f;
+    pirate_ship->hull = 85.0f;
+    pirate_ship->max_hull = 85.0f;
+    pirate_ship->energy = 100.0f;
+    pirate_ship->max_energy = 100.0f;
+    pirate_ship->weapon_energy_cost = 10.0f;
+    pirate_ship->has_ftl_drive = true;
+    pirate_ship->cargo[SF_ITEM_FUEL] = 8;
+}
+
 bool sf_game_jump_to_system(SfGame *game, int destination_system)
 {
     if (game == NULL ||
@@ -302,6 +342,7 @@ bool sf_game_jump_to_system(SfGame *game, int destination_system)
     game->station_y = sf_game_system_station_y(destination_system);
 
     memset(game->npcs, 0, sizeof(game->npcs));
+    initialize_system_npcs(game);
     memset(game->drops, 0, sizeof(game->drops));
     memset(game->projectiles, 0, sizeof(game->projectiles));
 
@@ -310,9 +351,6 @@ bool sf_game_jump_to_system(SfGame *game, int destination_system)
 
 void sf_game_init(SfGame *game)
 {
-    SfShip *cargo_ship;
-    SfShip *pirate_ship;
-
     if (game == NULL) {
         return;
     }
@@ -344,39 +382,7 @@ void sf_game_init(SfGame *game)
     game->station_x = sf_game_system_station_x(0);
     game->station_y = sf_game_system_station_y(0);
 
-    cargo_ship = &game->npcs[0];
-    cargo_ship->alive = true;
-    cargo_ship->role = SF_ROLE_CARGO;
-    cargo_ship->x = 720.0f;
-    cargo_ship->y = 360.0f;
-    cargo_ship->angle = SF_PI;
-    cargo_ship->armor = 20.0f;
-    cargo_ship->max_armor = 20.0f;
-    cargo_ship->hull = 65.0f;
-    cargo_ship->max_hull = 65.0f;
-    cargo_ship->energy = 60.0f;
-    cargo_ship->max_energy = 60.0f;
-    cargo_ship->weapon_energy_cost = 10.0f;
-    cargo_ship->has_ftl_drive = true;
-    cargo_ship->cargo[SF_ITEM_FUEL] = 60;
-    cargo_ship->cargo[SF_ITEM_FOOD] = 24;
-    cargo_ship->cargo[SF_ITEM_METAL] = 18;
-
-    pirate_ship = &game->npcs[1];
-    pirate_ship->alive = true;
-    pirate_ship->role = SF_ROLE_PIRATE;
-    pirate_ship->x = 910.0f;
-    pirate_ship->y = 340.0f;
-    pirate_ship->angle = SF_PI;
-    pirate_ship->armor = 35.0f;
-    pirate_ship->max_armor = 35.0f;
-    pirate_ship->hull = 85.0f;
-    pirate_ship->max_hull = 85.0f;
-    pirate_ship->energy = 100.0f;
-    pirate_ship->max_energy = 100.0f;
-    pirate_ship->weapon_energy_cost = 10.0f;
-    pirate_ship->has_ftl_drive = true;
-    pirate_ship->cargo[SF_ITEM_FUEL] = 8;
+    initialize_system_npcs(game);
 }
 
 static void update_player(SfGame *game, const SfInput *input, float dt)
