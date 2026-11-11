@@ -201,7 +201,39 @@ A future economy model can account for local production, consumption, population
 
 The user will provide/document the weapon catalogue and weapon details later. Therefore, this document intentionally does not define individual weapons, damage values, firing rates, projectile properties, or final weapon-market rules.
 
-## 10. Asset and data separation
+## 10. Piracy, wrecks, and salvage
+
+Piracy is a player-facing combat and economic activity. The player can attack other ships, destroy them, recover surviving cargo and equipment from the wreck, and sell recovered goods at planetary markets.
+
+### 10.1 Ship destruction and wreck contents
+
+- A destroyed ship can leave behind a wreck/salvage container in space.
+- The wreck's cargo contents are generated from the cargo actually carried by that ship at the moment of destruction.
+- Cargo loss/survival should be resolved by a defined destruction-and-salvage rule; do not assume every item always survives or that the wreck duplicates the original cargo.
+- Wreck contents are independent of the player's cargo hold. A wreck may contain more than the player can collect.
+- Wrecks may occasionally contain weapons that were installed on the destroyed ship. Weapon drops are not guaranteed; drop probability and weapon condition remain to be balanced.
+- Recovered weapons remain individual equipment items with their own size class, mass, condition, and compatibility requirements. They must pass the normal ship-layout and available-mass checks before installation.
+
+### 10.2 Loot collection
+
+- The player approaches a wreck and hovers/positions their ship over the salvage to collect it.
+- Collection transfers selected eligible items from the wreck into the player's cargo inventory.
+- The collection system must enforce the player's available cargo volume and mass limits.
+- If the player cannot carry everything, uncollected items remain in the wreck for a limited or otherwise defined period; persistence, despawn timing, and loss conditions are open design decisions.
+- The player should be able to inspect the wreck contents and choose what to collect when capacity is limited.
+
+### 10.3 Salvage economy
+
+- Recovered trade commodities can be sold at planetary markets.
+- Sale value uses the destination planet's current market price and stock/demand rules, rather than a fixed universal value.
+- Recovered weapons can be sold through an appropriate weapons market or retained for installation, subject to compatibility.
+- Piracy therefore connects combat, cargo management, ship fitting, and planetary trading into one gameplay loop.
+
+### 10.4 Reputation and consequences
+
+The existence of piracy is agreed, but its wider consequences are not yet specified. Possible systems include faction or local-security hostility, wanted status, patrol response, bounty/reputation changes, and restrictions at ports. Do not treat any of these as approved mechanics until designed.
+
+## 11. Asset and data separation
 
 The implementation should separate:
 - **Visual asset metadata:** sprite path, dimensions, pivot, animation frames, hardpoint coordinates, engine attachment points, and collision geometry.
@@ -213,7 +245,7 @@ The implementation should separate:
 
 The engine should combine these definitions at runtime rather than embedding individual ships, planets, or weapon values in C source code. Sprite coordinates use the convention in [Asset Pipeline](asset-pipeline.md).
 
-## 11. Open design decisions
+## 12. Open design decisions
 
 The following are deliberately left open:
 - Exact baseline statistics and balance values for all six ship types.\n- Whether maximum permitted mass is an equipment-only limit or includes cargo and fuel.\n- Whether weapon mass is the only equipment mass counted against the installation budget.\n- Exact weapon layout schema, mount positions, firing-arc conventions, and whether arcs are per mount or per layout.\n- Exact meaning and result of weapon fusion.\n- Fuel consumption per FTL jump and fuel tank/fleet range calculations.\n- Fuel-hauler variants/classes, fuel transfer mechanics, and fleet membership constraints.
@@ -226,7 +258,7 @@ The following are deliberately left open:
 - Weapons catalogue, weapon statistics, market rules, and mount-size taxonomy.
 - Whether and how population changes over time.
 
-## 12. Design constraints
+## 13. Design constraints
 
 - Preserve the offline-first requirement; the core galaxy, trading, and ship systems must not require a server.
 - Keep content definitions data-driven and versionable.
