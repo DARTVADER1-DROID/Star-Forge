@@ -465,34 +465,63 @@ void sf_render_inventory_panel(
     const SfGame *game
 )
 {
-    SDL_FRect panel = { 62.0f, 52.0f, 196.0f, 76.0f };
+    static const char *const labels[SF_ITEM_COUNT] = {
+        "METAL", "FUEL", "FOOD", "MED", "WEAPON"
+    };
+    SDL_FRect panel = { 40.0f, 45.0f, 240.0f, 88.0f };
     char text[96];
+    int i;
 
-    set_draw_color(renderer, 20, 28, 48);
+    set_draw_color(renderer, 12, 20, 38);
     SDL_RenderFillRect(renderer, &panel);
-
     set_draw_color(renderer, 100, 180, 220);
     SDL_RenderRect(renderer, &panel);
 
     set_draw_color(renderer, 240, 240, 245);
-    SDL_RenderDebugText(renderer, 72.0f, 61.0f, "CARGO HOLD");
+    SDL_RenderDebugText(renderer, 50.0f, 52.0f, "CARGO HOLD");
+    SDL_RenderDebugText(renderer, 250.0f, 52.0f, "X");
+
+    for (i = 0; i < SF_ITEM_COUNT; ++i) {
+        SDL_FRect item_button = {
+            48.0f + (float)i * 45.0f,
+            64.0f,
+            42.0f,
+            17.0f
+        };
+
+        set_draw_color(
+            renderer,
+            game->selected_item == i ? 55 : 30,
+            game->selected_item == i ? 105 : 55,
+            game->selected_item == i ? 155 : 85
+        );
+        SDL_RenderFillRect(renderer, &item_button);
+        set_draw_color(renderer, 230, 235, 245);
+        SDL_RenderDebugText(
+            renderer,
+            item_button.x + 2.0f,
+            item_button.y + 4.0f,
+            labels[i]
+        );
+    }
 
     (void)snprintf(
         text,
         sizeof(text),
-        "Selected: %s   Quantity: %d",
-        sf_item_name(game->selected_item),
-        game->selected_quantity
+        "QTY %d   HOLD %d",
+        game->selected_quantity,
+        game->inventory[game->selected_item]
     );
-
-    SDL_RenderDebugText(renderer, 72.0f, 76.0f, text);
+    set_draw_color(renderer, 240, 240, 245);
+    SDL_RenderDebugText(renderer, 50.0f, 87.0f, text);
+    SDL_RenderDebugText(renderer, 52.0f, 101.0f, "- QTY");
+    SDL_RenderDebugText(renderer, 115.0f, 101.0f, "+ QTY");
     SDL_RenderDebugText(
         renderer,
-        72.0f,
-        91.0f,
-        "Use the on-screen cargo buttons"
+        190.0f,
+        101.0f,
+        game->npc_salvage_enabled ? "NPC LOOT ON" : "NPC LOOT OFF"
     );
-    SDL_RenderDebugText(renderer, 72.0f, 106.0f, "Tap LOOT to collect nearby salvage");
+    SDL_RenderDebugText(renderer, 52.0f, 117.0f, "JETTISON");
+    SDL_RenderDebugText(renderer, 178.0f, 117.0f, "SELL AT STATION");
 }
-
-
