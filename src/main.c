@@ -4,6 +4,7 @@
 #include "game.h"
 #include "render.h"
 #include "assets.h"
+#include "galaxy.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -14,6 +15,12 @@
 #define SF_LOGICAL_WIDTH 320
 #define SF_LOGICAL_HEIGHT 180
 #define SF_FIXED_STEP (1.0 / 60.0)
+
+static bool galaxy_map_open;
+static int galaxy_selected_system = -1;
+static int ftl_destination = -1;
+static float ftl_transition_timer;
+static float arrival_effect_timer;
 
 typedef struct {
     SDL_FingerID joystick_id;
@@ -141,13 +148,40 @@ static void update_touch_event(
         return;
     }
 
+    if (galaxy_map_open) {
+        if (finger->type == SDL_EVENT_FINGER_DOWN) {
+            if (x >= 264.0f && y >= 8.0f && y <= 30.0f) {
+                galaxy_map_open = false;
+                galaxy_selected_system = -1;
+            } else if (x >= 260.0f && y >= 140.0f) {
+                if (galaxy_selected_system >= 0 &&
+                    sf_galaxy_is_connected(game->current_system, galaxy_selected_system) &&
+                    game->player.has_ftl_drive && game->inventory[SF_ITEM_FUEL] >= 5) {
+                    ftl_destination = galaxy_selected_system;
+                    ftl_transition_timer = 1.45f;
+                    galaxy_map_open = false;
+                    galaxy_selected_system = -1;
+                }
+            } else {
+                const int node = sf_galaxy_hit_test(x, y);
+                if (node >= 0 && sf_galaxy_is_connected(game->current_system, node)) {
+                    galaxy_selected_system = node;
+                }
+            }
+        }
+        return;
+    }
+
     if (finger->type == SDL_EVENT_FINGER_DOWN) {
         if (*inventory_open) {
             handle_ui_tap(game, inventory_open, x, y);
             return;
         }
 
-        if (x >= 160.0f && x <= 207.0f && y >= 143.0f) {
+        if (x >= 257.0f && x <= 281.0f && y >= 116.0f && y <= 140.0f) {
+            galaxy_map_open = true;
+            galaxy_selected_system = -1;
+        } else         if (x >= 160.0f && x <= 207.0f && y >= 143.0f) {
             handle_ui_tap(game, inventory_open, x, y);
         } else if (x < (float)SF_LOGICAL_WIDTH * 0.48f &&
                    !touch->joystick_active) {
@@ -165,11 +199,6 @@ static void update_touch_event(
             touch->boost_id = finger->fingerID;
         } else if (x > 175.0f && x <= 245.0f && y > 125.0f) {
             (void)sf_game_collect_nearest(game);
-        } else if (x > 175.0f && x <= 245.0f && y > 85.0f && y <= 125.0f) {
-            (void)sf_game_jump_to_system(
-                game,
-                (game->current_system + 1) % SF_MAX_SYSTEMS
-            );
         }
 
         return;
@@ -226,27 +255,26 @@ static void draw_touch_controls(
     const SfAssets *assets
 )
 {
-    SDL_FRect fire = { 276.0f, 130.0f, 36.0f, 36.0f };
-    SDL_FRect boost = { 278.0f, 76.0f, 32.0f, 32.0f };
-    SDL_FRect loot = { 211.0f, 145.0f, 38.0f, 27.0f };
-    SDL_FRect ftl = { 211.0f, 96.0f, 38.0f, 27.0f };
-    const float center_x = touch->joystick_active
-        ? touch->joystick_origin_x : 48.0f;
-    const float center_y = touch->joystick_active
-        ? touch->joystick_origin_y : 132.0f;
+    SDL_FRect buttons[4] = {
+        { 286.0f, 145.0f, 24.0f, 24.0f },
+        { 257.0f, 145.0f, 24.0f, 24.0f },
+        { 286.0f, 116.0f, 24.0f, 24.0f },
+        { 257.0f, 116.0f, 24.0f, 24.0f }
+    };
+    const float center_x = touch->joystick_active ? touch->joystick_origin_x : 29.0f;
+    const float center_y = touch->joystick_active ? touch->joystick_origin_y : 148.0f;
     float knob_x = center_x;
     float knob_y = center_y;
+    int i;
 
     if (touch->joystick_active) {
         float dx = touch->joystick_x - center_x;
         float dy = touch->joystick_y - center_y;
         const float length = sqrtf(dx * dx + dy * dy);
-
-        if (length > 18.0f) {
-            dx *= 18.0f / length;
-            dy *= 18.0f / length;
+        if (length > 14.0f) {
+            dx *= 14.0f / length;
+            dy *= 14.0f / length;
         }
-
         knob_x += dx;
         knob_y += dy;
     }
@@ -254,59 +282,34 @@ static void draw_touch_controls(
     {
         SDL_Texture *base = sf_assets_get(assets, SF_ASSET_JOYSTICK_BASE);
         SDL_Texture *knob = sf_assets_get(assets, SF_ASSET_JOYSTICK_KNOB);
-        SDL_Texture *fire_texture = sf_assets_get(
-            assets,
-            touch->fire_active ? SF_ASSET_FIRE_DOWN : SF_ASSET_FIRE_UP
-        );
-        SDL_Texture *boost_texture = sf_assets_get(
-            assets,
-            touch->boost_active ? SF_ASSET_BOOST_DOWN : SF_ASSET_BOOST_UP
-        );
-        SDL_Texture *loot_texture = sf_assets_get(assets, SF_ASSET_LOOT_UP);
-        SDL_FRect base_rect = {
-            center_x - 23.0f,
-            center_y - 23.0f,
-            46.0f,
-            46.0f
-        };
-        SDL_FRect knob_rect = {
-            knob_x - 9.0f,
-            knob_y - 9.0f,
-            18.0f,
-            18.0f
-        };
-
-        if (base) (void)SDL_RenderTexture(renderer, base, NULL, &base_rect);
-        else draw_touch_ring(renderer, center_x, center_y, 22.0f);
-        if (knob) (void)SDL_RenderTexture(renderer, knob, NULL, &knob_rect);
-        else draw_touch_ring(renderer, knob_x, knob_y, 8.0f);
-        if (fire_texture) (void)SDL_RenderTexture(renderer, fire_texture, NULL, &fire);
-        else { set_draw_color(renderer, 30, 70, 115); SDL_RenderFillRect(renderer, &fire); }
-        if (boost_texture) (void)SDL_RenderTexture(renderer, boost_texture, NULL, &boost);
-        else { set_draw_color(renderer, 30, 70, 115); SDL_RenderFillRect(renderer, &boost); }
-        if (loot_texture) (void)SDL_RenderTexture(renderer, loot_texture, NULL, &loot);
-        else { set_draw_color(renderer, 30, 70, 115); SDL_RenderFillRect(renderer, &loot); }
-        set_draw_color(renderer, 30, 70, 115);
-        SDL_RenderFillRect(renderer, &ftl);
+        SDL_FRect base_rect = { center_x - 18.0f, center_y - 18.0f, 36.0f, 36.0f };
+        SDL_FRect knob_rect = { knob_x - 7.0f, knob_y - 7.0f, 14.0f, 14.0f };
+        if (base != NULL) (void)SDL_RenderTexture(renderer, base, NULL, &base_rect);
+        else draw_touch_ring(renderer, center_x, center_y, 17.0f);
+        if (knob != NULL) (void)SDL_RenderTexture(renderer, knob, NULL, &knob_rect);
+        else draw_touch_ring(renderer, knob_x, knob_y, 6.0f);
     }
 
-    set_draw_color(renderer, 245, 245, 255);
-    SDL_RenderDebugText(renderer, 276.0f, 141.0f, "FIRE");
-    SDL_RenderDebugText(renderer, 275.0f, 82.0f, "BOOST");
-    SDL_RenderDebugText(renderer, 218.0f, 154.0f, "LOOT");
-    SDL_RenderDebugText(renderer, 218.0f, 105.0f, "FTL");
-    SDL_RenderDebugText(renderer, 165.0f, 154.0f, "CARGO");
+    for (i = 0; i < 4; ++i) {
+        (void)SDL_SetRenderDrawColor(renderer, 27, 48, 72, 225);
+        SDL_RenderFillRect(renderer, &buttons[i]);
+        (void)SDL_SetRenderDrawColor(renderer, 105, 155, 205, 255);
+        SDL_RenderRect(renderer, &buttons[i]);
+    }
+
+    (void)SDL_SetRenderDrawColor(renderer, 245, 248, 255, 255);
+    SDL_RenderDebugText(renderer, 293.0f, 153.0f, "F");
+    SDL_RenderDebugText(renderer, 264.0f, 153.0f, "B");
+    SDL_RenderDebugText(renderer, 293.0f, 124.0f, "L");
+    SDL_RenderDebugText(renderer, 259.0f, 124.0f, "FTL");
 
     {
-        char energy_text[24];
-
-        (void)snprintf(
-            energy_text,
-            sizeof(energy_text),
-            "ENERGY %.0f%%",
-            game->player.energy
-        );
-        SDL_RenderDebugText(renderer, 5.0f, 41.0f, energy_text);
+        char status[96];
+        (void)snprintf(status, sizeof(status), "%s H%.0f A%.0f E%.0f",
+                       sf_game_system_name(game->current_system),
+                       game->player.hull, game->player.armor, game->player.energy);
+        (void)SDL_SetRenderDrawColor(renderer, 220, 232, 245, 255);
+        SDL_RenderDebugText(renderer, 5.0f, 5.0f, status);
     }
 }
 
@@ -485,6 +488,18 @@ int main(int argc, char **argv)
             }
         }
 
+        if (ftl_transition_timer > 0.0f) {
+            ftl_transition_timer -= (float)SF_FIXED_STEP;
+            if (ftl_transition_timer <= 0.0f && ftl_destination >= 0) {
+                (void)sf_game_jump_to_system(&game, ftl_destination);
+                ftl_destination = -1;
+                arrival_effect_timer = 1.0f;
+            }
+        }
+        if (arrival_effect_timer > 0.0f) {
+            arrival_effect_timer = fmaxf(0.0f, arrival_effect_timer - (float)SF_FIXED_STEP);
+        }
+
         input.fire = touch.fire_active;
         input.boost = touch.boost_active;
 
@@ -542,7 +557,21 @@ int main(int argc, char **argv)
             );
         }
 
-        sf_render_world(renderer, &game, &assets, camera_x, camera_y);
+        if (galaxy_map_open) {
+            sf_galaxy_render(renderer, &game, galaxy_selected_system);
+        } else {
+            sf_render_world(renderer, &game, &assets, camera_x, camera_y);
+            if (ftl_transition_timer > 0.0f) {
+                const float pulse = 1.0f - ftl_transition_timer / 1.45f;
+                (void)SDL_SetRenderDrawColor(renderer, 120, 190, 255, 210);
+                draw_touch_ring(renderer, 160.0f, 90.0f, 12.0f + pulse * 95.0f);
+                SDL_RenderDebugText(renderer, 132.0f, 86.0f, "FTL TRANSIT");
+            } else if (arrival_effect_timer > 0.0f) {
+                const float pulse = 1.0f - arrival_effect_timer;
+                (void)SDL_SetRenderDrawColor(renderer, 145, 220, 255, 210);
+                draw_touch_ring(renderer, 160.0f, 90.0f, 8.0f + pulse * 55.0f);
+            }
+        }
 
         sf_render_hover_info(
             renderer,
@@ -553,11 +582,13 @@ int main(int argc, char **argv)
             camera_y
         );
 
-        if (inventory_open) {
+        if (inventory_open && !galaxy_map_open) {
             sf_render_inventory_panel(renderer, &game);
         }
 
-        draw_touch_controls(renderer, &touch, &game, &assets);
+        if (!galaxy_map_open) {
+            draw_touch_controls(renderer, &touch, &game, &assets);
+        }
 
         SDL_RenderPresent(renderer);
         SDL_Delay(1);
