@@ -55,6 +55,7 @@ These are prototype balance values and should be tuned through playtesting.
 
 - Cargo haulers navigate toward the station.
 - Pirates pursue the cargo hauler while it is alive, then target the player.
+- Patrol ships maintain an orbit around their system station as local traffic.
 - Pirates maintain a preferred combat distance and fire when the target is within range.
 - NPC salvage collection can be enabled or disabled.
 - More dedicated roles (trader, miner, patrol, escort) are planned, not yet implemented.
