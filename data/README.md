@@ -1,13 +1,10 @@
 # Game Data
 
-Data-driven definitions live here. Keep stable machine-readable IDs separate from display names.
+JSON definitions are loaded and validated by the Godot content database.
 
-Planned categories:
+- `items.json` — cargo items, categories, prices and volume
+- `ship_designs.json` — NPC ship design definitions
+- `npc_roles.json` — NPC role and manifest definitions
+- `systems.json` — star systems, adjacency, bodies and station locations
 
-- `ships/` — hull stats, sprite references, pivots, hardpoints
-- `weapons/` — weapon behavior and balance parameters
-- `items/` — cargo and equipment
-- `missions/` — mission definitions and objectives
-- `universe/` — sector and system definitions
-
-JSON is the initial authoring format. Runtime loading and validation will be implemented in the engine.
+Use stable IDs and keep display names separate from identifiers.
