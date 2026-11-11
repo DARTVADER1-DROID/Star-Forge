@@ -7,6 +7,7 @@
 - **Boost:** hold to accelerate faster; movement does not consume ship energy.
 - **FTL:** press G on desktop to jump to the next system; requires an FTL drive and 5 fuel.
 - **Loot:** collect the nearest salvage container within collection range.
+- **FTL:** tap the FTL button to jump to the next system; requires an FTL drive and 5 fuel.
 
 The joystick is analog in touch position, with a dead zone around its center. The current prototype maps the horizontal and vertical directions to discrete steering/thrust actions; a later input pass can introduce proportional steering.
 
