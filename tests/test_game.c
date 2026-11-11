@@ -159,6 +159,18 @@ int main(void)
     assert(game.player.energy == game.player.max_energy);
     assert(game.player.fire_cooldown == 0.0f);
 
+    /* Galaxy routes are bidirectional and only adjacent systems are reachable. */
+    assert(sf_game_systems_connected(0, 1));
+    assert(sf_game_systems_connected(1, 0));
+    assert(sf_game_systems_connected(0, 2));
+    assert(!sf_game_systems_connected(0, 3));
+    assert(!sf_game_systems_connected(0, 0));
+    assert(!sf_game_systems_connected(-1, 0));
+    assert(!sf_game_systems_connected(0, SF_MAX_SYSTEMS));
+
+    sf_game_init(&game);
+    assert(!sf_game_jump_to_system(&game, 3));
+
     /* Inter-system travel requires an FTL drive and five fuel units. */
     sf_game_init(&game);
     assert(sf_game_jump_to_system(&game, 1));
