@@ -153,11 +153,11 @@ static void draw_cargo_drops(
         const SfCargoDrop *drop = &game->drops[i];
         SDL_FRect rectangle;
 
-        if (!drop->active) {
+        if (!drop->active || drop->quantity <= 0) {
             continue;
         }
 
-        {
+        if (drop->item >= 0 && drop->item < SF_ITEM_COUNT) {
             static const SfAssetId salvage_ids[SF_ITEM_COUNT] = {
                 SF_ASSET_METAL, SF_ASSET_FUEL, SF_ASSET_FOOD,
                 SF_ASSET_MEDICINE, SF_ASSET_WEAPON
