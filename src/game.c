@@ -257,6 +257,7 @@ void sf_game_init(SfGame *game)
     game->selected_item = SF_ITEM_METAL;
     game->selected_quantity = 5;
     game->credits = 120;
+    game->boost_energy = 100.0f;
     game->npc_salvage_enabled = true;
     game->station_x = 220.0f;
     game->station_y = 180.0f;
@@ -304,18 +305,44 @@ static void update_player(SfGame *game, const SfInput *input, float dt)
         ship->angle += 2.0f * SF_PI;
     }
 
-    if (input->thrust) {
-        ship->vx += cosf(ship->angle) * 190.0f * dt;
-        ship->vy += sinf(ship->angle) * 190.0f * dt;
-    }
+    {
+        const bool boosting = input->boost && game->boost_energy > 0.0f;
+        const float acceleration = boosting ? 340.0f : 190.0f;
+        const float maximum_speed = boosting ? 270.0f : 190.0f;
 
-    if (input->reverse) {
-        ship->vx -= cosf(ship->angle) * 123.5f * dt;
-        ship->vy -= sinf(ship->angle) * 123.5f * dt;
-    }
+        if (boosting) {
+            game->boost_energy -= 38.0f * dt;
+            if (game->boost_energy < 0.0f) {
+                game->boost_energy = 0.0f;
+            }
+        } else {
+            game->boost_energy += 16.0f * dt;
+            if (game->boost_energy > 100.0f) {
+                game->boost_energy = 100.0f;
+            }
+        }
 
-    ship->vx = clampf(ship->vx * powf(0.985f, dt * 60.0f), -190.0f, 190.0f);
-    ship->vy = clampf(ship->vy * powf(0.985f, dt * 60.0f), -190.0f, 190.0f);
+        if (input->thrust) {
+            ship->vx += cosf(ship->angle) * acceleration * dt;
+            ship->vy += sinf(ship->angle) * acceleration * dt;
+        }
+
+        if (input->reverse) {
+            ship->vx -= cosf(ship->angle) * 123.5f * dt;
+            ship->vy -= sinf(ship->angle) * 123.5f * dt;
+        }
+
+        ship->vx = clampf(
+            ship->vx * powf(0.985f, dt * 60.0f),
+            -maximum_speed,
+            maximum_speed
+        );
+        ship->vy = clampf(
+            ship->vy * powf(0.985f, dt * 60.0f),
+            -maximum_speed,
+            maximum_speed
+        );
+    }
 
     ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
     ship->y = clampf(ship->y + ship->vy * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
