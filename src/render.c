@@ -399,7 +399,7 @@ void sf_render_world(
         const int screen_y = world_y - camera_y;
 
         if (screen_x >= 0 && screen_x < viewport_width &&
-            screen_y >= 0 && screen_y < SF_LOGICAL_HEIGHT) {
+            screen_y >= 0 && screen_y < SF_UI_LOGICAL_HEIGHT) {
             set_draw_color(
                 renderer,
                 (Uint8)(70 + (i % 4) * 30),
