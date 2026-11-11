@@ -100,7 +100,7 @@ int main(void)
 
     /* Inter-system travel requires an FTL drive and five fuel units. */
     sf_game_init(&game);
-    assert(!sf_game_jump_to_system(&game, 1) == false);
+    assert(sf_game_jump_to_system(&game, 1));
     assert(game.current_system == 1);
     assert(game.inventory[SF_ITEM_FUEL] == 13);
     assert(sf_game_system_planet_count(1) == 2);
