@@ -9,6 +9,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -16,6 +20,7 @@ jobs:
   android-apk:
     name: Export Godot Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out Star Forge
         uses: actions/checkout@v4

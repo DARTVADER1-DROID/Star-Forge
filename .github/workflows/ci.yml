@@ -9,6 +9,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -16,6 +20,7 @@ jobs:
   godot-validation:
     name: Validate Godot project and gameplay
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out Star Forge
         uses: actions/checkout@v4
@@ -51,6 +56,6 @@ jobs:
         run: godot --headless --editor --path . --import --quit
 
       - name: Run scene smoke test
-        run: godot --headless --path . res://tests/test_runner.tscn
+        run: timeout 120s godot --headless --path . res://tests/test_runner.tscn
 
 
