@@ -105,6 +105,10 @@ int main(void)
     /* Salvage can be collected in portions when the hold is nearly full. */
     sf_game_init(&game);
     game.inventory[SF_ITEM_METAL] = 95;
+    game.inventory[SF_ITEM_FUEL] = 0;
+    game.inventory[SF_ITEM_FOOD] = 0;
+    game.inventory[SF_ITEM_MEDICINE] = 0;
+    game.inventory[SF_ITEM_WEAPON] = 0;
     game.drops[0].active = true;
     game.drops[0].item = SF_ITEM_FUEL;
     game.drops[0].quantity = 10;
