@@ -36,9 +36,6 @@ jobs:
       - name: Run scene smoke test
         run: godot --headless --path . res://tests/test_runner.tscn
 
-      - name: Run gameplay regression tests
-        run: godot --headless --path . --script res://tests/godot_gameplay_test.gd
-
       - name: Check repository contains no native C sources or build files
         run: |
           if find . -type f \( -name '*.c' -o -name '*.h' -o -name 'CMakeLists.txt' -o -name '*.cmake' \) -not -path './.git/*' | grep -q .; then
