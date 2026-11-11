@@ -142,7 +142,7 @@ static void resolve_asteroid_collisions(SfShip *ship, int system_index)
     }
 }
 
-static void spawn_cargo_drop(
+static bool spawn_cargo_drop(
     SfGame *game,
     float x,
     float y,
@@ -152,8 +152,8 @@ static void spawn_cargo_drop(
 {
     int i;
 
-    if (quantity <= 0 || item < 0 || item >= SF_ITEM_COUNT) {
-        return;
+    if (game == NULL || quantity <= 0 || item < 0 || item >= SF_ITEM_COUNT) {
+        return false;
     }
 
     for (i = 0; i < SF_MAX_DROPS; ++i) {
@@ -167,9 +167,22 @@ static void spawn_cargo_drop(
             drop->vy = random_range(game, -18.0f, 18.0f);
             drop->item = item;
             drop->quantity = quantity;
-            return;
+            return true;
         }
     }
+
+    /* Preserve salvage under pool pressure by merging matching crate stacks. */
+    for (i = 0; i < SF_MAX_DROPS; ++i) {
+        SfCargoDrop *drop = &game->drops[i];
+
+        if (drop->active && drop->item == item &&
+            drop->quantity <= INT_MAX - quantity) {
+            drop->quantity += quantity;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 static void destroy_npc_ship(SfGame *game, SfShip *ship)
@@ -766,15 +779,17 @@ bool sf_game_jettison_selected(SfGame *game)
         return false;
     }
 
-    game->inventory[item] -= quantity;
+    if (!spawn_cargo_drop(
+            game,
+            game->player.x,
+            game->player.y,
+            item,
+            quantity
+        )) {
+        return false;
+    }
 
-    spawn_cargo_drop(
-        game,
-        game->player.x,
-        game->player.y,
-        item,
-        quantity
-    );
+    game->inventory[item] -= quantity;
 
     return true;
 }
