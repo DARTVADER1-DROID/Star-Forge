@@ -10,7 +10,7 @@ const DROP_SCENE: PackedScene = preload("res://scenes/cargo_drop.tscn")
 
 @onready var player: PlayerShip = $PlayerShip
 @onready var hud: TouchHUD = $HUD
-@onready var projectile_container: Node2D = $Projectiles
+@onready var projectile_pool: ProjectilePool = $ProjectilePool
 @onready var npc_container: Node2D = $NPCs
 @onready var obstacle_container: Node2D = $Obstacles
 @onready var drop_container: Node2D = $CargoDrops
@@ -32,7 +32,7 @@ func _ready() -> void:
         _background_sprite.z_index = -1
         _background_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
         add_child(_background_sprite)
-    player.projectile_container = projectile_container
+    player.projectile_pool = projectile_pool
     hud.steering_changed.connect(player.set_steering)
     hud.boost_changed.connect(player.set_boosting)
     hud.fire_changed.connect(player.set_firing)
@@ -83,6 +83,7 @@ func _load_system(id: String) -> void:
     if not _system_id.is_empty():
         _save_system_state()
     _system_id = id
+    projectile_pool.clear_active()
     for child: Node in npc_container.get_children():
         child.queue_free()
     for child: Node in obstacle_container.get_children():
@@ -162,7 +163,7 @@ func _spawn_npc(role: String, design: String, point: Vector2, station: Vector2) 
     npc.station_position = station
     npc.target = player
     npc.loot_enabled = npc_salvage_enabled
-    npc.projectile_container = projectile_container
+    npc.projectile_pool = projectile_pool
     npc.drop_container = drop_container
     npc_container.add_child(npc)
     return npc
