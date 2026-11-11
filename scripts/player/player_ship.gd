@@ -62,6 +62,7 @@ func _physics_process(delta: float) -> void:
     velocity *= pow(0.985, delta * 60.0)
     var speed_limit := boost_max_speed if _boosting else normal_max_speed
     velocity = velocity.limit_length(speed_limit)
+    rotation = _facing.angle() + PI / 2.0
     move_and_slide()
     queue_redraw()
 
@@ -76,9 +77,9 @@ func _fire_weapon() -> void:
     _fire_timer = weapon_cooldown
 
     var projectile := PROJECTILE_SCENE.instantiate() as SpaceProjectile
+    projectile_container.add_child(projectile)
     projectile.global_position = global_position + _facing * 20.0
     projectile.direction = _facing
-    projectile_container.add_child(projectile)
 
 func _draw() -> void:
     var points := PackedVector2Array([
@@ -97,7 +98,7 @@ func _draw() -> void:
         draw_colored_polygon(
             PackedVector2Array([
                 Vector2(-5.0, 13.0),
-                Vector2(0.0, 27.0 + randf_range(0.0, 4.0)),
+                Vector2(0.0, 28.0),
                 Vector2(5.0, 13.0)
             ]),
             Color(1.0, 0.56, 0.19)
