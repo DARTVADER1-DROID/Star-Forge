@@ -74,10 +74,25 @@ func _button(caption: String, offset: Vector2, dimensions: Vector2, right: bool,
     control.offset_bottom = offset.y+dimensions.y
     control.add_theme_font_size_override("font_size",17)
     control.add_theme_color_override("font_color",Color(0.92,0.96,1.0))
-    control.add_theme_stylebox_override("normal",_button_style(Color(0.08,0.19,0.32,0.92)))
-    control.add_theme_stylebox_override("pressed",_button_style(Color(0.12,0.39,0.58,0.98)))
+    control.add_theme_stylebox_override("normal",_button_texture_style("ui_button_9slice_normal.png"))
+    control.add_theme_stylebox_override("pressed",_button_texture_style("ui_button_9slice_pressed.png"))
+    control.add_theme_stylebox_override("hover",_button_style(Color(0.10,0.28,0.44,0.96)))
     add_child(control)
     return control
+
+func _button_texture_style(asset_name: String) -> StyleBox:
+    var texture := AssetLibrary.load_texture(asset_name)
+    if texture == null:
+        return _button_style(Color(0.08,0.19,0.32,0.92))
+    var style := StyleBoxTexture.new()
+    style.texture = texture
+    style.texture_margin_left = 9.0
+    style.texture_margin_top = 9.0
+    style.texture_margin_right = 9.0
+    style.texture_margin_bottom = 9.0
+    style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+    style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+    return style
 
 func _button_style(fill: Color) -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
@@ -134,6 +149,15 @@ func _make_panel(title: String, dimensions: Vector2) -> Dictionary:
     panel.position = -dimensions/2.0
     panel.visible = false
     add_child(panel)
+    var panel_texture := AssetLibrary.load_texture("ui_panel_9slice.png")
+    if panel_texture != null:
+        var panel_style := StyleBoxTexture.new()
+        panel_style.texture = panel_texture
+        panel_style.texture_margin_left = 18.0
+        panel_style.texture_margin_top = 18.0
+        panel_style.texture_margin_right = 18.0
+        panel_style.texture_margin_bottom = 18.0
+        panel.add_theme_stylebox_override("panel",panel_style)
     var content := VBoxContainer.new()
     panel.add_child(content)
     var heading := Label.new()
@@ -326,6 +350,15 @@ func _close_panels() -> void:
 func _draw() -> void:
     if _active_touch == -1:
         return
-    draw_circle(_joystick_origin,JOYSTICK_RADIUS,Color(0.18,0.38,0.56,0.22))
-    draw_arc(_joystick_origin,JOYSTICK_RADIUS,0.0,TAU,48,Color(0.48,0.74,0.94,0.78),3.0)
-    draw_circle(_joystick_origin+_joystick_vector*JOYSTICK_RADIUS,23.0,Color(0.58,0.82,1.0,0.82))
+    var base_texture := AssetLibrary.load_texture("ui_joystick_base.png")
+    var knob_texture := AssetLibrary.load_texture("ui_joystick_knob.png")
+    if base_texture != null:
+        draw_texture_rect(base_texture,Rect2(_joystick_origin-Vector2(64,64),Vector2(128,128)),false)
+    else:
+        draw_circle(_joystick_origin,JOYSTICK_RADIUS,Color(0.18,0.38,0.56,0.22))
+        draw_arc(_joystick_origin,JOYSTICK_RADIUS,0.0,TAU,48,Color(0.48,0.74,0.94,0.78),3.0)
+    var knob_position := _joystick_origin+_joystick_vector*JOYSTICK_RADIUS
+    if knob_texture != null:
+        draw_texture_rect(knob_texture,Rect2(knob_position-Vector2(24,24),Vector2(48,48)),false)
+    else:
+        draw_circle(knob_position,23.0,Color(0.58,0.82,1.0,0.82))
