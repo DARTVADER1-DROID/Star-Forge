@@ -135,10 +135,16 @@ func _test_main_scene(failures: Array[String]) -> void:
     var game := packed.instantiate()
     add_child(game)
     await get_tree().process_frame
-    for node_name: String in ["PlayerShip","HUD","ProjectilePool","NPCs","Obstacles","CargoDrops"]:
+    for node_name: String in ["PlayerShip","HUDLayer","HUDLayer/HUD","ProjectilePool","NPCs","Obstacles","CargoDrops"]:
         if game.get_node_or_null(node_name) == null:
             failures.append("Main scene missing node: " + node_name)
-    var ftl_button := game.get_node("HUD/FTLButton") as Button
+    var hud := game.get_node("HUDLayer/HUD") as TouchHUD
+    if hud == null:
+        failures.append("HUD must be a dedicated Control on its own CanvasLayer.")
+    else:
+        if not hud.is_visible_in_tree() or hud.size.x <= 0.0 or hud.size.y <= 0.0:
+            failures.append("HUD must fill the viewport and remain visible in the UI canvas.")
+    var ftl_button := game.get_node("HUDLayer/HUD/FTLButton") as Button
     if ftl_button == null:
         failures.append("HUD must create a dedicated FTL button.")
     else:
@@ -146,6 +152,14 @@ func _test_main_scene(failures: Array[String]) -> void:
             failures.append("FTL button must be clearly labelled and visible.")
         if not is_equal_approx(ftl_button.anchor_top,1.0) or not is_equal_approx(ftl_button.anchor_right,1.0):
             failures.append("FTL button must stay anchored in the lower-right flight-control cluster.")
+        var ftl_rect := ftl_button.get_global_rect()
+        if ftl_rect.size.x < 80.0 or ftl_rect.size.y < 50.0 or not Rect2(Vector2.ZERO,get_viewport_rect().size).encloses(ftl_rect):
+            failures.append("FTL button must have a usable size and remain inside the viewport.")
+    if hud != null:
+        for button_name: String in ["BOOSTButton","FIREButton","LOOTButton","FTLButton","BAGButton","SAVEButton"]:
+            var flight_button := hud.get_node_or_null(button_name) as Button
+            if flight_button == null or not flight_button.visible:
+                failures.append("Touch HUD is missing a visible flight/action button: " + button_name)
     var pool := game.get_node("ProjectilePool") as ProjectilePool
     var player := game.get_node("PlayerShip") as PlayerShip
     if pool.get_child_count() != 64:
