@@ -667,6 +667,33 @@ static void update_npcs(SfGame *game, float dt)
     }
 }
 
+static bool projectile_hits_asteroid(
+    const SfProjectile *projectile,
+    int system_index
+)
+{
+    int i;
+
+    if (projectile == NULL || !sf_game_system_has_asteroids(system_index)) {
+        return false;
+    }
+
+    for (i = 0; i < SF_ASTEROID_COUNT; ++i) {
+        const float collision_radius = asteroid_radius[i] + 2.0f;
+
+        if (sf_distance_squared(
+                projectile->x,
+                projectile->y,
+                asteroid_x[i],
+                asteroid_y[i]
+            ) < collision_radius * collision_radius) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void update_projectiles(SfGame *game, float dt)
 {
     int i;
@@ -683,6 +710,11 @@ static void update_projectiles(SfGame *game, float dt)
         projectile->life -= dt;
 
         if (projectile->life <= 0.0f) {
+            projectile->active = false;
+            continue;
+        }
+
+        if (projectile_hits_asteroid(projectile, game->current_system)) {
             projectile->active = false;
             continue;
         }
