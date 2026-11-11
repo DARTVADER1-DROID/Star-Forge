@@ -9,7 +9,7 @@ const STATION_SCENE: PackedScene = preload("res://scenes/station.tscn")
 const DROP_SCENE: PackedScene = preload("res://scenes/cargo_drop.tscn")
 
 @onready var player: PlayerShip = $PlayerShip
-@onready var hud: TouchHUD = $HUD
+@onready var hud: TouchHUD = $HUDLayer/HUD
 @onready var projectile_pool: ProjectilePool = $ProjectilePool
 @onready var npc_container: Node2D = $NPCs
 @onready var obstacle_container: Node2D = $Obstacles
