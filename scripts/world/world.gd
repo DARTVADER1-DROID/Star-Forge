@@ -18,10 +18,20 @@ const DROP_SCENE: PackedScene = preload("res://scenes/cargo_drop.tscn")
 var _stars := PackedVector2Array()
 var _system_id := ""
 var npc_salvage_enabled := false
+var _background_sprite: Sprite2D
 
 func _ready() -> void:
     get_viewport().size_changed.connect(queue_redraw)
     _create_star_field()
+    var background_texture := AssetLibrary.load_texture("bg_nebula_320x180.png")
+    if background_texture != null:
+        _background_sprite = Sprite2D.new()
+        _background_sprite.texture = background_texture
+        _background_sprite.position = Vector2(480.0,270.0)
+        _background_sprite.scale = Vector2(3.0,3.0)
+        _background_sprite.z_index = -1
+        _background_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        add_child(_background_sprite)
     player.projectile_container = projectile_container
     hud.steering_changed.connect(player.set_steering)
     hud.boost_changed.connect(player.set_boosting)
