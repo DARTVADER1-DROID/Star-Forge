@@ -524,7 +524,7 @@ int main(int argc, char **argv)
         }
 
         camera_x = (int)(game.player.x - (float)logical_width * 0.5f);
-        camera_y = (int)(game.player.y - (float)SF_LOGICAL_HEIGHT * 0.5f);
+        camera_y = (int)(game.player.y - (float)SF_UI_LOGICAL_HEIGHT * 0.5f);
 
 
 
