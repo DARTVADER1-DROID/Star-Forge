@@ -272,60 +272,20 @@ static void draw_npcs(
 
 static void draw_hud(SDL_Renderer *renderer, const SfGame *game)
 {
-    char text[160];
-
-    set_draw_color(renderer, 220, 230, 245);
+    char text[96];
 
     (void)snprintf(
         text,
         sizeof(text),
-        "STAR-FORGE  SYS %s  ARM %.0f HULL %.0f EN %.0f  CR %d",
+        "%s  HULL %.0f  ARM %.0f  ENERGY %.0f",
         sf_game_system_name(game->current_system),
-        game->player.armor,
         game->player.hull,
-        game->player.energy,
-        game->credits
+        game->player.armor,
+        game->player.energy
     );
 
+    set_draw_color(renderer, 205, 220, 238);
     SDL_RenderDebugText(renderer, 5.0f, 5.0f, text);
-
-    (void)snprintf(
-        text,
-        sizeof(text),
-        "METAL %d FUEL %d FOOD %d MED %d WEAPON %d",
-        game->inventory[SF_ITEM_METAL],
-        game->inventory[SF_ITEM_FUEL],
-        game->inventory[SF_ITEM_FOOD],
-        game->inventory[SF_ITEM_MEDICINE],
-        game->inventory[SF_ITEM_WEAPON]
-    );
-
-    SDL_RenderDebugText(renderer, 5.0f, 17.0f, text);
-
-    (void)snprintf(
-        text,
-        sizeof(text),
-        "SELECT %s x%d | NPC SALVAGE %s",
-        sf_item_name(game->selected_item),
-        game->selected_quantity,
-        game->npc_salvage_enabled ? "ON" : "OFF"
-    );
-
-    SDL_RenderDebugText(renderer, 5.0f, 29.0f, text);
-
-    SDL_RenderDebugText(
-        renderer,
-        5.0f,
-        153.0f,
-        "Use on-screen controls"
-    );
-
-    SDL_RenderDebugText(
-        renderer,
-        5.0f,
-        165.0f,
-        "CARGO button opens inventory"
-    );
 }
 
 
