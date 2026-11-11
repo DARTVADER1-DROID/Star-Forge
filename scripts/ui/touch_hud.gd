@@ -10,6 +10,8 @@ const JOYSTICK_RADIUS := 54.0
 const JOYSTICK_CENTER_X := 126.0
 const JOYSTICK_BOTTOM_MARGIN := 112.0
 const JOYSTICK_DEADZONE := 0.12
+const JOYSTICK_ZONE_WIDTH := 0.44
+const JOYSTICK_ZONE_TOP_RATIO := 0.34
 
 var _active_touch := -1
 var _joystick_origin := Vector2.ZERO
@@ -37,6 +39,7 @@ func _ready() -> void:
     _build_inventory()
     _build_galaxy()
     _build_recovery()
+    queue_redraw()
     GameState.inventory_changed.connect(refresh_inventory)
     GameState.system_changed.connect(_refresh_galaxy)
 
@@ -50,12 +53,12 @@ func _build_status() -> void:
     add_child(_status_label)
 
 func _build_controls() -> void:
-    var boost := _button("BOOST",Vector2(-222,-94),Vector2(94,66),true)
-    var fire := _button("FIRE",Vector2(-116,-94),Vector2(94,66),true)
-    var loot := _button("LOOT",Vector2(-96,14),Vector2(80,46),true,true)
-    var ftl := _button("FTL",Vector2(-96,68),Vector2(80,46),true,true)
-    var bag := _button("BAG",Vector2(-96,122),Vector2(80,46),true,true)
-    var save := _button("SAVE",Vector2(-96,176),Vector2(80,46),true,true)
+    var boost := _button("BOOST",Vector2(-218,-100),Vector2(96,72),true)
+    var fire := _button("FIRE",Vector2(-110,-100),Vector2(96,72),true)
+    var loot := _button("LOOT",Vector2(-100,14),Vector2(88,52),true,true)
+    var ftl := _button("FTL",Vector2(-100,74),Vector2(88,52),true,true)
+    var bag := _button("BAG",Vector2(-100,134),Vector2(88,52),true,true)
+    var save := _button("SAVE",Vector2(-100,194),Vector2(88,52),true,true)
     boost.button_down.connect(func(): boost_changed.emit(true))
     boost.button_up.connect(func(): boost_changed.emit(false))
     fire.button_down.connect(func(): fire_changed.emit(true))
@@ -137,7 +140,10 @@ func _start_joystick(id: int, point: Vector2) -> void:
     if _active_touch != -1:
         return
     var center := _joystick_center()
-    var zone := Rect2(Vector2(0,size.y*0.34),Vector2(size.x*0.44,size.y*0.66))
+    var zone := Rect2(
+        Vector2(0.0,size.y*JOYSTICK_ZONE_TOP_RATIO),
+        Vector2(size.x*JOYSTICK_ZONE_WIDTH,size.y*(1.0-JOYSTICK_ZONE_TOP_RATIO))
+    )
     if not zone.has_point(point):
         return
     _active_touch = id
@@ -333,6 +339,11 @@ func show_galaxy_map() -> void:
     _galaxy_panel.show()
     _gameplay_blocked = true
 
+func hide_galaxy_map() -> void:
+    if is_instance_valid(_galaxy_panel):
+        _galaxy_panel.hide()
+    _gameplay_blocked = false
+
 func _build_recovery() -> void:
     var built := _make_panel("SHIP DESTROYED",Vector2(320,190))
     _recovery_panel = built.panel
@@ -383,8 +394,20 @@ func _draw() -> void:
     else:
         draw_circle(base_position,JOYSTICK_RADIUS,Color(0.18,0.38,0.56,0.22))
         draw_arc(base_position,JOYSTICK_RADIUS,0.0,TAU,48,Color(0.48,0.74,0.94,0.78),3.0)
+    # Direction ticks make the movement control understandable before the
+    # player touches it; the knob remains centered until a finger is active.
+    var tick_color := Color(0.72,0.88,1.0,0.58)
+    draw_line(base_position+Vector2(0,-43),base_position+Vector2(0,-31),tick_color,2.0)
+    draw_line(base_position+Vector2(0,43),base_position+Vector2(0,31),tick_color,2.0)
+    draw_line(base_position+Vector2(-43,0),base_position+Vector2(-31,0),tick_color,2.0)
+    draw_line(base_position+Vector2(43,0),base_position+Vector2(31,0),tick_color,2.0)
     var knob_position := base_position+joystick_vector*JOYSTICK_RADIUS
     if knob_texture != null:
         draw_texture_rect(knob_texture,Rect2(knob_position-Vector2(24,24),Vector2(48,48)),false)
     else:
         draw_circle(knob_position,23.0,Color(0.58,0.82,1.0,0.82))
+
+
+    var move_label := ThemeDB.fallback_font
+    if move_label != null:
+        draw_string(move_label,base_position+Vector2(-23,78),"MOVE",HORIZONTAL_ALIGNMENT_CENTER,-1,12,Color(0.82,0.91,1.0,0.82))
