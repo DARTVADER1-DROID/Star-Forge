@@ -354,7 +354,7 @@ int main(int argc, char **argv)
             mouse_y = mouse_y * (float)SF_LOGICAL_HEIGHT / (float)window_height;
         }
 
-        draw_world(renderer, &game, camera_x, camera_y);
+        sf_render_world(renderer, &game, camera_x, camera_y);
 
         sf_render_hover_info(
             renderer,

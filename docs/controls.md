@@ -1,34 +1,14 @@
 # Controls
 
-## Android touch controls
+Star-Forge uses on-screen controls only. Keyboard gameplay bindings are intentionally not supported.
 
-- **Left virtual joystick:** steer left/right and thrust forward/backward.
-- **Fire:** hold to continuously fire the forward weapon.
-- **Boost:** hold to accelerate faster; movement does not consume ship energy.
-- **FTL:** press G on desktop to jump to the next system; requires an FTL drive and 5 fuel.
-- **Loot:** collect the nearest salvage container within collection range.
-- **FTL:** tap the FTL button to jump to the next system; requires an FTL drive and 5 fuel.
+## Movement
+- Use the on-screen virtual joystick (touch or mouse drag) to steer and thrust.
+- Hold **BOOST** for increased acceleration and speed.
 
-The joystick is analog in touch position, with a dead zone around its center. The current prototype maps the horizontal and vertical directions to discrete steering/thrust actions; a later input pass can introduce proportional steering.
+## Combat and interaction
+- Hold **FIRE** to shoot while energy is available.
+- Tap **LOOT** to collect nearby salvage.
+- Tap **FTL** to jump to the next available system. Each jump consumes 5 fuel.
 
-## Desktop keyboard controls
-
-| Key | Action |
-|---|---|
-| W / Up | Thrust |
-| S / Down | Reverse thrust |
-| A / Left | Turn left |
-| D / Right | Turn right |
-| Space | Fire |
-| Left Shift | Boost (free movement) |
-| G | FTL jump to the next system (5 fuel) |
-| E | Collect nearest salvage |
-| J | Jettison selected commodity |
-| T | Sell selected commodity at station |
-| 1–5 | Select commodity |
-| + / - | Change jettison quantity |
-| F3 | Toggle NPC salvage collection |
-| I | Open/close cargo inventory |
-| Escape | Quit |
-
-The Android touch overlay is currently compiled only for Android. Keyboard input remains available on desktop.
+The same control layout is displayed on Android and desktop. On desktop, click and drag the virtual joystick and click/hold the action buttons.
