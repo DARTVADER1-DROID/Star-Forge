@@ -60,7 +60,9 @@ static SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path)
 
     SDL_free(file_data);
 
-    if (pixels == NULL || width <= 0 || height <= 0) {
+    if (pixels == NULL || width <= 0 || height <= 0 ||
+        width > 2048 || height > 2048 ||
+        (size_t)width * (size_t)height > 4u * 1024u * 1024u) {
         SDL_Log("Could not decode sprite '%s'", path);
         stbi_image_free(pixels);
         return NULL;
