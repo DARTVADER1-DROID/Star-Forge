@@ -80,13 +80,13 @@ jobs:
           )
           content = manifest.read_text(encoding="utf-8")
           activity_pattern = re.compile(
-              r'(<activity\\b[^>]*\\bandroid:name="[^"]+")',
+              r'(<activity\b[^>]*\bandroid:name="[^"]+")',
               re.DOTALL,
           )
           if not activity_pattern.search(content):
               raise SystemExit(f"Activity declaration not found in {manifest}")
           content = activity_pattern.sub(
-              r'\\1\\n            android:screenOrientation="landscape"',
+              r'\1\n            android:screenOrientation="landscape"',
               content,
               count=1,
           )
