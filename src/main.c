@@ -154,7 +154,7 @@ static void draw_touch_ring(SDL_Renderer *renderer, float center_x, float center
     const int segments = 24;
     int i;
 
-    set_draw_color(renderer, 105, 165, 225);
+    (void)SDL_SetRenderDrawColor(renderer, 105, 165, 225, 255);
 
     for (i = 0; i < segments; ++i) {
         const float a0 = (float)i * 6.28318530718f / (float)segments;
