@@ -673,10 +673,14 @@ int main(int argc, char **argv)
     (void)argc;
     (void)argv;
 
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
-        SDL_Log("SDL initialization failed: %s", SDL_GetError());
+    SDL_Log("Star-Forge: starting SDL video subsystem");
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        SDL_Log("FATAL: SDL video initialization failed: %s", SDL_GetError());
         return 1;
     }
+
+    SDL_Log("Star-Forge: SDL video initialized");
 
     window = SDL_CreateWindow(
         "Star-Forge v0.1",
@@ -686,19 +690,29 @@ int main(int argc, char **argv)
     );
 
     if (window == NULL) {
-        SDL_Log("Window creation failed: %s", SDL_GetError());
+        SDL_Log("FATAL: window creation failed: %s", SDL_GetError());
         SDL_Quit();
         return 1;
     }
+
+    SDL_Log("Star-Forge: window created");
 
     renderer = SDL_CreateRenderer(window, NULL);
 
     if (renderer == NULL) {
-        SDL_Log("Renderer creation failed: %s", SDL_GetError());
+        SDL_Log("Default renderer unavailable: %s", SDL_GetError());
+        SDL_ClearError();
+        renderer = SDL_CreateRenderer(window, "software");
+    }
+
+    if (renderer == NULL) {
+        SDL_Log("FATAL: no SDL renderer could be created: %s", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return 1;
     }
+
+    SDL_Log("Star-Forge: renderer created");
 
     (void)SDL_SetRenderLogicalPresentation(
         renderer,
@@ -708,9 +722,12 @@ int main(int argc, char **argv)
     );
 
     sf_game_init(&game);
+    SDL_Log("Star-Forge: game simulation initialized");
 
     performance_frequency = SDL_GetPerformanceFrequency();
     previous_counter = SDL_GetPerformanceCounter();
+
+    SDL_Log("Star-Forge: entering main loop");
 
     while (running) {
         SDL_Event event;
@@ -829,6 +846,7 @@ int main(int argc, char **argv)
         SDL_Delay(1);
     }
 
+    SDL_Log("Star-Forge: shutting down normally");
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
