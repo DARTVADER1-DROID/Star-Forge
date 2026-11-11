@@ -20,6 +20,7 @@ var cargo_capacity := 100
 var _fire_timer := 0.0
 var _loot_timer := 0.0
 var _phase := 0.0
+var _sprite: Sprite2D
 
 func _ready() -> void:
     var role: Dictionary = ContentDatabase.npc_roles.get(role_id, {})
@@ -31,6 +32,14 @@ func _ready() -> void:
     hull = float(design.get("base_hull",65.0))
     cargo_capacity = int(design.get("cargo_capacity",50))
     _phase = float(get_instance_id() % 1000) / 1000.0 * TAU
+    var sprite_name := "ship_pirate_interceptor.png" if role_id == "pirate" else "ship_military_frigate.png"
+    var texture := AssetLibrary.load_texture(sprite_name)
+    if texture != null:
+        _sprite = Sprite2D.new()
+        _sprite.texture = texture
+        _sprite.scale = Vector2(0.48,0.48)
+        _sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        add_child(_sprite)
     var manifest: Dictionary = role.get("manifest", {})
     var random := RandomNumberGenerator.new()
     random.randomize()
@@ -125,5 +134,7 @@ func _drop_cargo() -> void:
         weapon_drop.global_position = global_position
 
 func _draw() -> void:
+    if is_instance_valid(_sprite):
+        return
     var tint := Color(0.92,0.34,0.28) if role_id=="pirate" else Color(0.42,0.78,0.62)
     draw_colored_polygon(PackedVector2Array([Vector2(0,-14),Vector2(10,10),Vector2(0,6),Vector2(-10,10)]),tint)
