@@ -4,7 +4,7 @@ Star-Forge uses on-screen controls only. Keyboard gameplay bindings are intentio
 
 ## Flight
 - Press anywhere in the left half of the screen to summon a floating joystick under your thumb.
-- Drag in the direction you want the ship to face; farther from the centre turns faster and applies more thrust.
+- Drag in the direction you want the ship to face; the ship smoothly turns toward that heading, while farther joystick movement applies more thrust.
 - Release the joystick to stop steering and thrusting. The ship coasts with its existing momentum.
 - Hold **BOOST** for increased acceleration and speed.
 - Hold **FIRE** to shoot while sufficient weapon energy is available.
