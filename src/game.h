@@ -8,6 +8,7 @@
 #define SF_MAX_PROJECTILES 96
 #define SF_ITEM_COUNT 5
 #define SF_MAX_SYSTEMS 4
+#define SF_FTL_FUEL_COST 5
 
 typedef enum {
     SF_ITEM_METAL,
