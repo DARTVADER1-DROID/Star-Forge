@@ -62,6 +62,7 @@ typedef struct {
     bool turn_left;
     bool turn_right;
     bool fire;
+    bool boost;
 } SfInput;
 
 typedef struct {
@@ -73,6 +74,7 @@ typedef struct {
     int selected_item;
     int selected_quantity;
     int credits;
+    float boost_energy;
     bool npc_salvage_enabled;
     float station_x;
     float station_y;
