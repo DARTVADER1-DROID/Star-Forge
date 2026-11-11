@@ -74,6 +74,7 @@ if(STARFORGE_BUILD_GAME)
     add_executable(
         star_forge
         src/main.c
+        src/render.c
     )
 
     target_link_libraries(

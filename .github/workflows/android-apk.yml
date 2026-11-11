@@ -52,6 +52,8 @@ jobs:
             "$GITHUB_WORKSPACE/src/main.c" \
             "$GITHUB_WORKSPACE/src/game.c" \
             "$GITHUB_WORKSPACE/src/game.h" \
+            "$GITHUB_WORKSPACE/src/render.c" \
+            "$GITHUB_WORKSPACE/src/render.h" \
             --variant copy \
             --output "$RUNNER_TEMP/starforge-android"
 
