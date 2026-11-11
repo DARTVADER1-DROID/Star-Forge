@@ -71,6 +71,8 @@ func _physics_process(delta: float) -> void:
     velocity = velocity.limit_length(maximum_speed)
     velocity *= pow(0.985,delta*60.0)
     move_and_slide()
+    if velocity.length_squared() > 1.0:
+        rotation = velocity.angle() + PI / 2.0
     if role_id == "pirate" and is_instance_valid(target) and global_position.distance_to(target.global_position)<320.0:
         _fire_at_target()
     queue_redraw()
