@@ -71,6 +71,9 @@ typedef struct {
     bool turn_right;
     bool fire;
     bool boost;
+    float steering_x;
+    float steering_y;
+    float steering_strength;
 } SfInput;
 
 typedef struct {
