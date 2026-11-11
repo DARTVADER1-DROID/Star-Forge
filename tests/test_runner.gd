@@ -91,8 +91,19 @@ func _test_main_scene(failures: Array[String]) -> void:
     for node_name: String in ["PlayerShip","HUD","ProjectilePool","NPCs","Obstacles","CargoDrops"]:
         if game.get_node_or_null(node_name) == null:
             failures.append("Main scene missing node: " + node_name)
-    if game.get_node("ProjectilePool").get_child_count() != 64:
+    var pool := game.get_node("ProjectilePool") as ProjectilePool
+    var player := game.get_node("PlayerShip") as PlayerShip
+    if pool.get_child_count() != 64:
         failures.append("Projectile pool should preallocate 64 slots.")
+    player.energy = 100.0
+    player._fire_weapon()
+    if pool.get_active_count() != 1:
+        failures.append("Player weapon should activate one pooled projectile.")
+    if not is_equal_approx(player.energy,92.0):
+        failures.append("Player weapon should consume eight energy per shot.")
+    pool.clear_active()
+    if pool.get_active_count() != 0:
+        failures.append("Projectile pool should deactivate all active shots.")
     if game.get_node("NPCs").get_child_count() != 3:
         failures.append("Initial system should spawn three NPC roles.")
     game.queue_free()
