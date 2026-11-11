@@ -119,7 +119,6 @@ static void draw_asteroids(
         const int screen_x = asteroid_x[i] - camera_x;
         const int screen_y = asteroid_y[i] - camera_y;
         const int radius = asteroid_radius[i];
-        int y;
 
         if (screen_x + radius < 0 ||
             screen_x - radius >= SF_LOGICAL_WIDTH ||
