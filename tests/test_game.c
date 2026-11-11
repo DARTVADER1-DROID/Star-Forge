@@ -102,6 +102,32 @@ int main(void)
         assert(game.player.energy >= energy_before);
     }
 
+    /* Salvage can be collected in portions when the hold is nearly full. */
+    sf_game_init(&game);
+    game.inventory[SF_ITEM_METAL] = 95;
+    game.drops[0].active = true;
+    game.drops[0].item = SF_ITEM_FUEL;
+    game.drops[0].quantity = 10;
+    game.drops[0].x = game.player.x;
+    game.drops[0].y = game.player.y;
+    assert(sf_game_collect_nearest(&game));
+    assert(game.inventory[SF_ITEM_FUEL] == 23);
+    assert(game.drops[0].active);
+    assert(game.drops[0].quantity == 5);
+
+    /* Jettison merges into an existing stack when the drop pool is full. */
+    sf_game_init(&game);
+    for (int i = 0; i < SF_MAX_DROPS; ++i) {
+        game.drops[i].active = true;
+        game.drops[i].item = SF_ITEM_FUEL;
+        game.drops[i].quantity = 1;
+    }
+    game.selected_item = SF_ITEM_METAL;
+    game.selected_quantity = 5;
+    assert(sf_game_jettison_selected(&game));
+    assert(game.inventory[SF_ITEM_METAL] == 7);
+    assert(game.drops[0].quantity == 6);
+
     /* A full projectile pool must not consume weapon energy or cooldown. */
     sf_game_init(&game);
     for (int i = 0; i < SF_MAX_PROJECTILES; ++i) {
