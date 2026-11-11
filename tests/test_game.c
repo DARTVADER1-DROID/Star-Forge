@@ -97,6 +97,19 @@ int main(void)
     sf_game_update(&game, &idle, 1.0f / 60.0f);
     assert(!game.projectiles[0].active);
 
+    /* Cargo crates cannot drift outside the navigable system bounds. */
+    sf_game_init(&game);
+    game.npc_salvage_enabled = false;
+    game.drops[0].active = true;
+    game.drops[0].item = SF_ITEM_METAL;
+    game.drops[0].quantity = 1;
+    game.drops[0].x = 2399.0f;
+    game.drops[0].y = 1200.0f;
+    game.drops[0].vx = 100.0f;
+    sf_game_update(&game, &idle, 1.0f / 60.0f);
+    assert(game.drops[0].x <= 2392.0f);
+    assert(game.drops[0].vx == 0.0f);
+
     /* Destroying a cargo NPC creates physical drops from its actual manifest. */
     sf_game_init(&game);
     game.player.x = 600.0f;
