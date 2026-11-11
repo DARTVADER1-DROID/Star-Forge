@@ -5,6 +5,8 @@ extends Node
 # runtime directory scanning therefore cannot reliably discover them.
 const ASSETS: Dictionary = {
     "bg_nebula_320x180.png": preload("res://assets/backgrounds/bg_nebula_320x180.png"),
+    "star_yellow_64.png": preload("res://assets/planets/star_yellow_64.png"),
+    "orbit_ring_96.png": preload("res://assets/planets/orbit_ring_96.png"),
     "ship_player_runner.png": preload("res://assets/ships/ship_player_runner.png"),
     "ship_cargo_hauler.png": preload("res://assets/ships/ship_cargo_hauler.png"),
     "ship_pirate_interceptor.png": preload("res://assets/ships/ship_pirate_interceptor.png"),

@@ -20,10 +20,11 @@ func _ready() -> void:
     custom_minimum_size = Vector2(460.0,220.0)
 
 func configure(id: String, system_data: Dictionary, ship: Vector2) -> void:
-    system_id = id
-    definition = system_data
+    if system_id != id:
+        system_id = id
+        definition = system_data
+        _rebuild_body_points()
     ship_position = ship
-    _rebuild_body_points()
     queue_redraw()
 
 func _rebuild_body_points() -> void:
@@ -56,20 +57,33 @@ func _draw() -> void:
     _map_scale = minf((size.x-MAP_MARGIN.x*2.0)/MAP_WIDTH,(size.y-MAP_MARGIN.y*2.0)/MAP_HEIGHT)
     _map_offset = (size-Vector2(MAP_WIDTH,MAP_HEIGHT)*_map_scale)*0.5
     draw_set_transform(_map_offset,0.0,Vector2(_map_scale,_map_scale))
-    draw_circle(Vector2(480,270),24.0,Color(1.0,0.72,0.32,0.16))
-    draw_circle(Vector2(480,270),12.0,Color(1.0,0.82,0.48,1.0))
-    draw_arc(Vector2(480,270),12.0,0.0,TAU,32,Color(1.0,0.92,0.72,1.0),2.0)
+    var star_texture := AssetLibrary.load_texture("star_yellow_64.png")
+    if star_texture != null:
+        draw_texture_rect(star_texture,Rect2(Vector2(448,238),Vector2(64,64)),false)
+    else:
+        draw_circle(Vector2(480,270),24.0,Color(1.0,0.72,0.32,0.16))
+        draw_circle(Vector2(480,270),12.0,Color(1.0,0.82,0.48,1.0))
+        draw_arc(Vector2(480,270),12.0,0.0,TAU,32,Color(1.0,0.92,0.72,1.0),2.0)
 
     var planet_count := int(definition.get("planet_count",2))
     var planets: Array[Vector2] = []
     for index in range(planet_count):
         var point := Vector2(150.0+float(index)*280.0,100.0+float(index%2)*330.0)
         planets.append(point)
-        draw_arc(Vector2(480,270),point.distance_to(Vector2(480,270)),0.0,TAU,72,Color(0.35,0.55,0.72,0.18),1.0)
+        var orbit_radius := point.distance_to(Vector2(480,270))
+        var orbit_texture := AssetLibrary.load_texture("orbit_ring_96.png")
+        if orbit_texture != null:
+            draw_texture_rect(orbit_texture,Rect2(Vector2(480-orbit_radius,270-orbit_radius),Vector2(orbit_radius*2.0,orbit_radius*2.0)),false)
+        else:
+            draw_arc(Vector2(480,270),orbit_radius,0.0,TAU,72,Color(0.35,0.55,0.72,0.18),1.0)
         var radius := 30.0+float(index%3)*12.0
-        var body_color := Color(0.32,0.70,0.82) if index%2==0 else Color(0.68,0.50,0.88)
-        draw_circle(point,radius,body_color)
-        draw_arc(point,radius,0.0,TAU,32,Color(0.86,0.94,1.0,0.92),2.0)
+        var planet_texture := AssetLibrary.load_texture("planet_terran_64.png") if index%2==0 else AssetLibrary.load_texture("planet_gas_96.png")
+        if planet_texture != null:
+            draw_texture_rect(planet_texture,Rect2(point-Vector2(radius,radius),Vector2(radius*2.0,radius*2.0)),false)
+        else:
+            var body_color := Color(0.32,0.70,0.82) if index%2==0 else Color(0.68,0.50,0.88)
+            draw_circle(point,radius,body_color)
+            draw_arc(point,radius,0.0,TAU,32,Color(0.86,0.94,1.0,0.92),2.0)
         if selected_body == "PLANET %d" % (index+1):
             draw_arc(point,radius+8.0,0.0,TAU,32,Color(1.0,0.78,0.36,1.0),2.0)
         draw_string(ThemeDB.fallback_font,point+Vector2(-42.0,radius+18.0),"PLANET %d" % (index+1),HORIZONTAL_ALIGNMENT_CENTER,84.0,12,Color(0.88,0.94,1.0,0.95))
@@ -81,7 +95,12 @@ func _draw() -> void:
         var parent: Vector2 = planets[moon_index % planets.size()]
         var angle := float(moon_index)*2.399
         var moon_point := parent+Vector2(cos(angle),sin(angle))*76.0
-        draw_circle(moon_point,11.0+float(moon_index%3)*3.0,Color(0.52,0.58,0.68,1.0))
+        var moon_texture := AssetLibrary.load_texture("planet_moon_32.png")
+        var moon_size := 24.0+float(moon_index%3)*6.0
+        if moon_texture != null:
+            draw_texture_rect(moon_texture,Rect2(moon_point-Vector2(moon_size,moon_size)*0.5,Vector2(moon_size,moon_size)),false)
+        else:
+            draw_circle(moon_point,moon_size*0.5,Color(0.52,0.58,0.68,1.0))
         if selected_body == "MOON %d" % (moon_index+1):
             draw_arc(moon_point,20.0,0.0,TAU,24,Color(1.0,0.78,0.36,1.0),2.0)
 
@@ -91,8 +110,12 @@ func _draw() -> void:
 
     var station_data: Array = definition.get("station_position",[480,270])
     var station := Vector2(float(station_data[0]),float(station_data[1]))
-    draw_circle(station,20.0,Color(0.28,0.76,0.72,0.24))
-    draw_arc(station,17.0,0.0,TAU,32,Color(0.42,0.94,0.84,1.0),3.0)
+    var station_texture := AssetLibrary.load_texture("station_ring_hub.png")
+    if station_texture != null:
+        draw_texture_rect(station_texture,Rect2(station-Vector2(30,30),Vector2(60,60)),false)
+    else:
+        draw_circle(station,20.0,Color(0.28,0.76,0.72,0.24))
+        draw_arc(station,17.0,0.0,TAU,32,Color(0.42,0.94,0.84,1.0),3.0)
     draw_string(ThemeDB.fallback_font,station+Vector2(-35.0,31.0),"STATION",HORIZONTAL_ALIGNMENT_CENTER,70.0,12,Color(0.58,0.98,0.90,1.0))
     draw_circle(ship_position,8.0,Color(0.46,0.86,1.0,1.0))
     draw_arc(ship_position,14.0,0.0,TAU,32,Color(0.46,0.86,1.0,0.9),2.0)
