@@ -103,6 +103,15 @@ static int cargo_used(const int cargo[SF_ITEM_COUNT])
 
     for (item = 0; item < SF_ITEM_COUNT; ++item) {
         const int volume_per_item = item == SF_ITEM_WEAPON ? 2 : 1;
+
+        if (cargo[item] <= 0) {
+            continue;
+        }
+
+        if (cargo[item] > (100 - total) / volume_per_item) {
+            return 101;
+        }
+
         total += cargo[item] * volume_per_item;
     }
 
