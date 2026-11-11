@@ -3,6 +3,7 @@
 #include "game.h"
 #include "render.h"
 #include "assets.h"
+#include "ui_layout.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -119,7 +120,7 @@ static void draw_asteroids(
         if (screen_x + radius < 0 ||
             screen_x - radius >= viewport_width ||
             screen_y + radius < 0 ||
-            screen_y - radius >= SF_LOGICAL_HEIGHT) {
+            screen_y - radius >= SF_UI_LOGICAL_HEIGHT) {
             continue;
         }
 
