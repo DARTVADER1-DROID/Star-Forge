@@ -9,6 +9,7 @@ func _run_tests() -> void:
     _test_asset_library(failures)
     _test_asset_manifest(failures)
     _test_cargo_capacity(failures)
+    _test_fuel_purchase(failures)
     _test_armour_damage(failures)
     _test_ftl_rules(failures)
     _test_map_graph(failures)
@@ -60,6 +61,16 @@ func _test_cargo_capacity(failures: Array[String]) -> void:
         failures.append("Cargo must reject capacity overflow.")
     if GameState.cargo_used() != 98:
         failures.append("Cargo volume calculation is incorrect.")
+
+func _test_fuel_purchase(failures: Array[String]) -> void:
+    GameState.inventory = {"metal":0,"fuel":25,"food":0,"medicine":0,"weapon_salvage":0}
+    GameState.credits = 250
+    if not GameState.buy_fuel(10):
+        failures.append("Planet refuelling should sell fuel when credits and cargo space are available.")
+    if int(GameState.inventory.fuel) != 35 or GameState.credits != 110:
+        failures.append("Fuel purchase must update inventory and credits at the catalog price.")
+    GameState.inventory = {"metal":0,"fuel":25,"food":0,"medicine":0,"weapon_salvage":0}
+    GameState.credits = 250
 
 func _test_armour_damage(failures: Array[String]) -> void:
     GameState.player_ship_state.hull = 20.0
