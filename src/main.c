@@ -226,8 +226,8 @@ static void draw_touch_controls(
     const SfAssets *assets
 )
 {
-    SDL_FRect fire = { 268.0f, 125.0f, 43.0f, 43.0f };
-    SDL_FRect boost = { 270.0f, 69.0f, 38.0f, 38.0f };
+    SDL_FRect fire = { 276.0f, 130.0f, 36.0f, 36.0f };
+    SDL_FRect boost = { 278.0f, 76.0f, 32.0f, 32.0f };
     SDL_FRect loot = { 211.0f, 145.0f, 38.0f, 27.0f };
     SDL_FRect ftl = { 211.0f, 96.0f, 38.0f, 27.0f };
     const float center_x = touch->joystick_active
@@ -242,9 +242,9 @@ static void draw_touch_controls(
         float dy = touch->joystick_y - center_y;
         const float length = sqrtf(dx * dx + dy * dy);
 
-        if (length > 28.0f) {
-            dx *= 28.0f / length;
-            dy *= 28.0f / length;
+        if (length > 18.0f) {
+            dx *= 18.0f / length;
+            dy *= 18.0f / length;
         }
 
         knob_x += dx;
@@ -264,22 +264,22 @@ static void draw_touch_controls(
         );
         SDL_Texture *loot_texture = sf_assets_get(assets, SF_ASSET_LOOT_UP);
         SDL_FRect base_rect = {
-            center_x - 34.0f,
-            center_y - 34.0f,
-            68.0f,
-            68.0f
+            center_x - 23.0f,
+            center_y - 23.0f,
+            46.0f,
+            46.0f
         };
         SDL_FRect knob_rect = {
-            knob_x - 13.0f,
-            knob_y - 13.0f,
-            26.0f,
-            26.0f
+            knob_x - 9.0f,
+            knob_y - 9.0f,
+            18.0f,
+            18.0f
         };
 
         if (base) (void)SDL_RenderTexture(renderer, base, NULL, &base_rect);
-        else draw_touch_ring(renderer, center_x, center_y, 33.0f);
+        else draw_touch_ring(renderer, center_x, center_y, 22.0f);
         if (knob) (void)SDL_RenderTexture(renderer, knob, NULL, &knob_rect);
-        else draw_touch_ring(renderer, knob_x, knob_y, 12.0f);
+        else draw_touch_ring(renderer, knob_x, knob_y, 8.0f);
         if (fire_texture) (void)SDL_RenderTexture(renderer, fire_texture, NULL, &fire);
         else { set_draw_color(renderer, 30, 70, 115); SDL_RenderFillRect(renderer, &fire); }
         if (boost_texture) (void)SDL_RenderTexture(renderer, boost_texture, NULL, &boost);
@@ -492,7 +492,7 @@ int main(int argc, char **argv)
             const float dx = touch.joystick_x - touch.joystick_origin_x;
             const float dy = touch.joystick_y - touch.joystick_origin_y;
             const float distance = sqrtf(dx * dx + dy * dy);
-            const float maximum_radius = 42.0f;
+            const float maximum_radius = 18.0f;
             const float normalized_distance = fminf(
                 distance / maximum_radius,
                 1.0f
