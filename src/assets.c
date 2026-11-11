@@ -1,6 +1,7 @@
 #include "assets.h"
 
 #include <limits.h>
+#include <stddef.h>
 #include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
