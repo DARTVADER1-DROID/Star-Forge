@@ -2,7 +2,7 @@
 #include <limits.h>
 #include <string.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include "../third_party/stb/stb_image.h"
+#include ""stb_image.h""
 static const char *const paths[SF_ASSET_COUNT]={
 "assets/ships/ship_player_runner.png","assets/ships/ship_cargo_hauler.png","assets/ships/ship_pirate_interceptor.png",
 "assets/stations/station_ring_hub.png","assets/planets/planet_terran_64.png","assets/planets/planet_gas_96.png",

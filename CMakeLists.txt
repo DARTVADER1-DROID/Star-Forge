@@ -40,7 +40,6 @@ add_library(
     STATIC
     src/game.c
     src/world.c
-    src/assets.c
 )
 
 target_include_directories(
