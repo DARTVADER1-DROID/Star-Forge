@@ -199,7 +199,7 @@ static void destroy_npc_ship(SfGame *game, SfShip *ship)
     game->destroyed_npcs += 1u;
 }
 
-static void spawn_projectile(
+static bool spawn_projectile(
     SfGame *game,
     float x,
     float y,
@@ -221,9 +221,11 @@ static void spawn_projectile(
             projectile->vy = sinf(angle) * speed;
             projectile->life = 1.8f;
             projectile->from_player = from_player;
-            return;
+            return true;
         }
     }
+
+    return false;
 }
 
 void sf_game_fire_player(SfGame *game)
@@ -241,14 +243,16 @@ void sf_game_fire_player(SfGame *game)
         return;
     }
 
-    spawn_projectile(
-        game,
-        ship->x + cosf(ship->angle) * 18.0f,
-        ship->y + sinf(ship->angle) * 18.0f,
-        ship->angle,
-        true,
-        360.0f
-    );
+    if (!spawn_projectile(
+            game,
+            ship->x + cosf(ship->angle) * 18.0f,
+            ship->y + sinf(ship->angle) * 18.0f,
+            ship->angle,
+            true,
+            360.0f
+        )) {
+        return;
+    }
 
     ship->energy -= ship->weapon_energy_cost;
     ship->fire_cooldown = 0.22f;
@@ -489,17 +493,17 @@ static void update_pirate(SfGame *game, SfShip *ship, float dt)
     if (distance < 330.0f &&
         ship->fire_cooldown <= 0.0f &&
         ship->energy >= ship->weapon_energy_cost) {
-        spawn_projectile(
-            game,
-            ship->x + cosf(ship->angle) * 17.0f,
-            ship->y + sinf(ship->angle) * 17.0f,
-            ship->angle,
-            false,
-            230.0f
-        );
-
-        ship->energy -= ship->weapon_energy_cost;
-        ship->fire_cooldown = 0.85f;
+        if (spawn_projectile(
+                game,
+                ship->x + cosf(ship->angle) * 17.0f,
+                ship->y + sinf(ship->angle) * 17.0f,
+                ship->angle,
+                false,
+                230.0f
+            )) {
+            ship->energy -= ship->weapon_energy_cost;
+            ship->fire_cooldown = 0.85f;
+        }
     }
 }
 
