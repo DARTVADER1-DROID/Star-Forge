@@ -39,6 +39,7 @@ int main(void)
     assert(!game.projectiles[0].active);
 
     /* Boost increases acceleration without consuming ship energy. */
+    sf_game_init(&game);
     {
         SfInput boost_input = { .thrust = true, .boost = true };
 
