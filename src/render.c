@@ -246,7 +246,9 @@ static void draw_npcs(
         draw_ship(
             renderer,
             assets,
-            ship->role == SF_ROLE_PIRATE ? SF_ASSET_PIRATE : SF_ASSET_CARGO,
+            ship->role == SF_ROLE_PIRATE
+                ? SF_ASSET_PIRATE
+                : (ship->role == SF_ROLE_PATROL ? SF_ASSET_PATROL : SF_ASSET_CARGO),
             ship->x,
             ship->y,
             ship->angle,
