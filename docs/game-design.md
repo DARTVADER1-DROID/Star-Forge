@@ -83,7 +83,51 @@ The planned model is data-driven:
 
 Earlier illustrative class multipliers and 1–10 archetype ratings are provisional examples only. They are **not approved balance values** and must not be treated as final game data.
 
-## 4. Ship upgrades
+## 4. Ship mass and weapon mounting
+
+Every ship has a defined mass and a weapon-mounting layout. Weapon installation is constrained by both the ship's layout and its remaining available mass.
+
+### 4.1 Mass budget
+
+Ship mass is a core design and equipment constraint:
+- Each hull has a base mass.
+- The ship has a maximum equipment/load mass budget (exact terminology and formula to be finalized).
+- Installed weapons add their own mass.
+- Installing a weapon reduces the ship's remaining available mass by that weapon's mass.
+- Other equipment and cargo may also contribute to total mass; the exact accounting rules remain to be specified.
+- Available mass must never become negative. The installation system must reject an installation that exceeds the hull's permitted mass limit.
+- Total mass feeds into derived mobility and fuel calculations, so fitting heavier weapons has consequences beyond the weapon slot itself.
+
+The data model should distinguish at least: base hull mass, installed equipment mass, cargo mass, total mass, maximum permitted mass, and remaining available mass. Whether the maximum is a hard equipment limit or a general maximum operating mass needs a final design decision.
+
+### 4.2 Weapon size classes
+
+Weapons are divided into four mount/size classes:
+1. **Small**
+2. **Medium**
+3. **Large**
+4. **Extra-large**
+
+A ship declares which weapon-size layouts it supports. A weapon can only be installed where the ship has a compatible layout/mount.
+
+### 4.3 Weapon layout geometry
+
+Each ship's layout definition specifies mounting information for the supported weapon sizes. A layout can include:
+- Weapon size class.
+- Mount position(s) on the hull.
+- Firing arc angle for each mount or mount group.
+- Mount orientation and any other geometry needed by the renderer and combat system.
+- Maximum count or other mount restrictions, when applicable.
+
+For example, a ship may have a Small-weapon layout with a defined firing arc. The player can browse the weapons market, select a compatible Small weapon, and install it into that layout. The weapon's visual attachment point and firing arc must match the ship's approved layout metadata.
+
+Weapon size compatibility, physical mount geometry, and remaining mass are separate checks: all must pass before installation.
+
+### 4.4 Weapon fusion / grouping rule
+
+The current design states that only weapons of the same size class and compatible layout may be fused. The exact meaning and gameplay result of "fused" (for example, combining identical weapons into a linked mount, or merging them into one stronger weapon) is not yet defined. Preserve this as a design rule to clarify before implementation; do not assume fusion increases damage or changes weapon size.
+
+## 5. Ship upgrades
 
 Ships are upgradeable. Upgrades have distinctive, humorous/in-universe names and improve one or more ship statistics by a defined percentage.
 
@@ -97,7 +141,7 @@ Upgrade definitions should be data-driven and identify:
 
 The percentage modifier should be explicit and inspectable in the ship configuration/UI. Stacking rules and whether modifiers are additive or multiplicative remain to be decided. Upgrades must respect hull limits so they improve a ship without erasing its archetype.
 
-## 5. Galaxy and star systems
+## 6. Galaxy and star systems
 
 - The game world is an open galaxy made up of multiple star systems.
 - Inter-system access requires FTL travel.
@@ -108,7 +152,26 @@ The percentage modifier should be explicit and inspectable in the ship configura
 
 The exact FTL mechanics, map representation, travel costs/times, system generation, and planet trait catalogue have not yet been specified.
 
-## 6. Planetary economy and commodities
+## 7. Fuel logistics and fleet range
+
+Fuel is a consumable resource:
+- FTL travel between star systems consumes fuel.
+- Fuel is also a tradeable commodity that can be bought and sold through planetary markets.
+- Fuel consumption must be accounted for when determining whether a ship or fleet can make an FTL jump.
+- The exact FTL fuel formula, per-jump cost, tank capacity rules, and whether local/system travel consumes fuel remain open.
+
+### 7.1 Fuel haulers
+
+Cargo ships may include specialized **fuel haulers** designed to transport fuel for other ships.
+- A fuel hauler carries fuel as dedicated fleet-support cargo.
+- Fuel haulers can extend the effective FTL range of a fleet by supplying fuel to fleet members.
+- Fuel haulers have their own class/configuration variants; their exact class taxonomy and relationship to the existing Civilian, Cargo, and Military classes are not yet defined.
+- Fleet range should account for the fuel available across eligible fleet ships, fuel-hauler capacity, transfer rules, and the fuel required for the planned route.
+- Fuel-hauler support should not imply infinite range: fuel capacity, consumption, and transfer limits still apply.
+
+The design must later define whether fuel is transferred between ships before a jump, during a stop, or represented as a shared fleet fuel pool, and what happens if a fuel hauler is disabled or separated from the fleet.
+
+## 8. Planetary economy and commodities
 
 The initial commodity categories are:
 
@@ -127,7 +190,7 @@ Commodity prices may differ from planet to planet based on their characteristics
 
 A future economy model can account for local production, consumption, population demand, scarcity, and trade supply. These are candidate pricing inputs, not finalized formulas. The initial design should keep commodity definitions separate from each planet's market stock and price.
 
-## 7. Weapons market and ship mounting
+## 9. Weapons market and ship mounting
 
 - Weapons are purchasable through a weapons market.
 - Weapons are attachable equipment, installed at compatible ship hardpoints.
@@ -137,7 +200,7 @@ A future economy model can account for local production, consumption, population
 
 The user will provide/document the weapon catalogue and weapon details later. Therefore, this document intentionally does not define individual weapons, damage values, firing rates, projectile properties, or final weapon-market rules.
 
-## 8. Asset and data separation
+## 10. Asset and data separation
 
 The implementation should separate:
 - **Visual asset metadata:** sprite path, dimensions, pivot, animation frames, hardpoint coordinates, engine attachment points, and collision geometry.
@@ -149,10 +212,10 @@ The implementation should separate:
 
 The engine should combine these definitions at runtime rather than embedding individual ships, planets, or weapon values in C source code. Sprite coordinates use the convention in [Asset Pipeline](asset-pipeline.md).
 
-## 9. Open design decisions
+## 11. Open design decisions
 
 The following are deliberately left open:
-- Exact baseline statistics and balance values for all six ship types.
+- Exact baseline statistics and balance values for all six ship types.\n- Whether maximum permitted mass is an equipment-only limit or includes cargo and fuel.\n- Whether weapon mass is the only equipment mass counted against the installation budget.\n- Exact weapon layout schema, mount positions, firing-arc conventions, and whether arcs are per mount or per layout.\n- Exact meaning and result of weapon fusion.\n- Fuel consumption per FTL jump and fuel tank/fleet range calculations.\n- Fuel-hauler variants/classes, fuel transfer mechanics, and fleet membership constraints.
 - Exact numerical class modifiers and class/type restrictions.
 - Upgrade names, upgrade catalogue, stacking rules, costs, and installation slots.
 - FTL navigation, range, fuel/cost, and travel-time rules.
@@ -162,7 +225,7 @@ The following are deliberately left open:
 - Weapons catalogue, weapon statistics, market rules, and mount-size taxonomy.
 - Whether and how population changes over time.
 
-## 10. Design constraints
+## 12. Design constraints
 
 - Preserve the offline-first requirement; the core galaxy, trading, and ship systems must not require a server.
 - Keep content definitions data-driven and versionable.
