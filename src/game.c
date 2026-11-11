@@ -1,91 +1,647 @@
 #include "game.h"
+
 #include <math.h>
 #include <string.h>
-#define PI 3.14159265358979323846f
-#define WORLD 2400.0f
-static const float asteroid_x[8] = { 520, 680, 860, 1040, 1280, 1510, 1740, 1980 };
-static const float asteroid_y[8] = { 250, 620, 430, 890, 510, 1120, 760, 1380 };
-static const float asteroid_r[8] = { 22, 30, 18, 34, 25, 28, 20, 32 };
-static float clampf(float v,float lo,float hi){return v<lo?lo:(v>hi?hi:v);}
-float sf_distance_squared(float ax,float ay,float bx,float by){float x=ax-bx,y=ay-by;return x*x+y*y;}
-static unsigned int rnd(SfGame*g){unsigned int x=g->rng;x^=x<<13;x^=x>>17;x^=x<<5;g->rng=x;return x;}
-static float rangef(SfGame*g,float a,float b){return a+(b-a)*(float)(rnd(g)&0xffffffu)/16777215.0f;}
-const char *sf_item_name(int i){static const char*n[SF_ITEM_COUNT]={"Metal","Fuel","Food","Medicine","Weapon"};return i>=0&&i<SF_ITEM_COUNT?n[i]:"Unknown";}
-int sf_item_price(int i){static const int p[SF_ITEM_COUNT]={8,14,5,22,75};return i>=0&&i<SF_ITEM_COUNT?p[i]:0;}
+
+#define SF_PI 3.14159265358979323846f
+#define SF_WORLD_SIZE 2400.0f
+#define SF_PLAYER_RADIUS 12.0f
+#define SF_ASTEROID_COUNT 8
+
+static const float asteroid_x[SF_ASTEROID_COUNT] = {
+    520.0f, 680.0f, 860.0f, 1040.0f, 1280.0f, 1510.0f, 1740.0f, 1980.0f
+};
+
+static const float asteroid_y[SF_ASTEROID_COUNT] = {
+    250.0f, 620.0f, 430.0f, 890.0f, 510.0f, 1120.0f, 760.0f, 1380.0f
+};
+
+static const float asteroid_radius[SF_ASTEROID_COUNT] = {
+    22.0f, 30.0f, 18.0f, 34.0f, 25.0f, 28.0f, 20.0f, 32.0f
+};
+
+static float clampf(float value, float minimum, float maximum)
+{
+    if (value < minimum) {
+        return minimum;
+    }
+
+    if (value > maximum) {
+        return maximum;
+    }
+
+    return value;
+}
+
+float sf_distance_squared(float ax, float ay, float bx, float by)
+{
+    const float dx = ax - bx;
+    const float dy = ay - by;
+
+    return dx * dx + dy * dy;
+}
+
+static unsigned int random_next(SfGame *game)
+{
+    unsigned int value = game->rng;
+
+    value ^= value << 13;
+    value ^= value >> 17;
+    value ^= value << 5;
+
+    game->rng = value;
+    return value;
+}
+
+static float random_range(SfGame *game, float minimum, float maximum)
+{
+    const float unit = (float)(random_next(game) & 0x00FFFFFFu) / 16777215.0f;
+
+    return minimum + (maximum - minimum) * unit;
+}
+
+const char *sf_item_name(int item)
+{
+    static const char *names[SF_ITEM_COUNT] = {
+        "Metal",
+        "Fuel",
+        "Food",
+        "Medicine",
+        "Weapon"
+    };
+
+    if (item < 0 || item >= SF_ITEM_COUNT) {
+        return "Unknown";
+    }
+
+    return names[item];
+}
+
+int sf_item_price(int item)
+{
+    static const int prices[SF_ITEM_COUNT] = {
+        8, 14, 5, 22, 75
+    };
+
+    if (item < 0 || item >= SF_ITEM_COUNT) {
+        return 0;
+    }
+
+    return prices[item];
+}
+
 static int cargo_used(const int cargo[SF_ITEM_COUNT])
 {
- int total = 0;
- for (int i = 0; i < SF_ITEM_COUNT; ++i) total += cargo[i] * (i == SF_ITEM_WEAPON ? 2 : 1);
- return total;
+    int total = 0;
+    int item;
+
+    for (item = 0; item < SF_ITEM_COUNT; ++item) {
+        const int volume_per_item = item == SF_ITEM_WEAPON ? 2 : 1;
+        total += cargo[item] * volume_per_item;
+    }
+
+    return total;
 }
-static void resolve_asteroids(SfShip *ship)
+
+static void resolve_asteroid_collisions(SfShip *ship)
 {
- for (int i = 0; i < 8; ++i) {
-  float dx = ship->x - asteroid_x[i], dy = ship->y - asteroid_y[i];
-  float d2 = dx * dx + dy * dy, min_d = asteroid_r[i] + 12.0f;
-  if (d2 < min_d * min_d) {
-   float d = sqrtf(d2);
-   if (d < 0.001f) { dx = 1.0f; dy = 0.0f; d = 1.0f; }
-   ship->x = asteroid_x[i] + dx / d * min_d;
-   ship->y = asteroid_y[i] + dy / d * min_d;
-   ship->vx *= -0.25f;
-   ship->vy *= -0.25f;
-  }
- }
+    int i;
+
+    for (i = 0; i < SF_ASTEROID_COUNT; ++i) {
+        const float dx = ship->x - asteroid_x[i];
+        const float dy = ship->y - asteroid_y[i];
+        const float minimum_distance = asteroid_radius[i] + SF_PLAYER_RADIUS;
+        const float distance_squared = dx * dx + dy * dy;
+
+        if (distance_squared < minimum_distance * minimum_distance) {
+            float distance = sqrtf(distance_squared);
+            float normal_x = dx;
+            float normal_y = dy;
+
+            if (distance < 0.001f) {
+                normal_x = 1.0f;
+                normal_y = 0.0f;
+                distance = 1.0f;
+            }
+
+            ship->x = asteroid_x[i] + (normal_x / distance) * minimum_distance;
+            ship->y = asteroid_y[i] + (normal_y / distance) * minimum_distance;
+            ship->vx *= -0.25f;
+            ship->vy *= -0.25f;
+        }
+    }
 }
-static void spawn_drop(SfGame*g,float x,float y,int item,int qty){
- if(qty<=0)return;
- for(int i=0;i<SF_MAX_DROPS;i++)if(!g->drops[i].active){SfCargoDrop*d=&g->drops[i];d->active=true;d->x=x+rangef(g,-12,12);d->y=y+rangef(g,-12,12);d->vx=rangef(g,-18,18);d->vy=rangef(g,-18,18);d->item=item;d->quantity=qty;return;}
+
+static void spawn_cargo_drop(
+    SfGame *game,
+    float x,
+    float y,
+    int item,
+    int quantity
+)
+{
+    int i;
+
+    if (quantity <= 0 || item < 0 || item >= SF_ITEM_COUNT) {
+        return;
+    }
+
+    for (i = 0; i < SF_MAX_DROPS; ++i) {
+        SfCargoDrop *drop = &game->drops[i];
+
+        if (!drop->active) {
+            drop->active = true;
+            drop->x = x + random_range(game, -12.0f, 12.0f);
+            drop->y = y + random_range(game, -12.0f, 12.0f);
+            drop->vx = random_range(game, -18.0f, 18.0f);
+            drop->vy = random_range(game, -18.0f, 18.0f);
+            drop->item = item;
+            drop->quantity = quantity;
+            return;
+        }
+    }
 }
-static void destroy_npc(SfGame*g,SfShip*s){
- for(int i=0;i<SF_ITEM_COUNT;i++){if(s->cargo[i]>0){spawn_drop(g,s->x,s->y,i,s->cargo[i]);s->cargo[i]=0;}}
- if(rnd(g)%100u<35u)spawn_drop(g,s->x,s->y,SF_ITEM_WEAPON,1);
- s->alive=false;g->destroyed_npcs++;
+
+static void destroy_npc_ship(SfGame *game, SfShip *ship)
+{
+    int item;
+
+    for (item = 0; item < SF_ITEM_COUNT; ++item) {
+        if (ship->cargo[item] > 0) {
+            spawn_cargo_drop(
+                game,
+                ship->x,
+                ship->y,
+                item,
+                ship->cargo[item]
+            );
+
+            ship->cargo[item] = 0;
+        }
+    }
+
+    /* Installed weapons are valuable salvage, but may not survive destruction. */
+    if ((random_next(game) % 100u) < 35u) {
+        spawn_cargo_drop(game, ship->x, ship->y, SF_ITEM_WEAPON, 1);
+    }
+
+    ship->alive = false;
+    game->destroyed_npcs += 1u;
 }
-static void spawn_projectile(SfGame*g,float x,float y,float a,bool player,float speed){
- for(int i=0;i<SF_MAX_PROJECTILES;i++)if(!g->projectiles[i].active){SfProjectile*p=&g->projectiles[i];p->active=true;p->x=x;p->y=y;p->vx=cosf(a)*speed;p->vy=sinf(a)*speed;p->life=1.8f;p->from_player=player;return;}
+
+static void spawn_projectile(
+    SfGame *game,
+    float x,
+    float y,
+    float angle,
+    bool from_player,
+    float speed
+)
+{
+    int i;
+
+    for (i = 0; i < SF_MAX_PROJECTILES; ++i) {
+        SfProjectile *projectile = &game->projectiles[i];
+
+        if (!projectile->active) {
+            projectile->active = true;
+            projectile->x = x;
+            projectile->y = y;
+            projectile->vx = cosf(angle) * speed;
+            projectile->vy = sinf(angle) * speed;
+            projectile->life = 1.8f;
+            projectile->from_player = from_player;
+            return;
+        }
+    }
 }
-void sf_game_fire_player(SfGame*g){SfShip*s=&g->player;if(s->fire_cooldown>0)return;spawn_projectile(g,s->x+cosf(s->angle)*18,s->y+sinf(s->angle)*18,s->angle,true,360);s->fire_cooldown=.22f;}
-void sf_game_init(SfGame*g){
- memset(g,0,sizeof(*g));g->rng=0x51A7F04Du;g->player.x=300;g->player.y=300;g->player.hp=g->player.max_hp=100;g->player.alive=true;
- g->inventory[SF_ITEM_METAL]=12;g->inventory[SF_ITEM_FUEL]=18;g->selected_item=SF_ITEM_METAL;g->selected_quantity=5;g->credits=120;g->npc_salvage_enabled=true;g->station_x=220;g->station_y=180;
- SfShip*c=&g->npcs[0];c->alive=true;c->role=SF_ROLE_CARGO;c->x=720;c->y=360;c->angle=PI;c->hp=c->max_hp=65;c->cargo[SF_ITEM_FUEL]=60;c->cargo[SF_ITEM_FOOD]=24;c->cargo[SF_ITEM_METAL]=18;
- SfShip*p=&g->npcs[1];p->alive=true;p->role=SF_ROLE_PIRATE;p->x=910;p->y=340;p->angle=PI;p->hp=p->max_hp=85;p->cargo[SF_ITEM_FUEL]=8;
+
+void sf_game_fire_player(SfGame *game)
+{
+    SfShip *ship = &game->player;
+
+    if (ship->fire_cooldown > 0.0f) {
+        return;
+    }
+
+    spawn_projectile(
+        game,
+        ship->x + cosf(ship->angle) * 18.0f,
+        ship->y + sinf(ship->angle) * 18.0f,
+        ship->angle,
+        true,
+        360.0f
+    );
+
+    ship->fire_cooldown = 0.22f;
 }
-static void update_player(SfGame*g,const SfInput*in,float dt){
- SfShip*s=&g->player;if(in->turn_left)s->angle-=2.8f*dt;if(in->turn_right)s->angle+=2.8f*dt;
- if(s->angle>PI)s->angle-=2*PI;if(s->angle< -PI)s->angle+=2*PI;
- if(in->thrust){s->vx+=cosf(s->angle)*190*dt;s->vy+=sinf(s->angle)*190*dt;}
- if(in->reverse){s->vx-=cosf(s->angle)*123.5f*dt;s->vy-=sinf(s->angle)*123.5f*dt;}
- s->vx=clampf(s->vx*powf(.985f,dt*60),-190,190);s->vy=clampf(s->vy*powf(.985f,dt*60),-190,190);
- s->x=clampf(s->x+s->vx*dt,24,WORLD-24);s->y=clampf(s->y+s->vy*dt,24,WORLD-24);resolve_asteroids(s);
- if(s->fire_cooldown>0)s->fire_cooldown-=dt;if(in->fire)sf_game_fire_player(g);
+
+void sf_game_init(SfGame *game)
+{
+    SfShip *cargo_ship;
+    SfShip *pirate_ship;
+
+    memset(game, 0, sizeof(*game));
+
+    game->rng = 0x51A7F04Du;
+
+    game->player.x = 300.0f;
+    game->player.y = 300.0f;
+    game->player.angle = 0.0f;
+    game->player.hp = 100.0f;
+    game->player.max_hp = 100.0f;
+    game->player.alive = true;
+
+    game->inventory[SF_ITEM_METAL] = 12;
+    game->inventory[SF_ITEM_FUEL] = 18;
+    game->selected_item = SF_ITEM_METAL;
+    game->selected_quantity = 5;
+    game->credits = 120;
+    game->npc_salvage_enabled = true;
+    game->station_x = 220.0f;
+    game->station_y = 180.0f;
+
+    cargo_ship = &game->npcs[0];
+    cargo_ship->alive = true;
+    cargo_ship->role = SF_ROLE_CARGO;
+    cargo_ship->x = 720.0f;
+    cargo_ship->y = 360.0f;
+    cargo_ship->angle = SF_PI;
+    cargo_ship->hp = 65.0f;
+    cargo_ship->max_hp = 65.0f;
+    cargo_ship->cargo[SF_ITEM_FUEL] = 60;
+    cargo_ship->cargo[SF_ITEM_FOOD] = 24;
+    cargo_ship->cargo[SF_ITEM_METAL] = 18;
+
+    pirate_ship = &game->npcs[1];
+    pirate_ship->alive = true;
+    pirate_ship->role = SF_ROLE_PIRATE;
+    pirate_ship->x = 910.0f;
+    pirate_ship->y = 340.0f;
+    pirate_ship->angle = SF_PI;
+    pirate_ship->hp = 85.0f;
+    pirate_ship->max_hp = 85.0f;
+    pirate_ship->cargo[SF_ITEM_FUEL] = 8;
 }
-static void update_npcs(SfGame*g,float dt){
- for(int i=0;i<SF_MAX_NPCS;i++){SfShip*s=&g->npcs[i];if(!s->alive)continue;
-  if(s->role==SF_ROLE_PIRATE){SfShip*t=g->npcs[0].alive?&g->npcs[0]:&g->player;float dx=t->x-s->x,dy=t->y-s->y,d=sqrtf(dx*dx+dy*dy),want=atan2f(dy,dx),delta=want-s->angle;
-   while(delta>PI)delta-=2*PI;while(delta< -PI)delta+=2*PI;s->angle+=clampf(delta,-1.7f*dt,1.7f*dt);
-   if(d>170){s->vx+=cosf(s->angle)*85*dt;s->vy+=sinf(s->angle)*85*dt;}else if(d<100){s->vx-=cosf(s->angle)*45*dt;s->vy-=sinf(s->angle)*45*dt;}
-   if(d<330&&s->fire_cooldown<=0){spawn_projectile(g,s->x+cosf(s->angle)*17,s->y+sinf(s->angle)*17,s->angle,false,230);s->fire_cooldown=.85f;}
-  }else{float dx=g->station_x-s->x,dy=g->station_y-s->y,want=atan2f(dy,dx),delta=want-s->angle;while(delta>PI)delta-=2*PI;while(delta< -PI)delta+=2*PI;s->angle+=clampf(delta,-.8f*dt,.8f*dt);s->vx+=cosf(s->angle)*28*dt;s->vy+=sinf(s->angle)*28*dt;}
-  s->vx=clampf(s->vx*powf(.992f,dt*60),-105,105);s->vy=clampf(s->vy*powf(.992f,dt*60),-105,105);s->x=clampf(s->x+s->vx*dt,24,WORLD-24);s->y=clampf(s->y+s->vy*dt,24,WORLD-24);resolve_asteroids(s);if(s->fire_cooldown>0)s->fire_cooldown-=dt;
- }
+
+static void update_player(SfGame *game, const SfInput *input, float dt)
+{
+    SfShip *ship = &game->player;
+
+    if (input->turn_left) {
+        ship->angle -= 2.8f * dt;
+    }
+
+    if (input->turn_right) {
+        ship->angle += 2.8f * dt;
+    }
+
+    if (ship->angle > SF_PI) {
+        ship->angle -= 2.0f * SF_PI;
+    }
+
+    if (ship->angle < -SF_PI) {
+        ship->angle += 2.0f * SF_PI;
+    }
+
+    if (input->thrust) {
+        ship->vx += cosf(ship->angle) * 190.0f * dt;
+        ship->vy += sinf(ship->angle) * 190.0f * dt;
+    }
+
+    if (input->reverse) {
+        ship->vx -= cosf(ship->angle) * 123.5f * dt;
+        ship->vy -= sinf(ship->angle) * 123.5f * dt;
+    }
+
+    ship->vx = clampf(ship->vx * powf(0.985f, dt * 60.0f), -190.0f, 190.0f);
+    ship->vy = clampf(ship->vy * powf(0.985f, dt * 60.0f), -190.0f, 190.0f);
+
+    ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
+    ship->y = clampf(ship->y + ship->vy * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
+
+    resolve_asteroid_collisions(ship);
+
+    if (ship->fire_cooldown > 0.0f) {
+        ship->fire_cooldown -= dt;
+    }
+
+    if (input->fire) {
+        sf_game_fire_player(game);
+    }
 }
-static void update_projectiles(SfGame*g,float dt){
- for(int i=0;i<SF_MAX_PROJECTILES;i++){SfProjectile*p=&g->projectiles[i];if(!p->active)continue;p->x+=p->vx*dt;p->y+=p->vy*dt;p->life-=dt;if(p->life<=0){p->active=false;continue;}
-  if(p->from_player){for(int j=0;j<SF_MAX_NPCS;j++){SfShip*s=&g->npcs[j];if(s->alive&&sf_distance_squared(p->x,p->y,s->x,s->y)<22*22){s->hp-=24;p->active=false;if(s->hp<=0)destroy_npc(g,s);break;}}}
-  else if(sf_distance_squared(p->x,p->y,g->player.x,g->player.y)<13*13){g->player.hp-=8;p->active=false;if(g->player.hp<0)g->player.hp=0;}
- }
+
+static float wrap_angle(float angle)
+{
+    while (angle > SF_PI) {
+        angle -= 2.0f * SF_PI;
+    }
+
+    while (angle < -SF_PI) {
+        angle += 2.0f * SF_PI;
+    }
+
+    return angle;
 }
-static void update_drops(SfGame*g,float dt){
- for(int i=0;i<SF_MAX_DROPS;i++){SfCargoDrop*d=&g->drops[i];if(!d->active)continue;d->x+=d->vx*dt;d->y+=d->vy*dt;d->vx*=powf(.94f,dt*60);d->vy*=powf(.94f,dt*60);
-  if(g->npc_salvage_enabled)for(int j=0;j<SF_MAX_NPCS;j++){SfShip*n=&g->npcs[j];if(!n->alive)continue;int total=cargo_used(n->cargo);if(total+(d->item==SF_ITEM_WEAPON?2*d->quantity:d->quantity)<=100&&sf_distance_squared(d->x,d->y,n->x,n->y)<26*26){n->cargo[d->item]+=d->quantity;d->active=false;break;}}
- }
+
+static void update_pirate(SfGame *game, SfShip *ship, float dt)
+{
+    SfShip *target = game->npcs[0].alive
+        ? &game->npcs[0]
+        : &game->player;
+
+    const float dx = target->x - ship->x;
+    const float dy = target->y - ship->y;
+    const float distance = sqrtf(dx * dx + dy * dy);
+    const float desired_angle = atan2f(dy, dx);
+    const float angle_delta = wrap_angle(desired_angle - ship->angle);
+
+    ship->angle += clampf(angle_delta, -1.7f * dt, 1.7f * dt);
+
+    if (distance > 170.0f) {
+        ship->vx += cosf(ship->angle) * 85.0f * dt;
+        ship->vy += sinf(ship->angle) * 85.0f * dt;
+    } else if (distance < 100.0f) {
+        ship->vx -= cosf(ship->angle) * 45.0f * dt;
+        ship->vy -= sinf(ship->angle) * 45.0f * dt;
+    }
+
+    if (distance < 330.0f && ship->fire_cooldown <= 0.0f) {
+        spawn_projectile(
+            game,
+            ship->x + cosf(ship->angle) * 17.0f,
+            ship->y + sinf(ship->angle) * 17.0f,
+            ship->angle,
+            false,
+            230.0f
+        );
+
+        ship->fire_cooldown = 0.85f;
+    }
 }
-void sf_game_update(SfGame*g,const SfInput*in,float dt){if(dt<=0)return;if(dt>.05f)dt=.05f;if(g->player.hp>0)update_player(g,in,dt);update_npcs(g,dt);update_projectiles(g,dt);update_drops(g,dt);}
-bool sf_game_collect_nearest(SfGame*g){
- int best=-1;float best_d=38*38;for(int i=0;i<SF_MAX_DROPS;i++){SfCargoDrop*d=&g->drops[i];int total=cargo_used(g->inventory);if(!d->active)continue;if(total+(d->item==SF_ITEM_WEAPON?2*d->quantity:d->quantity)>100)continue;float dist=sf_distance_squared(g->player.x,g->player.y,d->x,d->y);if(dist<=best_d){best=i;best_d=dist;}}
- if(best<0)return false;SfCargoDrop*d=&g->drops[best];g->inventory[d->item]+=d->quantity;d->active=false;return true;
+
+static void update_cargo_ship(SfGame *game, SfShip *ship, float dt)
+{
+    const float dx = game->station_x - ship->x;
+    const float dy = game->station_y - ship->y;
+    const float desired_angle = atan2f(dy, dx);
+    const float angle_delta = wrap_angle(desired_angle - ship->angle);
+
+    ship->angle += clampf(angle_delta, -0.8f * dt, 0.8f * dt);
+    ship->vx += cosf(ship->angle) * 28.0f * dt;
+    ship->vy += sinf(ship->angle) * 28.0f * dt;
 }
-bool sf_game_jettison_selected(SfGame*g){int i=g->selected_item,q=g->selected_quantity;if(i<0||i>=SF_ITEM_COUNT||i==SF_ITEM_WEAPON||q<=0||q>g->inventory[i])return false;g->inventory[i]-=q;spawn_drop(g,g->player.x,g->player.y,i,q);return true;}
-bool sf_game_sell_selected(SfGame*g){int i=g->selected_item;if(i<0||i>=SF_ITEM_COUNT||sf_distance_squared(g->player.x,g->player.y,g->station_x,g->station_y)>90*90||g->inventory[i]<=0)return false;g->credits+=g->inventory[i]*sf_item_price(i);g->inventory[i]=0;return true;}
+
+static void update_npcs(SfGame *game, float dt)
+{
+    int i;
+
+    for (i = 0; i < SF_MAX_NPCS; ++i) {
+        SfShip *ship = &game->npcs[i];
+
+        if (!ship->alive) {
+            continue;
+        }
+
+        if (ship->role == SF_ROLE_PIRATE) {
+            update_pirate(game, ship, dt);
+        } else {
+            update_cargo_ship(game, ship, dt);
+        }
+
+        ship->vx = clampf(ship->vx * powf(0.992f, dt * 60.0f), -105.0f, 105.0f);
+        ship->vy = clampf(ship->vy * powf(0.992f, dt * 60.0f), -105.0f, 105.0f);
+
+        ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
+        ship->y = clampf(ship->y + ship->vy * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
+
+        resolve_asteroid_collisions(ship);
+
+        if (ship->fire_cooldown > 0.0f) {
+            ship->fire_cooldown -= dt;
+        }
+    }
+}
+
+static void update_projectiles(SfGame *game, float dt)
+{
+    int i;
+
+    for (i = 0; i < SF_MAX_PROJECTILES; ++i) {
+        SfProjectile *projectile = &game->projectiles[i];
+
+        if (!projectile->active) {
+            continue;
+        }
+
+        projectile->x += projectile->vx * dt;
+        projectile->y += projectile->vy * dt;
+        projectile->life -= dt;
+
+        if (projectile->life <= 0.0f) {
+            projectile->active = false;
+            continue;
+        }
+
+        if (projectile->from_player) {
+            int j;
+
+            for (j = 0; j < SF_MAX_NPCS; ++j) {
+                SfShip *ship = &game->npcs[j];
+
+                if (ship->alive &&
+                    sf_distance_squared(
+                        projectile->x,
+                        projectile->y,
+                        ship->x,
+                        ship->y
+                    ) < 22.0f * 22.0f) {
+                    ship->hp -= 24.0f;
+                    projectile->active = false;
+
+                    if (ship->hp <= 0.0f) {
+                        destroy_npc_ship(game, ship);
+                    }
+
+                    break;
+                }
+            }
+        } else if (sf_distance_squared(
+                       projectile->x,
+                       projectile->y,
+                       game->player.x,
+                       game->player.y
+                   ) < SF_PLAYER_RADIUS * SF_PLAYER_RADIUS) {
+            game->player.hp -= 8.0f;
+            projectile->active = false;
+
+            if (game->player.hp < 0.0f) {
+                game->player.hp = 0.0f;
+            }
+        }
+    }
+}
+
+static void update_cargo_drops(SfGame *game, float dt)
+{
+    int i;
+
+    for (i = 0; i < SF_MAX_DROPS; ++i) {
+        SfCargoDrop *drop = &game->drops[i];
+
+        if (!drop->active) {
+            continue;
+        }
+
+        drop->x += drop->vx * dt;
+        drop->y += drop->vy * dt;
+        drop->vx *= powf(0.94f, dt * 60.0f);
+        drop->vy *= powf(0.94f, dt * 60.0f);
+
+        if (game->npc_salvage_enabled) {
+            int j;
+
+            for (j = 0; j < SF_MAX_NPCS; ++j) {
+                SfShip *npc = &game->npcs[j];
+                const int added_volume = drop->quantity *
+                    (drop->item == SF_ITEM_WEAPON ? 2 : 1);
+
+                if (!npc->alive) {
+                    continue;
+                }
+
+                if (cargo_used(npc->cargo) + added_volume <= 100 &&
+                    sf_distance_squared(
+                        drop->x,
+                        drop->y,
+                        npc->x,
+                        npc->y
+                    ) < 26.0f * 26.0f) {
+                    npc->cargo[drop->item] += drop->quantity;
+                    drop->active = false;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void sf_game_update(SfGame *game, const SfInput *input, float dt)
+{
+    if (dt <= 0.0f) {
+        return;
+    }
+
+    if (dt > 0.05f) {
+        dt = 0.05f;
+    }
+
+    if (game->player.hp > 0.0f) {
+        update_player(game, input, dt);
+    }
+
+    update_npcs(game, dt);
+    update_projectiles(game, dt);
+    update_cargo_drops(game, dt);
+}
+
+bool sf_game_collect_nearest(SfGame *game)
+{
+    int best_index = -1;
+    float best_distance_squared = 38.0f * 38.0f;
+    int i;
+
+    for (i = 0; i < SF_MAX_DROPS; ++i) {
+        SfCargoDrop *drop = &game->drops[i];
+        const int added_volume = drop->quantity *
+            (drop->item == SF_ITEM_WEAPON ? 2 : 1);
+        const float distance_squared = sf_distance_squared(
+            game->player.x,
+            game->player.y,
+            drop->x,
+            drop->y
+        );
+
+        if (!drop->active) {
+            continue;
+        }
+
+        if (cargo_used(game->inventory) + added_volume > 100) {
+            continue;
+        }
+
+        if (distance_squared <= best_distance_squared) {
+            best_index = i;
+            best_distance_squared = distance_squared;
+        }
+    }
+
+    if (best_index < 0) {
+        return false;
+    }
+
+    {
+        SfCargoDrop *drop = &game->drops[best_index];
+
+        game->inventory[drop->item] += drop->quantity;
+        drop->active = false;
+    }
+
+    return true;
+}
+
+bool sf_game_jettison_selected(SfGame *game)
+{
+    const int item = game->selected_item;
+    const int quantity = game->selected_quantity;
+
+    if (item < 0 || item >= SF_ITEM_COUNT || item == SF_ITEM_WEAPON) {
+        return false;
+    }
+
+    if (quantity <= 0 || quantity > game->inventory[item]) {
+        return false;
+    }
+
+    game->inventory[item] -= quantity;
+
+    spawn_cargo_drop(
+        game,
+        game->player.x,
+        game->player.y,
+        item,
+        quantity
+    );
+
+    return true;
+}
+
+bool sf_game_sell_selected(SfGame *game)
+{
+    const int item = game->selected_item;
+    int quantity;
+
+    if (item < 0 || item >= SF_ITEM_COUNT) {
+        return false;
+    }
+
+    if (sf_distance_squared(
+            game->player.x,
+            game->player.y,
+            game->station_x,
+            game->station_y
+        ) > 90.0f * 90.0f) {
+        return false;
+    }
+
+    quantity = game->inventory[item];
+
+    if (quantity <= 0) {
+        return false;
+    }
+
+    game->credits += quantity * sf_item_price(item);
+    game->inventory[item] = 0;
+
+    return true;
+}
