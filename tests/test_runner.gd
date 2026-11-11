@@ -187,7 +187,7 @@ func _test_system_map(failures: Array[String]) -> void:
     var body_points: Dictionary = map.get("_body_points")
     if body_points.size() != 9:
         failures.append("System map should expose the station, three planets and five moons in Solace.")
-    if not body_points.has("STATION") or not body_points.has("PLANET 1"):
+    if not body_points.has("STATION") or not body_points.has("Solace 1"):
         failures.append("System map is missing expected celestial body markers.")
     map.free()
 

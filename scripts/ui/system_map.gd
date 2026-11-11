@@ -31,21 +31,20 @@ func configure(id: String, system_data: Dictionary, ship: Vector2) -> void:
 
 func _rebuild_body_points() -> void:
     _body_points.clear()
-    var station_data: Array = definition.get("station_position",[480,270])
-    _body_points["STATION"] = Vector2(float(station_data[0]),float(station_data[1]))
-    var planet_count := int(definition.get("planet_count",2))
-    var moon_count := int(definition.get("moon_count",0))
-    var planets: Array[Vector2] = []
-    for index in range(planet_count):
-        var point := Vector2(150.0+float(index)*280.0,100.0+float(index%2)*330.0)
-        planets.append(point)
-        _body_points["PLANET %d" % (index+1)] = point
-    for moon_index in range(moon_count):
-        if planets.is_empty():
-            break
-        var parent: Vector2 = planets[moon_index % planets.size()]
-        var angle := float(moon_index)*2.399
-        _body_points["MOON %d" % (moon_index+1)] = parent+Vector2(cos(angle),sin(angle))*76.0
+    _body_points["STATION"] = SystemLayout.station_position(definition)
+    for planet_data: Dictionary in SystemLayout.planet_definitions(definition):
+        var planet_name := str(planet_data.get("name",planet_data.get("id","PLANET")))
+        var planet_position := _read_position(planet_data.get("position",[480,270]))
+        _body_points[planet_name] = planet_position
+        for moon_data: Variant in planet_data.get("moons",[]):
+            if moon_data is Dictionary:
+                var moon_name := str(moon_data.get("name",moon_data.get("id","MOON")))
+                _body_points[moon_name] = planet_position+_read_position(moon_data.get("offset",[76,0]))
+
+static func _read_position(raw: Variant) -> Vector2:
+    if raw is Array and raw.size() >= 2:
+        return Vector2(float(raw[0]),float(raw[1]))
+    return Vector2.ZERO
 
 func _draw() -> void:
     draw_rect(Rect2(Vector2.ZERO,size),Color(0.015,0.035,0.075,0.92),true)
@@ -67,55 +66,48 @@ func _draw() -> void:
         draw_circle(Vector2(480,270),12.0,Color(1.0,0.82,0.48,1.0))
         draw_arc(Vector2(480,270),12.0,0.0,TAU,32,Color(1.0,0.92,0.72,1.0),2.0)
 
-    var planet_count := int(definition.get("planet_count",2))
-    var planets: Array[Vector2] = []
-    for index in range(planet_count):
-        var point := Vector2(150.0+float(index)*280.0,100.0+float(index%2)*330.0)
-        planets.append(point)
+    for planet_data: Dictionary in SystemLayout.planet_definitions(definition):
+        var point := _read_position(planet_data.get("position",[480,270]))
+        var radius := float(planet_data.get("radius",32.0))
+        var planet_name := str(planet_data.get("name",planet_data.get("id","PLANET")))
         var orbit_radius := point.distance_to(Vector2(480,270))
         var orbit_texture := AssetLibrary.load_texture("orbit_ring_96.png")
         if orbit_texture != null:
             draw_texture_rect(orbit_texture,Rect2(Vector2(480-orbit_radius,270-orbit_radius),Vector2(orbit_radius*2.0,orbit_radius*2.0)),false)
         else:
             draw_arc(Vector2(480,270),orbit_radius,0.0,TAU,72,Color(0.35,0.55,0.72,0.18),1.0)
-        var radius := 30.0+float(index%3)*12.0
-        var planet_texture := AssetLibrary.load_texture("planet_terran_64.png") if index%2==0 else AssetLibrary.load_texture("planet_gas_96.png")
+        var planet_texture := AssetLibrary.load_texture(str(planet_data.get("texture","planet_terran_64.png")))
         if planet_texture != null:
             draw_texture_rect(planet_texture,Rect2(point-Vector2(radius,radius),Vector2(radius*2.0,radius*2.0)),false)
         else:
-            var body_color := Color(0.32,0.70,0.82) if index%2==0 else Color(0.68,0.50,0.88)
-            draw_circle(point,radius,body_color)
+            draw_circle(point,radius,Color(0.32,0.70,0.82))
             draw_arc(point,radius,0.0,TAU,32,Color(0.86,0.94,1.0,0.92),2.0)
-        if selected_body == "PLANET %d" % (index+1):
+        if selected_body == planet_name:
             draw_arc(point,radius+8.0,0.0,TAU,32,Color(1.0,0.78,0.36,1.0),2.0)
-        draw_string(ThemeDB.fallback_font,point+Vector2(-110.0,radius+30.0),"PLANET %d" % (index+1),HORIZONTAL_ALIGNMENT_CENTER,220.0,28,Color(0.88,0.94,1.0,0.95))
-
-    var moon_count := int(definition.get("moon_count",0))
-    for moon_index in range(moon_count):
-        if planets.is_empty():
-            break
-        var parent: Vector2 = planets[moon_index % planets.size()]
-        var angle := float(moon_index)*2.399
-        var moon_point := parent+Vector2(cos(angle),sin(angle))*76.0
-        var moon_texture := AssetLibrary.load_texture("planet_moon_32.png")
-        var moon_size := 24.0+float(moon_index%3)*6.0
-        if moon_texture != null:
-            draw_texture_rect(moon_texture,Rect2(moon_point-Vector2(moon_size,moon_size)*0.5,Vector2(moon_size,moon_size)),false)
-        else:
-            draw_circle(moon_point,moon_size*0.5,Color(0.52,0.58,0.68,1.0))
-        if selected_body == "MOON %d" % (moon_index+1):
-            draw_arc(moon_point,20.0,0.0,TAU,24,Color(1.0,0.78,0.36,1.0),2.0)
-
-    if bool(definition.get("has_asteroids",false)):
-        var asteroid_texture := AssetLibrary.load_texture("asteroid_small_01.png")
-        for asteroid_point in [Vector2(520,250),Vector2(680,420),Vector2(860,310),Vector2(740,160)]:
-            if asteroid_texture != null:
-                draw_texture_rect(asteroid_texture,Rect2(asteroid_point-Vector2(10,10),Vector2(20,20)),false)
+        draw_string(ThemeDB.fallback_font,point+Vector2(-110.0,radius+30.0),planet_name,HORIZONTAL_ALIGNMENT_CENTER,220.0,28,Color(0.88,0.94,1.0,0.95))
+        for moon_data: Variant in planet_data.get("moons",[]):
+            if not moon_data is Dictionary:
+                continue
+            var moon_name := str(moon_data.get("name",moon_data.get("id","MOON")))
+            var moon_point := point+_read_position(moon_data.get("offset",[76,0]))
+            var moon_size := float(moon_data.get("radius",12.0))*2.0
+            var moon_texture := AssetLibrary.load_texture(str(moon_data.get("texture","planet_moon_32.png")))
+            if moon_texture != null:
+                draw_texture_rect(moon_texture,Rect2(moon_point-Vector2.ONE*moon_size*0.5,Vector2.ONE*moon_size),false)
             else:
-                draw_circle(asteroid_point,7.0,Color(0.58,0.60,0.64,0.95))
+                draw_circle(moon_point,moon_size*0.5,Color(0.52,0.58,0.68,1.0))
+            if selected_body == moon_name:
+                draw_arc(moon_point,moon_size*0.5+7.0,0.0,TAU,24,Color(1.0,0.78,0.36,1.0),2.0)
 
-    var station_data: Array = definition.get("station_position",[480,270])
-    var station := Vector2(float(station_data[0]),float(station_data[1]))
+    var asteroid_texture := AssetLibrary.load_texture("asteroid_small_01.png")
+    for raw_point: Variant in SystemLayout.asteroid_positions(definition):
+        var asteroid_point := _read_position(raw_point)
+        if asteroid_texture != null:
+            draw_texture_rect(asteroid_texture,Rect2(asteroid_point-Vector2(10,10),Vector2(20,20)),false)
+        else:
+            draw_circle(asteroid_point,7.0,Color(0.58,0.60,0.64,0.95))
+
+    var station := SystemLayout.station_position(definition)
     var station_texture := AssetLibrary.load_texture("station_ring_hub.png")
     if station_texture != null:
         draw_texture_rect(station_texture,Rect2(station-Vector2(30,30),Vector2(60,60)),false)

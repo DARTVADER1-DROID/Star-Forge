@@ -4,6 +4,7 @@ class_name PlanetBody
 @export var body_id := "unassigned_planet"
 @export var body_name := "Unknown Planet"
 @export var body_radius := 38.0
+@export var texture_name := "planet_terran_64.png"
 @export var body_color := Color(0.22,0.48,0.68)
 @export var interaction_radius := 110.0
 
@@ -15,12 +16,6 @@ func _ready() -> void:
     var collision := CollisionShape2D.new()
     collision.shape = shape
     add_child(collision)
-
-    var texture_name := "planet_moon_32.png"
-    if body_radius >= 50.0:
-        texture_name = "planet_gas_96.png"
-    elif body_radius > 18.0:
-        texture_name = "planet_terran_64.png"
 
     var texture := AssetLibrary.load_texture(texture_name)
     if texture != null:
