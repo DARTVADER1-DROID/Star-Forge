@@ -70,7 +70,6 @@ jobs:
           mkdir -p assets data
           unzip -q StarForge_Asset_Pack.zip -d "$RUNNER_TEMP/starforge-assets"
           cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/assets/." assets/
-          cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/data/." data/
 
       - name: Import Godot resources
         run: godot --headless --editor --path . --import --quit
