@@ -445,7 +445,7 @@ void sf_render_world(
     draw_projectiles(renderer, game, camera_x, camera_y);
     draw_npcs(renderer, game, assets, camera_x, camera_y);
 
-    if (draw_player) {
+    if (draw_player && game->player.alive) {
         draw_ship(
             renderer,
             assets,
