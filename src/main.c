@@ -731,7 +731,7 @@ int main(int argc, char **argv)
 
     while (running) {
         SDL_Event event;
-        SfInput input = { false, false, false, false, false };
+        SfInput input = { 0 };
         const bool *keyboard_state;
         Uint64 current_counter;
         double frame_time;
@@ -782,7 +782,7 @@ int main(int argc, char **argv)
             keyboard_state[SDL_SCANCODE_RIGHT];
 
         input.fire = keyboard_state[SDL_SCANCODE_SPACE] || touch.fire_active;
-        input.boost = touch.boost_active;
+        input.boost = touch.boost_active || keyboard_state[SDL_SCANCODE_LSHIFT];
 
         if (touch.joystick_active) {
             const float dx = touch.joystick_x - 48.0f;
