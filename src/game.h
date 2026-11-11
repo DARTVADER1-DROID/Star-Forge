@@ -93,6 +93,7 @@ typedef struct {
     unsigned int destroyed_npcs;
 } SfGame;
 
+bool sf_game_systems_connected(int from_system, int to_system);
 void sf_game_init(SfGame *game);
 void sf_game_update(SfGame *game, const SfInput *input, float dt);
 void sf_game_fire_player(SfGame *game);
