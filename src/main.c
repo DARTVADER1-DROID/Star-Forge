@@ -214,6 +214,7 @@ static void update_touch_event(
             *inventory_open = true;
             release_touch_controls(touch);
         } else if (x < layout->inventory.x - 8.0f &&
+                   y >= (float)SF_UI_LOGICAL_HEIGHT * 0.45f &&
                    !touch->joystick_active) {
             touch->joystick_active = true;
             touch->joystick_id = finger->fingerID;
@@ -348,6 +349,7 @@ int main(int argc, char **argv)
     SfAssets assets;
     bool running = true;
     bool inventory_open = false;
+    bool app_active = true;
     SfTouchState touch = { 0 };
     SfUiLayout layout;
     Uint64 previous_counter;
@@ -470,7 +472,13 @@ int main(int argc, char **argv)
 
             if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST ||
                 event.type == SDL_EVENT_WINDOW_HIDDEN) {
+                app_active = false;
                 release_touch_controls(&touch);
+            }
+
+            if (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED ||
+                event.type == SDL_EVENT_WINDOW_SHOWN) {
+                app_active = true;
             }
 
             if (event.type == SDL_EVENT_FINGER_DOWN ||
@@ -527,7 +535,7 @@ int main(int argc, char **argv)
         accumulator += frame_time;
 
         while (accumulator >= SF_FIXED_STEP) {
-            if (!galaxy_map_open && !inventory_open) {
+            if (app_active && !galaxy_map_open && !inventory_open) {
                 if (ftl_transition_timer > 0.0f) {
                     ftl_transition_timer -= (float)SF_FIXED_STEP;
                     if (ftl_transition_timer <= 0.0f && ftl_destination >= 0) {
