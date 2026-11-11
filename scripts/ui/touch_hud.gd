@@ -20,6 +20,10 @@ var _inventory_rows: VBoxContainer
 var _galaxy_buttons: VBoxContainer
 var _selected_system := ""
 var _jump_button: Button
+var _selected_item_id := "metal"
+var _selected_quantity := 1
+var _quantity_label: Label
+var _npc_loot_button: Button
 var _gameplay_blocked := false
 
 func _ready() -> void:
@@ -144,6 +148,38 @@ func _build_inventory() -> void:
     var content: VBoxContainer = built.content
     _inventory_rows = VBoxContainer.new()
     content.add_child(_inventory_rows)
+    var quantity_row := HBoxContainer.new()
+    content.add_child(quantity_row)
+    var decrease := Button.new()
+    decrease.text = "- QTY"
+    decrease.pressed.connect(func():
+        _selected_quantity = maxi(1,_selected_quantity-1)
+        _update_quantity_label()
+    )
+    quantity_row.add_child(decrease)
+    _quantity_label = Label.new()
+    _quantity_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _quantity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    quantity_row.add_child(_quantity_label)
+    var increase := Button.new()
+    increase.text = "+ QTY"
+    increase.pressed.connect(func():
+        _selected_quantity = mini(int(GameState.inventory.get(_selected_item_id,0)),_selected_quantity+1)
+        _selected_quantity = maxi(1,_selected_quantity)
+        _update_quantity_label()
+    )
+    quantity_row.add_child(increase)
+    var jettison := Button.new()
+    jettison.text = "JETTISON SELECTED"
+    jettison.pressed.connect(func():
+        action_requested.emit("JETTISON","%s:%d" % [_selected_item_id,_selected_quantity])
+    )
+    content.add_child(jettison)
+    _npc_loot_button = Button.new()
+    _npc_loot_button.text = "NPC LOOT: OFF"
+    _npc_loot_button.toggle_mode = true
+    _npc_loot_button.pressed.connect(func(): action_requested.emit("NPC_LOOT",""))
+    content.add_child(_npc_loot_button)
     var close := Button.new()
     close.text = "CLOSE"
     close.pressed.connect(func(): _close_panels())
@@ -162,12 +198,36 @@ func refresh_inventory() -> void:
         label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         label.text = "%s  x%d" % [item.get("name",id),GameState.inventory[id]]
         row.add_child(label)
+        var select := Button.new()
+        select.text = "SELECT"
+        select.button_pressed = id == _selected_item_id
+        select.toggle_mode = true
+        select.pressed.connect(func():
+            _selected_item_id = id
+            _selected_quantity = maxi(1,int(GameState.inventory.get(id,0)))
+            _update_quantity_label()
+            refresh_inventory()
+        )
+        row.add_child(select)
         var sell := Button.new()
         sell.text = "SELL"
         sell.disabled = int(GameState.inventory[id]) <= 0
         sell.pressed.connect(func(): action_requested.emit("SELL",id))
         row.add_child(sell)
         _inventory_rows.add_child(row)
+    _update_quantity_label()
+
+func _update_quantity_label() -> void:
+    if not is_instance_valid(_quantity_label):
+        return
+    var available := int(GameState.inventory.get(_selected_item_id,0))
+    _selected_quantity = clampi(_selected_quantity,1,maxi(1,available))
+    _quantity_label.text = "%s  %d/%d" % [_selected_item_id,_selected_quantity,available]
+
+func set_npc_loot_enabled(enabled: bool) -> void:
+    if is_instance_valid(_npc_loot_button):
+        _npc_loot_button.button_pressed = enabled
+        _npc_loot_button.text = "NPC LOOT: ON" if enabled else "NPC LOOT: OFF"
 
 func toggle_inventory() -> void:
     _close_panels()
