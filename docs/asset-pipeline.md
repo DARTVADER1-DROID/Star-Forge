@@ -3,7 +3,7 @@
 ## Import
 - Keep source artwork in `assets/` and use PNG for runtime pixel art.
 - Godot imports source files into its generated resource cache; never commit the generated `.godot/` directory.
-- The cloud APK workflow extracts the archived art pack into `assets/` before Godot imports resources. The JSON files already in `data/` remain the authoritative gameplay definitions.
+- The cloud workflows extract the archived art pack into `assets/` before Godot imports resources. For local editor use, open `tools/import_asset_pack.gd` in Godot and run the EditorScript once. The JSON files already in `data/` remain the authoritative gameplay definitions.
 - Prefer nearest-neighbor filtering for pixel art.
 - Use the Compatibility renderer and ETC2/ASTC texture compression for Android exports.
 - Keep editable Pixelorama/Aseprite files alongside runtime exports where practical.
