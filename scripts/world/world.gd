@@ -45,7 +45,10 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
     _update_player_state()
-    hud.update_ship_status(player.hull, player.max_hull, player.armour, player.max_armour, player.energy, player.max_energy, GameState.credits, GameState.inventory)
+    var station_data: Array = ContentDatabase.get_system(_system_id).get("station_position",[480,270])
+    var station_position := Vector2(float(station_data[0]),float(station_data[1]))
+    var station_distance := player.global_position.distance_to(station_position)
+    hud.update_ship_status(player.hull,player.max_hull,player.armour,player.max_armour,player.energy,player.max_energy,GameState.credits,GameState.inventory,int(GameState.inventory.get("fuel",0)),str(ContentDatabase.get_system(_system_id).get("name",_system_id)),station_distance)
 
 func _draw() -> void:
     draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.012,0.02,0.055))
