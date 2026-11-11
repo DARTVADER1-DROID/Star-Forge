@@ -1,4 +1,4 @@
-name: Star Forge CI
+name: Star Forge Godot CI
 
 on:
   push:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   godot-validation:
-    name: Validate Godot project and gameplay scene
+    name: Validate Godot project and gameplay
     runs-on: ubuntu-latest
     steps:
       - name: Check out Star Forge
@@ -35,3 +35,14 @@ jobs:
 
       - name: Run scene smoke test
         run: godot --headless --path . --script res://tests/godot_smoke_test.gd
+
+      - name: Run gameplay regression tests
+        run: godot --headless --path . --script res://tests/godot_gameplay_test.gd
+
+      - name: Check repository contains no native C sources or build files
+        run: |
+          if find . -type f \( -name '*.c' -o -name '*.h' -o -name 'CMakeLists.txt' -o -name '*.cmake' \) -not -path './.git/*' | grep -q .; then
+            echo "Native C/CMake files remain in the repository."
+            find . -type f \( -name '*.c' -o -name '*.h' -o -name 'CMakeLists.txt' -o -name '*.cmake' \) -not -path './.git/*'
+            exit 1
+          fi
