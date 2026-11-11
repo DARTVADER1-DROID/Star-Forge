@@ -5,11 +5,12 @@
 int main(void)
 {
     SfGame game;
-    SfInput idle = { false, false, false, false, false };
+    SfInput idle = { false, false, false, false, false, false };
     bool fuel_drop_found = false;
 
     sf_game_init(&game);
     assert(game.player.alive);
+    assert(game.boost_energy == 100.0f);
     assert(game.inventory[SF_ITEM_METAL] == 12);
     assert(game.npcs[0].role == SF_ROLE_CARGO);
     assert(game.npcs[1].role == SF_ROLE_PIRATE);
