@@ -49,6 +49,7 @@ func _process(_delta: float) -> void:
     var station_position := Vector2(float(station_data[0]),float(station_data[1]))
     var station_distance := player.global_position.distance_to(station_position)
     hud.update_ship_status(player.hull,player.max_hull,player.armour,player.max_armour,player.energy,player.max_energy,GameState.credits,GameState.inventory,int(GameState.inventory.get("fuel",0)),str(ContentDatabase.get_system(_system_id).get("name",_system_id)),station_distance)
+    hud.update_system_map(player.position)
 
 func _draw() -> void:
     for star: Vector2 in _stars:

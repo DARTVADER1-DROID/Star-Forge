@@ -10,6 +10,7 @@ func _run_tests() -> void:
     _test_cargo_capacity(failures)
     _test_armour_damage(failures)
     _test_ftl_rules(failures)
+    _test_map_graph(failures)
     _test_save_round_trip(failures)
     _test_main_scene(failures)
 
@@ -67,6 +68,23 @@ func _test_ftl_rules(failures: Array[String]) -> void:
         failures.append("FTL jump must consume five fuel.")
     GameState.current_system_id = "solace"
     GameState.inventory.fuel = 25
+
+func _test_map_graph(failures: Array[String]) -> void:
+    var map_script: Script = load("res://scripts/ui/galaxy_map.gd")
+    if map_script == null:
+        failures.append("Galaxy map script is missing.")
+        return
+    var map := map_script.new() as Control
+    map.size = Vector2(460,220)
+    map.set("systems",ContentDatabase.systems)
+    map.call("configure","solace","vesper")
+    var solace_point: Vector2 = map.call("_system_point","solace")
+    if not Rect2(Vector2.ZERO,map.size).has_point(solace_point):
+        failures.append("Galaxy map system node is outside its map viewport.")
+    var solace: Dictionary = ContentDatabase.get_system("solace")
+    if not Array(solace.get("links",[])).has("vesper") or Array(solace.get("links",[])).has("ironwake"):
+        failures.append("Galaxy map graph adjacency does not match FTL routing.")
+    map.free()
 
 func _test_save_round_trip(failures: Array[String]) -> void:
     GameState.credits = 321

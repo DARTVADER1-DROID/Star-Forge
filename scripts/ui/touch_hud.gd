@@ -13,6 +13,7 @@ const JOYSTICK_DEADZONE := 0.12
 const JOYSTICK_ZONE_WIDTH := 0.44
 const JOYSTICK_ZONE_TOP_RATIO := 0.34
 const GALAXY_MAP_SCRIPT: Script = preload("res://scripts/ui/galaxy_map.gd")
+const SYSTEM_MAP_SCRIPT: Script = preload("res://scripts/ui/system_map.gd")
 
 var _active_touch := -1
 var _joystick_origin := Vector2.ZERO
@@ -22,8 +23,11 @@ var _inventory_panel: PanelContainer
 var _galaxy_panel: PanelContainer
 var _recovery_panel: PanelContainer
 var _inventory_rows: VBoxContainer
-var _galaxy_map: Control
+var _galaxy_map: GalaxyMapView
+var _system_map: SystemMapView
 var _galaxy_hint: Label
+var _galaxy_tab: Button
+var _system_tab: Button
 var _transit_overlay: ColorRect
 var _selected_system := ""
 var _jump_button: Button
@@ -299,12 +303,33 @@ func _build_galaxy() -> void:
     _galaxy_hint.text = "Choose an adjacent star system · 5 Fuel per jump"
     _galaxy_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     content.add_child(_galaxy_hint)
-    _galaxy_map = GALAXY_MAP_SCRIPT.new() as Control
+    var tabs := HBoxContainer.new()
+    tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+    content.add_child(tabs)
+    _galaxy_tab = Button.new()
+    _galaxy_tab.text = "GALAXY"
+    _galaxy_tab.toggle_mode = true
+    _galaxy_tab.button_pressed = true
+    _galaxy_tab.pressed.connect(_show_galaxy_view)
+    tabs.add_child(_galaxy_tab)
+    _system_tab = Button.new()
+    _system_tab.text = "SYSTEM"
+    _system_tab.toggle_mode = true
+    _system_tab.pressed.connect(_show_system_view)
+    tabs.add_child(_system_tab)
+    _galaxy_map = GALAXY_MAP_SCRIPT.new() as GalaxyMapView
     _galaxy_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _galaxy_map.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _galaxy_map.custom_minimum_size = Vector2(460,220)
     _galaxy_map.system_selected.connect(_on_map_system_selected)
     content.add_child(_galaxy_map)
+    _system_map = SYSTEM_MAP_SCRIPT.new() as SystemMapView
+    _system_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _system_map.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _system_map.custom_minimum_size = Vector2(460,220)
+    _system_map.body_selected.connect(_on_map_body_selected)
+    _system_map.visible = false
+    content.add_child(_system_map)
     var actions := HBoxContainer.new()
     content.add_child(actions)
     var jump := Button.new()
@@ -327,8 +352,9 @@ func _refresh_galaxy(_system_id: String) -> void:
         fuel,
         GameState.FTL_FUEL_COST
     ]
-    _galaxy_map.set("systems",ContentDatabase.systems)
-    _galaxy_map.call("configure",GameState.current_system_id,_selected_system)
+    _galaxy_map.systems = ContentDatabase.systems
+    _galaxy_map.configure(GameState.current_system_id,_selected_system)
+    update_system_map(Vector2(480.0,270.0))
     if is_instance_valid(_jump_button):
         _jump_button.disabled = not GameState.can_jump_to(_selected_system)
 
@@ -336,9 +362,32 @@ func _on_map_system_selected(system_id: String) -> void:
     _selected_system = system_id
     _refresh_galaxy(GameState.current_system_id)
 
+func _show_galaxy_view() -> void:
+    _galaxy_map.show()
+    _system_map.hide()
+    _galaxy_tab.button_pressed = true
+    _system_tab.button_pressed = false
+    _galaxy_hint.text = "Select a connected system · 5 Fuel per jump"
+
+func _show_system_view() -> void:
+    _galaxy_map.hide()
+    _system_map.show()
+    _galaxy_tab.button_pressed = false
+    _system_tab.button_pressed = true
+    update_system_map(Vector2(480.0,270.0))
+
+func update_system_map(ship_position: Vector2) -> void:
+    if not is_instance_valid(_system_map):
+        return
+    _system_map.configure(GameState.current_system_id,ContentDatabase.get_system(GameState.current_system_id),ship_position)
+
+func _on_map_body_selected(body_name: String) -> void:
+    _galaxy_hint.text = "SELECTED: " + body_name
+
 func show_galaxy_map() -> void:
     _close_panels()
     _selected_system = ""
+    _show_galaxy_view()
     _refresh_galaxy(GameState.current_system_id)
     _galaxy_panel.show()
     _gameplay_blocked = true
