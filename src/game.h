@@ -29,6 +29,7 @@ typedef struct {
     float vx;
     float vy;
     float angle;
+    float ai_phase;
     float armor;
     float max_armor;
     float hull;
