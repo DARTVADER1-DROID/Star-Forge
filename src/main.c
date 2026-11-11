@@ -26,6 +26,65 @@ typedef struct {
     bool mouse_joystick_active;
 } SfTouchState;
 
+static void handle_ui_tap(
+    SfGame *game,
+    bool *inventory_open,
+    float x,
+    float y
+)
+{
+    if (game == NULL || inventory_open == NULL) {
+        return;
+    }
+
+    if (!*inventory_open) {
+        if (x >= 160.0f && x <= 207.0f && y >= 143.0f && y <= 174.0f) {
+            *inventory_open = true;
+        }
+        return;
+    }
+
+    if (x >= 235.0f && x <= 260.0f && y >= 48.0f && y <= 68.0f) {
+        *inventory_open = false;
+        return;
+    }
+
+    if (y >= 65.0f && y <= 82.0f && x >= 48.0f && x < 273.0f) {
+        const int item = (int)((x - 48.0f) / 45.0f);
+
+        if (item >= 0 && item < SF_ITEM_COUNT) {
+            game->selected_item = item;
+            if (game->selected_quantity > game->inventory[item]) {
+                game->selected_quantity = game->inventory[item];
+            }
+            if (game->selected_quantity < 1) {
+                game->selected_quantity = 1;
+            }
+        }
+        return;
+    }
+
+    if (y >= 86.0f && y <= 102.0f) {
+        if (x >= 52.0f && x <= 105.0f && game->selected_quantity > 1) {
+            game->selected_quantity--;
+        } else if (x >= 110.0f && x <= 165.0f &&
+                   game->selected_quantity < 999) {
+            game->selected_quantity++;
+        } else if (x >= 185.0f && x <= 270.0f) {
+            game->npc_salvage_enabled = !game->npc_salvage_enabled;
+        }
+        return;
+    }
+
+    if (y >= 108.0f && y <= 128.0f) {
+        if (x >= 50.0f && x <= 150.0f) {
+            (void)sf_game_jettison_selected(game);
+        } else if (x >= 160.0f && x <= 270.0f) {
+            (void)sf_game_sell_selected(game);
+        }
+    }
+}
+
 static void update_touch_event(
     const SDL_TouchFingerEvent *finger,
     SfTouchState *touch,
@@ -36,7 +95,7 @@ static void update_touch_event(
     const float y = finger->y * (float)SF_LOGICAL_HEIGHT;
 
     if (finger->type == SDL_EVENT_FINGER_DOWN) {
-        if (x < 155.0f && !touch->joystick_active) {
+        if (*inventory_open) {\n            handle_ui_tap(game, inventory_open, x, y);\n            return;\n        }\n\n        if (x >= 160.0f && x <= 207.0f && y >= 143.0f) {\n            handle_ui_tap(game, inventory_open, x, y);\n        } else if (x < 155.0f && !touch->joystick_active) {
             touch->joystick_active = true;
             touch->joystick_id = finger->fingerID;
             touch->joystick_x = x;
@@ -164,7 +223,7 @@ static void draw_touch_controls(
     SDL_RenderDebugText(renderer, 276.0f, 141.0f, "FIRE");
     SDL_RenderDebugText(renderer, 275.0f, 82.0f, "BOOST");
     SDL_RenderDebugText(renderer, 218.0f, 154.0f, "LOOT");
-    SDL_RenderDebugText(renderer, 218.0f, 105.0f, "FTL");
+    SDL_RenderDebugText(renderer, 218.0f, 105.0f, "FTL");\n    SDL_RenderDebugText(renderer, 165.0f, 154.0f, "CARGO");
 
     {
         char energy_text[24];
@@ -272,7 +331,7 @@ int main(int argc, char **argv)
             if (event.type == SDL_EVENT_FINGER_DOWN ||
                 event.type == SDL_EVENT_FINGER_MOTION ||
                 event.type == SDL_EVENT_FINGER_UP) {
-                update_touch_event(&event.tfinger, &touch, &game);
+                update_touch_event(&event.tfinger, &touch, &game, &inventory_open);
             }
 
             if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
@@ -299,7 +358,7 @@ int main(int argc, char **argv)
                     pointer_y *= (float)SF_LOGICAL_HEIGHT / (float)height;
                 }
 
-                if (pointer_x < 155.0f) {
+                if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&\n                    (inventory_open || (pointer_x >= 160.0f && pointer_x <= 207.0f &&\n                                        pointer_y >= 143.0f))) {\n                    handle_ui_tap(&game, &inventory_open, pointer_x, pointer_y);\n                } else if (pointer_x < 155.0f) {
                     touch.mouse_joystick_active = pressed;
                     touch.joystick_active = pressed;
                     touch.joystick_x = pointer_x;
