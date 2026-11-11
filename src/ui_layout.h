@@ -2,6 +2,7 @@
 #define STAR_FORGE_UI_LAYOUT_H
 
 #include <SDL3/SDL.h>
+#include <stdbool.h>
 
 #define SF_UI_LOGICAL_HEIGHT 180
 #define SF_UI_MIN_LOGICAL_WIDTH 320
