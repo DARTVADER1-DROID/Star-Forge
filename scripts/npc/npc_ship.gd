@@ -13,7 +13,7 @@ var energy := 100.0
 var cargo: Dictionary = {}
 var station_position := Vector2.ZERO
 var target: Node2D
-var projectile_container: Node2D
+var projectile_pool: ProjectilePool
 var drop_container: Node2D
 var loot_enabled := false
 var cargo_capacity := 100
@@ -83,17 +83,13 @@ func apply_damage(amount: float) -> void:
     hull = maxf(0.0,hull-(amount-absorbed))
 
 func _fire_at_target() -> void:
-    if _fire_timer>0.0 or energy<8.0 or not is_instance_valid(projectile_container):
+    if _fire_timer>0.0 or energy<8.0 or not is_instance_valid(projectile_pool):
+        return
+    var direction_to_target := (target.global_position-global_position).normalized()
+    if not projectile_pool.spawn(global_position,direction_to_target,false,8.0,230.0):
         return
     energy -= 8.0
     _fire_timer = weapon_cooldown
-    var shot := preload("res://scenes/projectile.tscn").instantiate() as SpaceProjectile
-    projectile_container.add_child(shot)
-    shot.global_position = global_position
-    shot.direction = (target.global_position-global_position).normalized()
-    shot.damage = 8.0
-    shot.from_player = false
-    shot.speed = 230.0
 
 func _try_collect_salvage() -> void:
     if not is_instance_valid(drop_container):
