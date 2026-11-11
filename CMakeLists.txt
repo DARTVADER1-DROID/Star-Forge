@@ -52,7 +52,30 @@ if(NOT MSVC)
     target_link_libraries(star_forge_sim PUBLIC m)
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/assets")
+set(STARFORGE_ASSET_ARCHIVE "${CMAKE_SOURCE_DIR}/StarForge_Asset_Pack.zip")
+set(STARFORGE_EXTRACTED_ASSETS "${CMAKE_BINARY_DIR}/_asset_pack/StarForge_Asset_Pack")
+
+if(EXISTS "${STARFORGE_ASSET_ARCHIVE}")
+    file(
+        ARCHIVE_EXTRACT
+        INPUT "${STARFORGE_ASSET_ARCHIVE}"
+        DESTINATION "${CMAKE_BINARY_DIR}/_asset_pack"
+    )
+
+    if(EXISTS "${STARFORGE_EXTRACTED_ASSETS}/assets")
+        file(
+            COPY "${STARFORGE_EXTRACTED_ASSETS}/assets"
+            DESTINATION "${CMAKE_BINARY_DIR}"
+        )
+    endif()
+
+    if(EXISTS "${STARFORGE_EXTRACTED_ASSETS}/data")
+        file(
+            COPY "${STARFORGE_EXTRACTED_ASSETS}/data"
+            DESTINATION "${CMAKE_BINARY_DIR}"
+        )
+    endif()
+elseif(EXISTS "${CMAKE_SOURCE_DIR}/assets")
     file(COPY "${CMAKE_SOURCE_DIR}/assets" DESTINATION "${CMAKE_BINARY_DIR}")
 endif()
 
