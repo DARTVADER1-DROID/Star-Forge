@@ -9,6 +9,10 @@ run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/description="Offline-first top-down 2D pixel-art space sandbox RPG."
 
+[autoload]
+GameState="*res://scripts/autoload/game_state.gd"
+ContentDatabase="*res://scripts/autoload/content_database.gd"
+
 [display]
 window/size/viewport_width=960
 window/size/viewport_height=540
@@ -22,7 +26,10 @@ renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/default_filters/use_nearest_mipmap_filter=false
 textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.012, 0.02, 0.055, 1)
 
 [physics]
 2d/default_gravity=0.0
+
+[application/run]
