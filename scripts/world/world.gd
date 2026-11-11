@@ -5,6 +5,7 @@ const STAR_COUNT := 110
 const ASTEROID_SCENE: PackedScene = preload("res://scenes/asteroid.tscn")
 const PLANET_SCENE: PackedScene = preload("res://scenes/planet_body.tscn")
 const NPC_SCENE: PackedScene = preload("res://scenes/npc_ship.tscn")
+const STATION_SCENE: PackedScene = preload("res://scenes/station.tscn")
 const DROP_SCENE: PackedScene = preload("res://scenes/cargo_drop.tscn")
 
 @onready var player: PlayerShip = $PlayerShip
@@ -89,18 +90,57 @@ func _load_system(id: String) -> void:
             asteroid.position = point
 
     var planets := int(definition.get("planet_count",2))
+    var moon_count := int(definition.get("moon_count",0))
+    var planet_positions: Array[Vector2] = []
     for index in range(planets):
+        var planet_position := Vector2(150.0 + float(index)*280.0,100.0 + float(index%2)*330.0)
+        planet_positions.append(planet_position)
         var body := PLANET_SCENE.instantiate() as PlanetBody
         obstacle_container.add_child(body)
-        body.position = Vector2(150.0 + float(index)*280.0,100.0 + float(index%2)*330.0)
+        body.position = planet_position
         body.body_radius = 30.0 + float(index%3)*12.0
+    for moon_index in range(moon_count):
+        if planet_positions.is_empty():
+            break
+        var parent_position: Vector2 = planet_positions[moon_index % planet_positions.size()]
+        var orbit_angle := float(moon_index) * 2.399
+        var moon := PLANET_SCENE.instantiate() as PlanetBody
+        obstacle_container.add_child(moon)
+        moon.position = parent_position + Vector2(cos(orbit_angle),sin(orbit_angle))*76.0
+        moon.body_radius = 11.0 + float(moon_index % 3)*3.0
+        moon.body_color = Color(0.48,0.52,0.60)
 
-    _spawn_npc("cargo_hauler","starter_freighter",station+Vector2(160,40),station)
-    var pirate := _spawn_npc("pirate","starter_interceptor",station+Vector2(-160,-40),station)
-    var hauler := npc_container.get_child(0) as NPCShip
-    pirate.target = hauler
-    _spawn_npc("patrol","starter_patrol",station+Vector2(0,150),station)
+    var station_body := STATION_SCENE.instantiate()
+    obstacle_container.add_child(station_body)
+    station_body.position = station
+    _restore_or_spawn_npcs(station)
     _restore_system_drops()
+
+func _restore_or_spawn_npcs(station: Vector2) -> void:
+    var saved: Array = GameState.system_states.get(_system_id,{}).get("npcs",[])
+    if saved.is_empty():
+        var hauler := _spawn_npc("cargo_hauler","starter_freighter",station+Vector2(160,40),station)
+        var pirate := _spawn_npc("pirate","starter_interceptor",station+Vector2(-160,-40),station)
+        pirate.target = hauler
+        _spawn_npc("patrol","starter_patrol",station+Vector2(0,150),station)
+        return
+
+    var restored: Array[NPCShip] = []
+    for entry: Variant in saved:
+        if not entry is Dictionary or float(entry.get("hull",0.0)) <= 0.0:
+            continue
+        var npc := _spawn_npc(str(entry.get("role_id","patrol")),str(entry.get("ship_design_id","starter_patrol")),Vector2(float(entry.get("x",station.x)),float(entry.get("y",station.y))),station)
+        npc.velocity = Vector2(float(entry.get("vx",0.0)),float(entry.get("vy",0.0)))
+        npc.hull = float(entry.get("hull",npc.hull))
+        npc.armour = float(entry.get("armour",npc.armour))
+        npc.energy = float(entry.get("energy",npc.energy))
+        npc.cargo = entry.get("cargo",{})
+        restored.append(npc)
+    for npc: NPCShip in restored:
+        if npc.role_id == "pirate" and not restored.is_empty():
+            npc.target = restored[0]
+        else:
+            npc.target = player
 
 func _spawn_npc(role: String, design: String, point: Vector2, station: Vector2) -> NPCShip:
     var npc := NPC_SCENE.instantiate() as NPCShip
@@ -127,11 +167,27 @@ func _restore_system_drops() -> void:
 
 func _save_system_state() -> void:
     var drops: Array[Dictionary] = []
+    var npcs: Array[Dictionary] = []
+    for npc_node: Node in npc_container.get_children():
+        if npc_node is NPCShip:
+            var npc := npc_node as NPCShip
+            npcs.append({
+                "role_id":npc.role_id,
+                "ship_design_id":npc.ship_design_id,
+                "x":npc.position.x,
+                "y":npc.position.y,
+                "vx":npc.velocity.x,
+                "vy":npc.velocity.y,
+                "hull":npc.hull,
+                "armour":npc.armour,
+                "energy":npc.energy,
+                "cargo":npc.cargo
+            })
     for node: Node in drop_container.get_children():
         if node is CargoDrop:
             var crate := node as CargoDrop
             drops.append({"item_id":crate.item_id,"quantity":crate.quantity,"x":crate.position.x,"y":crate.position.y})
-    GameState.system_states[_system_id] = {"drops":drops}
+    GameState.system_states[_system_id] = {"drops":drops,"npcs":npcs}
 
 func _on_hud_action(action: String, value: String = "") -> void:
     match action:
