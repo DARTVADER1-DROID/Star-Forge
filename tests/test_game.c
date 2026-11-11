@@ -6,7 +6,7 @@
 int main(void)
 {
     SfGame game;
-    SfInput idle = { false, false, false, false, false, false };
+    SfInput idle = { 0 };
     bool fuel_drop_found = false;
 
     sf_game_init(&game);
@@ -26,12 +26,27 @@ int main(void)
 
     /* Boost increases acceleration without consuming ship energy. */
     {
-        SfInput boost_input = { true, false, false, false, false, true };
+        SfInput boost_input = { .thrust = true, .boost = true };
 
         sf_game_update(&game, &boost_input, 1.0f / 60.0f);
         assert(game.player.energy == 100.0f);
         assert(game.player.vx > 4.0f);
         assert(game.npcs[2].ai_phase > 0.0f);
+    }
+
+    /* Analog steering turns toward the thumb direction and scales thrust. */
+    sf_game_init(&game);
+    {
+        SfInput steering_input = {
+            .steering_x = 0.0f,
+            .steering_y = -1.0f,
+            .steering_strength = 0.75f
+        };
+
+        sf_game_update(&game, &steering_input, 1.0f / 60.0f);
+        assert(game.player.angle < 0.0f);
+        assert(game.player.vy < 0.0f);
+        assert(game.player.energy == game.player.max_energy);
     }
 
     game.selected_item = SF_ITEM_METAL;
@@ -99,7 +114,7 @@ int main(void)
     sf_game_fire_player(&game);
     assert(!game.projectiles[1].active);
     {
-        SfInput move_input = { true, false, true, false, false, false };
+        SfInput move_input = { .thrust = true, .turn_left = true };
         const float energy_before = game.player.energy;
         sf_game_update(&game, &move_input, 1.0f / 60.0f);
         assert(game.player.energy >= energy_before);
