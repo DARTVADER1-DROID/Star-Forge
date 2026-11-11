@@ -732,9 +732,6 @@ bool sf_game_jettison_selected(SfGame *game)
     item = game->selected_item;
     quantity = game->selected_quantity;
 
-    /* = game->selected_item;
-    const int quantity = game->selected_quantity;
-
     if (item < 0 || item >= SF_ITEM_COUNT || item == SF_ITEM_WEAPON) {
         return false;
     }
