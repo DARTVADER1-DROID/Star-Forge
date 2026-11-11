@@ -97,6 +97,8 @@ const char *sf_game_system_name(int system_index);
 int sf_game_system_planet_count(int system_index);
 int sf_game_system_moon_count(int system_index);
 bool sf_game_system_has_asteroids(int system_index);
+float sf_game_system_station_x(int system_index);
+float sf_game_system_station_y(int system_index);
 
 bool sf_game_collect_nearest(SfGame *game);
 bool sf_game_jettison_selected(SfGame *game);

@@ -51,6 +51,7 @@ jobs:
             com.starforge.game \
             "$GITHUB_WORKSPACE/src/main.c" \
             "$GITHUB_WORKSPACE/src/game.c" \
+            "$GITHUB_WORKSPACE/src/world.c" \
             "$GITHUB_WORKSPACE/src/game.h" \
             "$GITHUB_WORKSPACE/src/render.c" \
             "$GITHUB_WORKSPACE/src/render.h" \

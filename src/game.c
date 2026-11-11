@@ -23,58 +23,6 @@ static const float asteroid_radius[SF_ASTEROID_COUNT] = {
     22.0f, 30.0f, 18.0f, 34.0f, 25.0f, 28.0f, 20.0f, 32.0f
 };
 
-typedef struct {
-    const char *name;
-    int planet_count;
-    int moon_count;
-    bool has_asteroids;
-    float station_x;
-    float station_y;
-} SfSystemDefinition;
-
-static const SfSystemDefinition systems[SF_MAX_SYSTEMS] = {
-    { "Solace", 3, 5, true, 220.0f, 180.0f },
-    { "Vesper", 2, 3, false, 360.0f, 260.0f },
-    { "Kestrel", 4, 7, true, 180.0f, 420.0f },
-    { "Ironwake", 2, 2, false, 480.0f, 340.0f }
-};
-
-const char *sf_game_system_name(int system_index)
-{
-    if (system_index < 0 || system_index >= SF_MAX_SYSTEMS) {
-        return "Unknown";
-    }
-
-    return systems[system_index].name;
-}
-
-int sf_game_system_planet_count(int system_index)
-{
-    if (system_index < 0 || system_index >= SF_MAX_SYSTEMS) {
-        return 0;
-    }
-
-    return systems[system_index].planet_count;
-}
-
-int sf_game_system_moon_count(int system_index)
-{
-    if (system_index < 0 || system_index >= SF_MAX_SYSTEMS) {
-        return 0;
-    }
-
-    return systems[system_index].moon_count;
-}
-
-bool sf_game_system_has_asteroids(int system_index)
-{
-    if (system_index < 0 || system_index >= SF_MAX_SYSTEMS) {
-        return false;
-    }
-
-    return systems[system_index].has_asteroids;
-}
-
 
 static float clampf(float value, float minimum, float maximum)
 {
@@ -341,8 +289,8 @@ bool sf_game_jump_to_system(SfGame *game, int destination_system)
     game->player.vx = 0.0f;
     game->player.vy = 0.0f;
 
-    game->station_x = systems[destination_system].station_x;
-    game->station_y = systems[destination_system].station_y;
+    game->station_x = sf_game_system_station_x(destination_system);
+    game->station_y = sf_game_system_station_y(destination_system);
 
     memset(game->npcs, 0, sizeof(game->npcs));
     memset(game->drops, 0, sizeof(game->drops));
@@ -380,8 +328,8 @@ void sf_game_init(SfGame *game)
     game->credits = 120;
     game->current_system = 0;
     game->npc_salvage_enabled = true;
-    game->station_x = systems[0].station_x;
-    game->station_y = systems[0].station_y;
+    game->station_x = sf_game_system_station_x(0);
+    game->station_y = sf_game_system_station_y(0);
 
     cargo_ship = &game->npcs[0];
     cargo_ship->alive = true;

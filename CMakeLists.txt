@@ -39,6 +39,7 @@ add_library(
     star_forge_sim
     STATIC
     src/game.c
+    src/world.c
 )
 
 target_include_directories(
