@@ -15,6 +15,15 @@ int main(void)
     assert(game.npcs[0].role == SF_ROLE_CARGO);
     assert(game.npcs[1].role == SF_ROLE_PIRATE);
 
+    /* Boost consumes energy and increases acceleration. */
+    {
+        SfInput boost_input = { true, false, false, false, false, true };
+
+        sf_game_update(&game, &boost_input, 1.0f / 60.0f);
+        assert(game.boost_energy < 100.0f);
+        assert(game.player.vx > 4.0f);
+    }
+
     game.selected_item = SF_ITEM_METAL;
     game.selected_quantity = 5;
     assert(sf_game_jettison_selected(&game));
