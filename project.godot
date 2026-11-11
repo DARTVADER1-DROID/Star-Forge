@@ -12,6 +12,7 @@ config/description="Offline-first top-down 2D pixel-art space sandbox RPG."
 [autoload]
 GameState="*res://scripts/autoload/game_state.gd"
 ContentDatabase="*res://scripts/autoload/content_database.gd"
+AssetLibrary="*res://scripts/autoload/asset_library.gd"
 
 [display]
 window/size/viewport_width=960
