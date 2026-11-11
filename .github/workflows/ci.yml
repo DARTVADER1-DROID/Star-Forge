@@ -10,8 +10,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure simulation tests
-        run: cmake -S . -B build -DSTARFORGE_BUILD_GAME=OFF -DSTARFORGE_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
-      - name: Build
-        run: cmake --build build --parallel
-      - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: cmake -S . -B build-tests -DSTARFORGE_BUILD_GAME=OFF -DSTARFORGE_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+      - name: Build simulation
+        run: cmake --build build-tests --parallel
+      - name: Run simulation tests
+        run: ctest --test-dir build-tests --output-on-failure
+  desktop-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SDL3 desktop game
+        run: cmake -S . -B build-desktop -DSTARFORGE_BUILD_GAME=ON -DSTARFORGE_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+      - name: Build desktop game and tests
+        run: cmake --build build-desktop --parallel 2
+      - name: Run simulation tests
+        run: ctest --test-dir build-desktop --output-on-failure
