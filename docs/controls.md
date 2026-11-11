@@ -4,7 +4,8 @@
 
 - **Left virtual joystick:** steer left/right and thrust forward/backward.
 - **Fire:** hold to continuously fire the forward weapon.
-- **Boost:** hold to accelerate faster while boost energy remains.
+- **Boost:** hold to accelerate faster; movement does not consume ship energy.
+- **FTL:** press G on desktop to jump to the next system; requires an FTL drive and 5 fuel.
 - **Loot:** collect the nearest salvage container within collection range.
 
 The joystick is analog in touch position, with a dead zone around its center. The current prototype maps the horizontal and vertical directions to discrete steering/thrust actions; a later input pass can introduce proportional steering.
@@ -18,7 +19,8 @@ The joystick is analog in touch position, with a dead zone around its center. Th
 | A / Left | Turn left |
 | D / Right | Turn right |
 | Space | Fire |
-| Left Shift | Boost |
+| Left Shift | Boost (free movement) |
+| G | FTL jump to the next system (5 fuel) |
 | E | Collect nearest salvage |
 | J | Jettison selected commodity |
 | T | Sell selected commodity at station |
