@@ -399,6 +399,9 @@ int main(int argc, char **argv)
     }
 
     SDL_Log("Star-Forge: renderer created");
+    if (!SDL_SetRenderVSync(renderer, 1)) {
+        SDL_Log("Renderer VSync unavailable; using software frame pacing: %s", SDL_GetError());
+    }
 
     {
         int output_width = 0;
@@ -440,11 +443,14 @@ int main(int argc, char **argv)
         SDL_Event event;
         SfInput input = { 0 };
         Uint64 current_counter;
+        Uint64 frame_start_counter;
         double frame_time;
         int camera_x;
         int camera_y;
         int output_width = 0;
         int output_height = 0;
+
+        frame_start_counter = SDL_GetPerformanceCounter();
 
         if (SDL_GetRenderOutputSize(renderer, &output_width, &output_height) &&
             output_width > 0 && output_height > 0) {
@@ -591,7 +597,20 @@ int main(int argc, char **argv)
         }
 
         SDL_RenderPresent(renderer);
-        SDL_Delay(1);
+
+        {
+            const Uint64 frame_end_counter = SDL_GetPerformanceCounter();
+            const double frame_elapsed =
+                (double)(frame_end_counter - frame_start_counter) /
+                (double)performance_frequency;
+            const double target_frame_time = 1.0 / 60.0;
+
+            if (frame_elapsed < target_frame_time) {
+                const double remaining_ms =
+                    (target_frame_time - frame_elapsed) * 1000.0;
+                SDL_Delay((Uint32)ceil(remaining_ms));
+            }
+        }
     }
 
     SDL_Log("Star-Forge: shutting down normally");
