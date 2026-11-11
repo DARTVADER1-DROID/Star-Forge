@@ -1,0 +1,34 @@
+# Build output
+/build/
+/out/
+/cmake-build-*/
+/.android-build/
+/.gradle/
+/.externalNativeBuild/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Generated binaries and debug symbols
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+*.apk
+*.aab
+*.class
+*.pdb
+*.dSYM/
+
+# Local editor backups
+*~
+*.swp
+*.swo
+
+# Keep source art and editable sprite projects; ignore only temporary exports.
