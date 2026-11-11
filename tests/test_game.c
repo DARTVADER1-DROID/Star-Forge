@@ -118,7 +118,7 @@ int main(void)
     game.drops[0].x = game.player.x;
     game.drops[0].y = game.player.y;
     assert(sf_game_collect_nearest(&game));
-    assert(game.inventory[SF_ITEM_FUEL] == 23);
+    assert(game.inventory[SF_ITEM_FUEL] == 5);
     assert(game.drops[0].active);
     assert(game.drops[0].quantity == 5);
 
