@@ -148,6 +148,10 @@ static void update_touch_event(
         return;
     }
 
+    if (ftl_transition_timer > 0.0f) {
+        return;
+    }
+
     if (galaxy_map_open) {
         if (finger->type == SDL_EVENT_FINGER_DOWN) {
             if (x >= 264.0f && y >= 8.0f && y <= 30.0f) {
