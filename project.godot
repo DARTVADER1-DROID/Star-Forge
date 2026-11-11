@@ -19,7 +19,7 @@ window/size/viewport_height=540
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
-window/handheld/orientation=1
+window/handheld/orientation=0
 
 [rendering]
 renderer/rendering_method="gl_compatibility"
@@ -27,9 +27,7 @@ renderer/rendering_method.mobile="gl_compatibility"
 textures/default_filters/use_nearest_mipmap_filter=false
 textures/canvas_textures/default_texture_filter=0
 textures/vram_compression/import_etc2_astc=true
-environment/defaults/default_clear_color=Color(0.012, 0.02, 0.055, 1)
+environment/defaults/default_clear_color=Color(0.012,0.02,0.055,1)
 
 [physics]
 2d/default_gravity=0.0
-
-[application/run]
