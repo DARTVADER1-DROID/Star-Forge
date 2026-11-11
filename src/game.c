@@ -549,8 +549,8 @@ static void update_patrol(SfGame *game, SfShip *ship, float dt)
 {
     const float orbit_radius = 180.0f;
     const float orbit_speed = 0.35f;
-    const float target_x = game->station_x + cosf(ship->angle) * orbit_radius;
-    const float target_y = game->station_y + sinf(ship->angle) * orbit_radius;
+    const float target_x = game->station_x + cosf(ship->ai_phase) * orbit_radius;
+    const float target_y = game->station_y + sinf(ship->ai_phase) * orbit_radius;
     const float dx = target_x - ship->x;
     const float dy = target_y - ship->y;
     const float desired_angle = atan2f(dy, dx);
@@ -560,8 +560,8 @@ static void update_patrol(SfGame *game, SfShip *ship, float dt)
     ship->vx += cosf(ship->angle) * 55.0f * dt;
     ship->vy += sinf(ship->angle) * 55.0f * dt;
 
-    /* The patrol follows a stable orbit around its system's station. */
-    ship->angle += orbit_speed * dt;
+    /* Keep orbit phase separate from the ship's facing direction. */
+    ship->ai_phase += orbit_speed * dt;
 }
 
 static void update_cargo_ship(SfGame *game, SfShip *ship, float dt)
