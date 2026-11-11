@@ -18,6 +18,8 @@ int main(void)
     assert(game.inventory[SF_ITEM_METAL] == 12);
     assert(game.npcs[0].role == SF_ROLE_CARGO);
     assert(game.npcs[1].role == SF_ROLE_PIRATE);
+    assert(game.npcs[2].alive);
+    assert(game.npcs[2].role == SF_ROLE_PATROL);
     assert(game.npcs[0].cargo[SF_ITEM_FUEL] +
            game.npcs[0].cargo[SF_ITEM_FOOD] +
            game.npcs[0].cargo[SF_ITEM_METAL] == 100);
