@@ -34,6 +34,7 @@ This document distinguishes current prototype behavior from features that remain
 - Pirate weapon cooldown: 0.85 seconds.
 - Pirate projectile damage: 8.
 - Projectiles expire after 1.8 seconds.
+- A fixed pool of 64 projectile nodes is preallocated per active system; shots are reused instead of repeatedly allocated and freed.
 - NPC armour and hull use the same armour-first damage rule.
 - Destroyed NPC cargo is released as physical salvage.
 - NPC destruction has a 35% chance to release one weapon-salvage item.
