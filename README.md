@@ -50,4 +50,4 @@ Build instructions will be added as the desktop and Android build paths are vali
 - Keep platform-specific code behind narrow interfaces.
 - Avoid unnecessary runtime dependencies and allocations in hot loops.
 
-See [Architecture](docs/architecture.md), [Performance](docs/performance.md), and [Asset Pipeline](docs/asset-pipeline.md).
+See [Architecture](docs/architecture.md), [Performance](docs/performance.md), [Asset Pipeline](docs/asset-pipeline.md), and [Game Design Foundations](docs/game-design.md).
