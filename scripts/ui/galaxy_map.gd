@@ -16,9 +16,12 @@ var current_system_id := ""
 var selected_system_id := ""
 var _pan_offset := Vector2.ZERO
 var _zoom := 1.0
+var _touch_positions: Dictionary = {}
 var _active_touch := -1
 var _last_touch_position := Vector2.ZERO
 var _touch_moved := false
+var _pinch_distance := 0.0
+var _pinch_midpoint := Vector2.ZERO
 
 func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_STOP
@@ -86,24 +89,51 @@ func _gui_input(event: InputEvent) -> void:
     if event is InputEventScreenTouch:
         var touch := event as InputEventScreenTouch
         if touch.pressed:
-            _active_touch = touch.index
-            _last_touch_position = touch.position
-            _touch_moved = false
+            _touch_positions[touch.index] = touch.position
+            if _touch_positions.size() == 1:
+                _active_touch = touch.index
+                _last_touch_position = touch.position
+                _touch_moved = false
+            elif _touch_positions.size() == 2:
+                var points: Array = _touch_positions.values()
+                _pinch_distance = (points[0] as Vector2).distance_to(points[1] as Vector2)
+                _pinch_midpoint = ((points[0] as Vector2)+(points[1] as Vector2))*0.5
             accept_event()
-        elif touch.index == _active_touch:
-            if not _touch_moved:
+        else:
+            if touch.index == _active_touch and _touch_positions.size() == 1 and not _touch_moved:
                 _select_system_at((touch.position-_pan_offset)/_zoom)
+            _touch_positions.erase(touch.index)
+            if _touch_positions.size() < 2:
+                _pinch_distance = 0.0
             _active_touch = -1
+            if _touch_positions.size() == 1:
+                var remaining: Vector2 = _touch_positions.values()[0]
+                _active_touch = int(_touch_positions.keys()[0])
+                _last_touch_position = remaining
+                _touch_moved = true
             accept_event()
     elif event is InputEventScreenDrag:
         var drag := event as InputEventScreenDrag
-        if drag.index == _active_touch:
+        if not _touch_positions.has(drag.index):
+            return
+        _touch_positions[drag.index] = drag.position
+        if _touch_positions.size() >= 2:
+            var points: Array = _touch_positions.values()
+            var midpoint := ((points[0] as Vector2)+(points[1] as Vector2))*0.5
+            var distance := (points[0] as Vector2).distance_to(points[1] as Vector2)
+            if _pinch_distance > 1.0 and distance > 1.0:
+                set_zoom(_zoom*distance/_pinch_distance,_pinch_midpoint)
+            pan_by(midpoint-_pinch_midpoint)
+            _pinch_distance = distance
+            _pinch_midpoint = midpoint
+            _touch_moved = true
+        elif drag.index == _active_touch:
             var movement := drag.position-_last_touch_position
             if movement.length() > 2.0:
                 _touch_moved = true
                 pan_by(movement)
             _last_touch_position = drag.position
-            accept_event()
+        accept_event()
     elif event is InputEventMagnifyGesture:
         var gesture := event as InputEventMagnifyGesture
         set_zoom(_zoom*gesture.factor,gesture.position)

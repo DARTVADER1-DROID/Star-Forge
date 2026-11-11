@@ -10,6 +10,9 @@ var from_player := true
 var active := false
 var _age := 0.0
 var _sprite: Sprite2D
+var _safe_zone_enabled := false
+var _safe_zone_center := Vector2.ZERO
+var _safe_zone_radius := 0.0
 
 func _ready() -> void:
     var shape := CircleShape2D.new()
@@ -30,7 +33,9 @@ func activate(
     travel_direction: Vector2,
     fired_by_player: bool,
     projectile_damage: float,
-    projectile_speed: float
+    projectile_speed: float,
+    safe_zone_center: Vector2 = Vector2.ZERO,
+    safe_zone_radius: float = 0.0
 ) -> void:
     global_position = spawn_position
     direction = travel_direction.normalized()
@@ -38,6 +43,9 @@ func activate(
     collision_mask = 1 if from_player else 2
     damage = projectile_damage
     speed = projectile_speed
+    _safe_zone_enabled = not fired_by_player and safe_zone_radius > 0.0
+    _safe_zone_center = safe_zone_center
+    _safe_zone_radius = safe_zone_radius
     _age = 0.0
     if is_instance_valid(_sprite):
         var texture_name := "proj_laser_blue.png" if from_player else "proj_laser_red.png"
@@ -63,6 +71,8 @@ func _physics_process(delta: float) -> void:
         deactivate()
         return
     global_position += direction * speed * delta
+    if _safe_zone_enabled and global_position.distance_to(_safe_zone_center) <= _safe_zone_radius:
+        deactivate()
 
 func _on_body_entered(body: Node2D) -> void:
     if not active:

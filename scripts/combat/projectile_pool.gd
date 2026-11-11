@@ -21,11 +21,13 @@ func spawn(
     direction: Vector2,
     fired_by_player: bool,
     damage: float,
-    speed: float
+    speed: float,
+    safe_zone_center: Vector2 = Vector2.ZERO,
+    safe_zone_radius: float = 0.0
 ) -> bool:
     for projectile: SpaceProjectile in _projectiles:
         if not projectile.active:
-            projectile.activate(spawn_position,direction,fired_by_player,damage,speed)
+            projectile.activate(spawn_position,direction,fired_by_player,damage,speed,safe_zone_center,safe_zone_radius)
             return true
     return false
 

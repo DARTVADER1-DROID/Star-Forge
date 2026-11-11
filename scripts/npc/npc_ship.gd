@@ -124,7 +124,7 @@ func _fire_at_target() -> void:
     if _fire_timer > 0.0 or energy < 8.0 or not is_instance_valid(projectile_pool):
         return
     var direction_to_target := (target.global_position-global_position).normalized()
-    if not projectile_pool.spawn(global_position,direction_to_target,false,8.0,230.0):
+    if not projectile_pool.spawn(global_position,direction_to_target,false,8.0,230.0,station_position,station_safety_radius):
         return
     energy -= 8.0
     _fire_timer = weapon_cooldown

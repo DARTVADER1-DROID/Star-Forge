@@ -19,7 +19,7 @@ func _run_tests() -> void:
     _test_map_graph(failures)
     _test_system_map(failures)
     _test_save_round_trip(failures)
-    _test_main_scene(failures)
+    await _test_main_scene(failures)
 
     if failures.is_empty():
         print("All Star Forge Godot tests passed.")
@@ -100,6 +100,13 @@ func _test_npc_docking_rules(failures: Array[String]) -> void:
     pirate.position = Vector2(160,100)
     if pirate.can_engage_target():
         failures.append("Pirates must not fire at docked station traffic.")
+    var projectile_script: Script = load("res://scripts/combat/projectile.gd")
+    var shot := projectile_script.new() as SpaceProjectile
+    shot.activate(Vector2(150,0),Vector2.LEFT,false,8.0,230.0,Vector2.ZERO,118.0)
+    shot._physics_process(0.2)
+    if shot.active:
+        failures.append("NPC projectiles must be removed when they enter the station safe zone.")
+    shot.free()
     hauler.free()
     pirate.free()
 
