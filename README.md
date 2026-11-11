@@ -2,13 +2,18 @@
 
 An original, offline-first, top-down 2D pixel-art space sandbox RPG.
 
+## Current milestone: v0.1 playable prototype
+
+The repository now contains the first small playable star-system sandbox: steer a ship, fight a pirate, watch an NPC freighter drop physical cargo when destroyed, collect salvage, jettison selected cargo by quantity, and sell goods at a station. NPC cargo collection can be toggled with F3.
+
+See [v0.1 prototype notes](docs/v0.1-playable-prototype.md) and [controls](docs/controls.md).
+
 ## Project goals
 
-- Android is the primary platform; desktop builds are development and secondary targets.
-- Target compatibility includes low-memory Android devices, with **1 GB total device RAM** as the minimum-device design goal.
-- Native C game code with explicit memory ownership and predictable runtime behavior.
-- Exploration, spacecraft customization, combat, trading, missions, factions, and progression.
-- Original art, universe, characters, systems, and content.
+- Android is the primary platform; desktop builds are the initial development target.
+- Low-memory Android compatibility is a design goal to validate on real devices.
+- Native C17 game code with explicit memory ownership and predictable runtime behavior.
+- Offline exploration, ship customization, combat, trading, missions, factions, and progression.
 
 ## Technology
 
@@ -16,38 +21,34 @@ An original, offline-first, top-down 2D pixel-art space sandbox RPG.
 |---|---|
 | Core language | C17 |
 | Platform layer | SDL3 |
-| Android native toolchain | Android NDK + CMake |
-| Android packaging | Gradle |
 | Build system | CMake |
-| Graphics direction | Custom 2D renderer; OpenGL ES 2.0 compatibility baseline |
-| Asset source files | PNG sprites and editable Pixelorama/Aseprite project files |
-| Game definitions | JSON during authoring; compact runtime data where useful |
+| Android target | NDK + CMake; packaging is a later milestone |
+| Game definitions | JSON during authoring |
 | Version control | Git + GitHub |
+
+## Build desktop prototype
+
+Requires CMake 3.21+, a C17 compiler, Git, and network access on the first configure if SDL3 is fetched automatically.
+
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+    cmake --build build --config Release
+    ctest --test-dir build --output-on-failure
+
+Run the generated `star_forge` executable.
+
+To use a system-installed SDL3 package, configure with `-DSTARFORGE_FETCH_SDL3=OFF`.
 
 ## Repository layout
 
-- `src/` — game entry point and game-specific code
-- `engine/` — reusable engine modules
+- `src/` — SDL frontend and simulation
+- `data/` — starter item and NPC role definitions
 - `assets/` — sprites, audio, fonts, and other game assets
-- `data/` — data-driven ship, weapon, item, and world definitions
-- `docs/` — architecture, performance, and asset-pipeline notes
-- `tests/` — automated tests
+- `docs/` — architecture, performance, design, and controls
+- `tests/` — simulation tests
 - `.github/workflows/` — CI and build automation
 
-## Current status
+## Not yet implemented
 
-**Foundation stage.** This repository is being initialized. The first milestone is a small, readable SDL3 application shell, followed by the custom renderer, input, timing, resource management, and a playable ship-in-an-asteroid-field prototype.
-
-## Build status
-
-Build instructions will be added as the desktop and Android build paths are validated. Android APK generation is planned through GitHub Actions so a desktop Android Studio installation is not required.
-
-## Design constraints
-
-- Offline gameplay must not depend on an account, server, or network connection.
-- Memory budgets are engineering targets and must be validated on real devices.
-- Low-end device performance takes priority over expensive visual effects.
-- Keep platform-specific code behind narrow interfaces.
-- Avoid unnecessary runtime dependencies and allocations in hot loops.
+Android APK packaging, touch controls, final sprite art, animation, save/load, FTL travel, multiple systems, dynamic markets, advanced NPC factions/reputation, and full ship fitting are future milestones.
 
 See [Architecture](docs/architecture.md), [Performance](docs/performance.md), [Asset Pipeline](docs/asset-pipeline.md), and [Game Design Foundations](docs/game-design.md).
