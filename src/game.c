@@ -58,7 +58,7 @@ static void update_player(SfGame*g,const SfInput*in,float dt){
  if(in->thrust){s->vx+=cosf(s->angle)*190*dt;s->vy+=sinf(s->angle)*190*dt;}
  if(in->reverse){s->vx-=cosf(s->angle)*123.5f*dt;s->vy-=sinf(s->angle)*123.5f*dt;}
  s->vx=clampf(s->vx*powf(.985f,dt*60),-190,190);s->vy=clampf(s->vy*powf(.985f,dt*60),-190,190);
- s->x=clampf(s->x+s->vx*dt,24,WORLD-24);s->y=clampf(s->y+s->vy*dt,24,WORLD-24);
+ s->x=clampf(s->x+s->vx*dt,24,WORLD-24);s->y=clampf(s->y+s->vy*dt,24,WORLD-24);resolve_asteroids(s);
  if(s->fire_cooldown>0)s->fire_cooldown-=dt;if(in->fire)sf_game_fire_player(g);
 }
 static void update_npcs(SfGame*g,float dt){
