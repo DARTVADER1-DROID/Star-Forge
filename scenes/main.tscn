@@ -13,7 +13,7 @@ radius = 15.0
 script = ExtResource("1_world")
 
 [node name="ParallaxBackground" type="ParallaxBackground" parent="."]
-z_index = -100
+layer = -1
 script = ExtResource("5_starfield")
 
 [node name="PlayerShip" type="CharacterBody2D" parent="."]

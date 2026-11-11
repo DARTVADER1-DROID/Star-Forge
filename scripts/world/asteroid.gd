@@ -5,7 +5,16 @@ class_name SpaceAsteroid
 var _sprite: Sprite2D
 
 func _ready() -> void:
-    var sprite_names := ["asteroid_small_01.png","asteroid_small_02.png","asteroid_small_03.png","asteroid_large_01.png"]
+    var sprite_names := [
+        "asteroid_small_01.png",
+        "asteroid_small_02.png",
+        "asteroid_small_03.png",
+        "asteroid_large_01.png",
+        "asteroid_large_02.png",
+        "asteroid_large_03.png",
+        "asteroid_large_04.png",
+        "asteroid_ore_32.png"
+    ]
     var random := RandomNumberGenerator.new()
     random.randomize()
     var texture := AssetLibrary.load_texture(sprite_names[random.randi_range(0,sprite_names.size()-1)])

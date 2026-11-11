@@ -1,7 +1,6 @@
 extends Node2D
 class_name StarForgeWorld
 
-const STAR_COUNT := 110
 const NPC_SCENE: PackedScene = preload("res://scenes/npc_ship.tscn")
 const DROP_SCENE: PackedScene = preload("res://scenes/cargo_drop.tscn")
 
