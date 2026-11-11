@@ -14,23 +14,7 @@ static const SfGalaxyNode nodes[SF_MAX_SYSTEMS] = {
     { 245.0f, 82.0f }
 };
 
-static const bool links[SF_MAX_SYSTEMS][SF_MAX_SYSTEMS] = {
-    { false, true,  true,  false },
-    { true,  false, true,  true  },
-    { true,  true,  false, true  },
-    { false, true,  true,  false }
-};
 
-bool sf_galaxy_is_connected(int from_system, int to_system)
-{
-    if (from_system < 0 || from_system >= SF_MAX_SYSTEMS ||
-        to_system < 0 || to_system >= SF_MAX_SYSTEMS ||
-        from_system == to_system) {
-        return false;
-    }
-
-    return links[from_system][to_system];
-}
 
 int sf_galaxy_hit_test(float x, float y)
 {
@@ -73,7 +57,7 @@ void sf_galaxy_render(SDL_Renderer *renderer, const SfGame *game, int selected_s
 
     for (i = 0; i < SF_MAX_SYSTEMS; ++i) {
         for (j = i + 1; j < SF_MAX_SYSTEMS; ++j) {
-            if (links[i][j]) {
+            if (sf_game_systems_connected(i, j)) {
                 (void)SDL_SetRenderDrawColor(renderer, 55, 93, 130, 255);
                 SDL_RenderLine(renderer, nodes[i].x, nodes[i].y,
                                nodes[j].x, nodes[j].y);
@@ -83,7 +67,7 @@ void sf_galaxy_render(SDL_Renderer *renderer, const SfGame *game, int selected_s
 
     for (i = 0; i < SF_MAX_SYSTEMS; ++i) {
         const bool current = i == game->current_system;
-        const bool reachable = sf_galaxy_is_connected(game->current_system, i);
+        const bool reachable = sf_game_systems_connected(game->current_system, i);
         const bool selected = i == selected_system;
         char label[48];
 
