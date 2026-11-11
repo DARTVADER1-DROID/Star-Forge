@@ -58,6 +58,7 @@ jobs:
             "$GITHUB_WORKSPACE/src/render.h" \
             "$GITHUB_WORKSPACE/src/galaxy.c" \
             "$GITHUB_WORKSPACE/src/galaxy.h" \
+            "$GITHUB_WORKSPACE/src/ui_layout.h" \
             "$GITHUB_WORKSPACE/src/assets.c" \
             "$GITHUB_WORKSPACE/src/assets.h" \
             "$GITHUB_WORKSPACE/src/stb_image.h" \
