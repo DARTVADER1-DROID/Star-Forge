@@ -49,6 +49,21 @@ static SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path)
         return NULL;
     }
 
+    if (!stbi_info_from_memory(
+            (const stbi_uc *)file_data,
+            (int)file_size,
+            &width,
+            &height,
+            &source_channels
+        ) ||
+        width <= 0 || height <= 0 ||
+        width > 2048 || height > 2048 ||
+        (size_t)width * (size_t)height > 4u * 1024u * 1024u) {
+        SDL_Log("Rejected invalid or oversized sprite '%s'", path);
+        SDL_free(file_data);
+        return NULL;
+    }
+
     pixels = stbi_load_from_memory(
         (const stbi_uc *)file_data,
         (int)file_size,
@@ -60,11 +75,8 @@ static SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path)
 
     SDL_free(file_data);
 
-    if (pixels == NULL || width <= 0 || height <= 0 ||
-        width > 2048 || height > 2048 ||
-        (size_t)width * (size_t)height > 4u * 1024u * 1024u) {
+    if (pixels == NULL) {
         SDL_Log("Could not decode sprite '%s'", path);
-        stbi_image_free(pixels);
         return NULL;
     }
 
