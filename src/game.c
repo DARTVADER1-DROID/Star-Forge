@@ -45,6 +45,19 @@ static const float asteroid_radius[SF_ASTEROID_COUNT] = {
 };
 
 
+static void limit_ship_speed(SfShip *ship, float maximum_speed)
+{
+    const float speed_squared = ship->vx * ship->vx + ship->vy * ship->vy;
+    const float maximum_speed_squared = maximum_speed * maximum_speed;
+
+    if (speed_squared > maximum_speed_squared) {
+        const float speed = sqrtf(speed_squared);
+        const float scale = maximum_speed / speed;
+        ship->vx *= scale;
+        ship->vy *= scale;
+    }
+}
+
 static float clampf(float value, float minimum, float maximum)
 {
     if (value < minimum) {
@@ -279,7 +292,7 @@ void sf_game_fire_player(SfGame *game)
 
     ship = &game->player;
 
-    if (ship->fire_cooldown > 0.0f ||
+    if (!ship->alive || ship->fire_cooldown > 0.0f ||
         ship->energy < ship->weapon_energy_cost) {
         return;
     }
@@ -509,16 +522,9 @@ static void update_player(SfGame *game, const SfInput *input, float dt)
             ship->vy -= sinf(ship->angle) * 123.5f * dt;
         }
 
-        ship->vx = clampf(
-            ship->vx * powf(0.985f, dt * 60.0f),
-            -maximum_speed,
-            maximum_speed
-        );
-        ship->vy = clampf(
-            ship->vy * powf(0.985f, dt * 60.0f),
-            -maximum_speed,
-            maximum_speed
-        );
+        ship->vx *= powf(0.985f, dt * 60.0f);
+        ship->vy *= powf(0.985f, dt * 60.0f);
+        limit_ship_speed(ship, maximum_speed);
     }
 
     ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
@@ -642,8 +648,9 @@ static void update_npcs(SfGame *game, float dt)
             update_patrol(game, ship, dt);
         }
 
-        ship->vx = clampf(ship->vx * powf(0.992f, dt * 60.0f), -105.0f, 105.0f);
-        ship->vy = clampf(ship->vy * powf(0.992f, dt * 60.0f), -105.0f, 105.0f);
+        ship->vx *= powf(0.992f, dt * 60.0f);
+        ship->vy *= powf(0.992f, dt * 60.0f);
+        limit_ship_speed(ship, 105.0f);
 
         ship->x = clampf(ship->x + ship->vx * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
         ship->y = clampf(ship->y + ship->vy * dt, 24.0f, SF_WORLD_SIZE - 24.0f);
