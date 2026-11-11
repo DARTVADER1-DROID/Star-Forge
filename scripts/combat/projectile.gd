@@ -9,6 +9,7 @@ var direction := Vector2.UP
 var from_player := true
 var active := false
 var _age := 0.0
+var _sprite: Sprite2D
 
 func _ready() -> void:
     var shape := CircleShape2D.new()
@@ -17,6 +18,9 @@ func _ready() -> void:
     collision.shape = shape
     add_child(collision)
     body_entered.connect(_on_body_entered)
+    _sprite = Sprite2D.new()
+    _sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    add_child(_sprite)
     monitoring = false
     visible = false
     set_physics_process(false)
@@ -34,6 +38,11 @@ func activate(
     damage = projectile_damage
     speed = projectile_speed
     _age = 0.0
+    if is_instance_valid(_sprite):
+        var texture_name := "proj_laser_blue.png" if from_player else "proj_laser_red.png"
+        _sprite.texture = AssetLibrary.load_texture(texture_name)
+        _sprite.rotation = direction.angle() + PI / 2.0
+        _sprite.scale = Vector2(0.65,0.65)
     active = true
     visible = true
     set_physics_process(true)
@@ -67,7 +76,7 @@ func _on_body_entered(body: Node2D) -> void:
         deactivate()
 
 func _draw() -> void:
-    if not active:
+    if not active or (is_instance_valid(_sprite) and _sprite.texture != null):
         return
     draw_line(Vector2.ZERO,-direction*9.0,Color(1.0,0.82,0.38),3.0)
     draw_circle(Vector2.ZERO,2.0,Color(1.0,0.96,0.72))
