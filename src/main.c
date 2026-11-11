@@ -33,7 +33,6 @@ typedef struct {
     float joystick_origin_y;
     float joystick_x;
     float joystick_y;
-    bool mouse_joystick_active;
 } SfTouchState;
 
 static void set_draw_color(
@@ -145,6 +144,17 @@ static void update_touch_event(
             &x,
             &y
         )) {
+        if (finger->type == SDL_EVENT_FINGER_UP) {
+            if (touch->joystick_active && finger->fingerID == touch->joystick_id) {
+                touch->joystick_active = false;
+            }
+            if (touch->fire_active && finger->fingerID == touch->fire_id) {
+                touch->fire_active = false;
+            }
+            if (touch->boost_active && finger->fingerID == touch->boost_id) {
+                touch->boost_active = false;
+            }
+        }
         return;
     }
 
@@ -181,6 +191,9 @@ static void update_touch_event(
         if (x >= 257.0f && x <= 281.0f && y >= 116.0f && y <= 140.0f) {
             galaxy_map_open = true;
             galaxy_selected_system = -1;
+            touch->joystick_active = false;
+            touch->fire_active = false;
+            touch->boost_active = false;
         } else if (x >= 160.0f && x <= 207.0f && y >= 143.0f) {
             handle_ui_tap(game, inventory_open, x, y);
         } else if (x < (float)SF_LOGICAL_WIDTH * 0.48f &&
@@ -392,8 +405,6 @@ int main(int argc, char **argv)
         SfInput input = { 0 };
         Uint64 current_counter;
         double frame_time;
-        int window_width = SF_WINDOW_WIDTH;
-        int window_height = SF_WINDOW_HEIGHT;
         int camera_x;
         int camera_y;
 
@@ -421,9 +432,10 @@ int main(int argc, char **argv)
         if (ftl_transition_timer > 0.0f) {
             ftl_transition_timer -= (float)SF_FIXED_STEP;
             if (ftl_transition_timer <= 0.0f && ftl_destination >= 0) {
-                (void)sf_game_jump_to_system(&game, ftl_destination);
+                if (sf_game_jump_to_system(&game, ftl_destination)) {
+                    arrival_effect_timer = 1.0f;
+                }
                 ftl_destination = -1;
-                arrival_effect_timer = 1.0f;
             }
         }
         if (arrival_effect_timer > 0.0f) {
@@ -437,7 +449,7 @@ int main(int argc, char **argv)
             const float dx = touch.joystick_x - touch.joystick_origin_x;
             const float dy = touch.joystick_y - touch.joystick_origin_y;
             const float distance = sqrtf(dx * dx + dy * dy);
-            const float maximum_radius = 14.0f
+            const float maximum_radius = 14.0f;
             const float normalized_distance = fminf(
                 distance / maximum_radius,
                 1.0f
@@ -467,25 +479,16 @@ int main(int argc, char **argv)
         accumulator += frame_time;
 
         while (accumulator >= SF_FIXED_STEP) {
-            sf_game_update(&game, &input, (float)SF_FIXED_STEP);
+            if (!galaxy_map_open && ftl_transition_timer <= 0.0f) {
+                sf_game_update(&game, &input, (float)SF_FIXED_STEP);
+            }
             accumulator -= SF_FIXED_STEP;
         }
 
         camera_x = (int)(game.player.x - (float)SF_LOGICAL_WIDTH * 0.5f);
         camera_y = (int)(game.player.y - (float)SF_LOGICAL_HEIGHT * 0.5f);
 
-        (void)SDL_GetMouseState(&mouse_x, &mouse_y);
-        SDL_GetWindowSize(window, &window_width, &window_height);
 
-        if (window_width > 0 && window_height > 0) {
-            (void)window_to_logical(
-                renderer,
-                mouse_x,
-                mouse_y,
-                &mouse_x,
-                &mouse_y
-            );
-        }
 
         if (galaxy_map_open) {
             sf_galaxy_render(renderer, &game, galaxy_selected_system);
