@@ -12,12 +12,14 @@ void sf_render_world(
     const SfAssets *assets,
     int camera_x,
     int camera_y,
-    bool draw_player
+    bool draw_player,
+    int viewport_width
 );
 
 void sf_render_inventory_panel(
     SDL_Renderer *renderer,
-    const SfGame *game
+    const SfGame *game,
+    int viewport_width
 );
 
 #endif
