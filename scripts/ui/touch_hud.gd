@@ -76,8 +76,20 @@ func _button(caption: String, offset: Vector2, dimensions: Vector2, right: bool,
     control.offset_bottom = offset.y+dimensions.y
     control.add_theme_font_size_override("font_size",17)
     control.add_theme_color_override("font_color",Color(0.92,0.96,1.0))
-    control.add_theme_stylebox_override("normal",_button_texture_style("ui_button_9slice_normal.png"))
-    control.add_theme_stylebox_override("pressed",_button_texture_style("ui_button_9slice_pressed.png"))
+    var normal_asset := "ui_button_9slice_normal.png"
+    var pressed_asset := "ui_button_9slice_pressed.png"
+    match caption:
+        "BOOST":
+            normal_asset = "ui_btn_boost_up.png"
+            pressed_asset = "ui_btn_boost_down.png"
+        "FIRE":
+            normal_asset = "ui_btn_fire_up.png"
+            pressed_asset = "ui_btn_fire_down.png"
+        "LOOT":
+            normal_asset = "ui_btn_loot_up.png"
+            pressed_asset = "ui_btn_loot_down.png"
+    control.add_theme_stylebox_override("normal",_button_texture_style(normal_asset))
+    control.add_theme_stylebox_override("pressed",_button_texture_style(pressed_asset))
     control.add_theme_stylebox_override("hover",_button_style(Color(0.10,0.28,0.44,0.96)))
     add_child(control)
     return control
