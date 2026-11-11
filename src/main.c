@@ -196,6 +196,9 @@ static void update_touch_event(
             touch->boost_active = false;
         } else if (sf_ui_contains(&layout->inventory, x, y)) {
             *inventory_open = true;
+            touch->joystick_active = false;
+            touch->fire_active = false;
+            touch->boost_active = false;
         } else if (x < (float)layout->viewport_width * 0.48f &&
                    !touch->joystick_active) {
             touch->joystick_active = true;
@@ -467,7 +470,7 @@ int main(int argc, char **argv)
             const float dx = touch.joystick_x - touch.joystick_origin_x;
             const float dy = touch.joystick_y - touch.joystick_origin_y;
             const float distance = sqrtf(dx * dx + dy * dy);
-            const float maximum_radius = 14.0f;
+            const float maximum_radius = layout.joystick_radius;
             const float normalized_distance = fminf(
                 distance / maximum_radius,
                 1.0f
@@ -497,7 +500,7 @@ int main(int argc, char **argv)
         accumulator += frame_time;
 
         while (accumulator >= SF_FIXED_STEP) {
-            if (!galaxy_map_open) {
+            if (!galaxy_map_open && !inventory_open) {
                 if (ftl_transition_timer > 0.0f) {
                     ftl_transition_timer -= (float)SF_FIXED_STEP;
                     if (ftl_transition_timer <= 0.0f && ftl_destination >= 0) {
@@ -548,7 +551,7 @@ int main(int argc, char **argv)
             sf_render_inventory_panel(renderer, &game, logical_width);
         }
 
-        if (!galaxy_map_open) {
+        if (!galaxy_map_open && !inventory_open) {
             draw_touch_controls(renderer, &touch, &game, &assets, &layout);
         }
 
