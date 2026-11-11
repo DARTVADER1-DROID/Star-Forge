@@ -448,6 +448,147 @@ static void draw_inventory_panel(
     SDL_RenderDebugText(renderer, 72.0f, 106.0f, "E collect nearby salvage");
 }
 
+
+typedef struct {
+    SDL_FingerID joystick_id;
+    SDL_FingerID fire_id;
+    SDL_FingerID boost_id;
+    bool joystick_active;
+    bool fire_active;
+    bool boost_active;
+    float joystick_x;
+    float joystick_y;
+} SfTouchState;
+
+static void update_touch_event(
+    const SDL_TouchFingerEvent *finger,
+    SfTouchState *touch,
+    SfGame *game
+)
+{
+    const float x = finger->x * (float)SF_LOGICAL_WIDTH;
+    const float y = finger->y * (float)SF_LOGICAL_HEIGHT;
+
+    if (finger->type == SDL_EVENT_FINGER_DOWN) {
+        if (x < 155.0f && !touch->joystick_active) {
+            touch->joystick_active = true;
+            touch->joystick_id = finger->fingerID;
+            touch->joystick_x = x;
+            touch->joystick_y = y;
+        } else if (x > 245.0f && y > 105.0f && !touch->fire_active) {
+            touch->fire_active = true;
+            touch->fire_id = finger->fingerID;
+        } else if (x > 245.0f && y <= 105.0f && !touch->boost_active) {
+            touch->boost_active = true;
+            touch->boost_id = finger->fingerID;
+        } else if (x > 175.0f && x <= 245.0f && y > 125.0f) {
+            (void)sf_game_collect_nearest(game);
+        }
+
+        return;
+    }
+
+    if (finger->type == SDL_EVENT_FINGER_MOTION &&
+        touch->joystick_active &&
+        finger->fingerID == touch->joystick_id) {
+        touch->joystick_x = x;
+        touch->joystick_y = y;
+        return;
+    }
+
+    if (finger->type == SDL_EVENT_FINGER_UP) {
+        if (touch->joystick_active && finger->fingerID == touch->joystick_id) {
+            touch->joystick_active = false;
+        }
+
+        if (touch->fire_active && finger->fingerID == touch->fire_id) {
+            touch->fire_active = false;
+        }
+
+        if (touch->boost_active && finger->fingerID == touch->boost_id) {
+            touch->boost_active = false;
+        }
+    }
+}
+
+static void draw_touch_ring(SDL_Renderer *renderer, float center_x, float center_y, float radius)
+{
+    const int segments = 24;
+    int i;
+
+    set_draw_color(renderer, 105, 165, 225);
+
+    for (i = 0; i < segments; ++i) {
+        const float a0 = (float)i * 6.28318530718f / (float)segments;
+        const float a1 = (float)(i + 1) * 6.28318530718f / (float)segments;
+
+        SDL_RenderLine(
+            renderer,
+            center_x + cosf(a0) * radius,
+            center_y + sinf(a0) * radius,
+            center_x + cosf(a1) * radius,
+            center_y + sinf(a1) * radius
+        );
+    }
+}
+
+static void draw_touch_controls(
+    SDL_Renderer *renderer,
+    const SfTouchState *touch,
+    const SfGame *game
+)
+{
+    SDL_FRect fire = { 268.0f, 125.0f, 43.0f, 43.0f };
+    SDL_FRect boost = { 270.0f, 69.0f, 38.0f, 38.0f };
+    SDL_FRect loot = { 211.0f, 145.0f, 38.0f, 27.0f };
+    float knob_x = 48.0f;
+    float knob_y = 132.0f;
+
+    if (touch->joystick_active) {
+        float dx = touch->joystick_x - 48.0f;
+        float dy = touch->joystick_y - 132.0f;
+        const float length = sqrtf(dx * dx + dy * dy);
+
+        if (length > 25.0f) {
+            dx *= 25.0f / length;
+            dy *= 25.0f / length;
+        }
+
+        knob_x += dx;
+        knob_y += dy;
+    }
+
+    draw_touch_ring(renderer, 48.0f, 132.0f, 31.0f);
+    draw_touch_ring(renderer, knob_x, knob_y, 12.0f);
+
+    set_draw_color(renderer, 30, 70, 115);
+    SDL_RenderFillRect(renderer, &fire);
+    SDL_RenderFillRect(renderer, &boost);
+    SDL_RenderFillRect(renderer, &loot);
+
+    set_draw_color(renderer, 125, 195, 245);
+    SDL_RenderRect(renderer, &fire);
+    SDL_RenderRect(renderer, &boost);
+    SDL_RenderRect(renderer, &loot);
+
+    set_draw_color(renderer, 245, 245, 255);
+    SDL_RenderDebugText(renderer, 276.0f, 141.0f, "FIRE");
+    SDL_RenderDebugText(renderer, 275.0f, 82.0f, "BOOST");
+    SDL_RenderDebugText(renderer, 218.0f, 154.0f, "LOOT");
+
+    {
+        char energy_text[24];
+
+        (void)snprintf(
+            energy_text,
+            sizeof(energy_text),
+            "BOOST %.0f%%",
+            game->boost_energy
+        );
+        SDL_RenderDebugText(renderer, 5.0f, 41.0f, energy_text);
+    }
+}
+
 static void handle_key_press(
     SDL_Scancode key,
     SfGame *game,
@@ -524,6 +665,7 @@ int main(int argc, char **argv)
     SfGame game;
     bool running = true;
     bool inventory_open = false;
+    SfTouchState touch = { 0 };
     Uint64 previous_counter;
     Uint64 performance_frequency;
     double accumulator = 0.0;
@@ -596,6 +738,12 @@ int main(int argc, char **argv)
                     &inventory_open
                 );
             }
+
+            if (event.type == SDL_EVENT_FINGER_DOWN ||
+                event.type == SDL_EVENT_FINGER_MOTION ||
+                event.type == SDL_EVENT_FINGER_UP) {
+                update_touch_event(&event.tfinger, &touch, &game);
+            }
         }
 
         keyboard_state = SDL_GetKeyboardState(NULL);
@@ -616,7 +764,18 @@ int main(int argc, char **argv)
             keyboard_state[SDL_SCANCODE_D] ||
             keyboard_state[SDL_SCANCODE_RIGHT];
 
-        input.fire = keyboard_state[SDL_SCANCODE_SPACE];
+        input.fire = keyboard_state[SDL_SCANCODE_SPACE] || touch.fire_active;
+        input.boost = touch.boost_active;
+
+        if (touch.joystick_active) {
+            const float dx = touch.joystick_x - 48.0f;
+            const float dy = touch.joystick_y - 132.0f;
+
+            input.turn_left = input.turn_left || dx < -8.0f;
+            input.turn_right = input.turn_right || dx > 8.0f;
+            input.thrust = input.thrust || dy < -8.0f;
+            input.reverse = input.reverse || dy > 8.0f;
+        }
 
         current_counter = SDL_GetPerformanceCounter();
 
@@ -661,6 +820,10 @@ int main(int argc, char **argv)
         if (inventory_open) {
             draw_inventory_panel(renderer, &game);
         }
+
+#ifdef __ANDROID__
+        draw_touch_controls(renderer, &touch, &game);
+#endif
 
         SDL_RenderPresent(renderer);
         SDL_Delay(1);
