@@ -1,0 +1,510 @@
+{
+  "schema_version": 1,
+  "asset_count": 126,
+  "assets": [
+    {
+      "path": "assets/asteroids/asteroid_large_01.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/asteroid_large_02.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/asteroid_large_03.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/asteroid_large_04.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/asteroid_ore_32.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/asteroid_small_01.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/asteroid_small_02.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/asteroid_small_03.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/wreckage_large.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/wreckage_medium.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/asteroids/wreckage_small.png",
+      "category": "asteroids"
+    },
+    {
+      "path": "assets/backgrounds/bg_nebula_320x180.png",
+      "category": "backgrounds"
+    },
+    {
+      "path": "assets/backgrounds/stars_far_128.png",
+      "category": "backgrounds"
+    },
+    {
+      "path": "assets/backgrounds/stars_mid_128.png",
+      "category": "backgrounds"
+    },
+    {
+      "path": "assets/backgrounds/stars_near_128.png",
+      "category": "backgrounds"
+    },
+    {
+      "path": "assets/effects/damage_fire.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/damage_smoke.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/exhaust_blue.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/exhaust_large_blue.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/exhaust_orange.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/exhaust_red.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/explosion_large.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/explosion_small.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/damage_fire/damage_fire_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/damage_fire/damage_fire_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/damage_fire/damage_fire_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/damage_fire/damage_fire_03.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/damage_smoke/damage_smoke_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/damage_smoke/damage_smoke_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/damage_smoke/damage_smoke_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/damage_smoke/damage_smoke_03.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_blue/exhaust_blue_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_blue/exhaust_blue_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_blue/exhaust_blue_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_blue/exhaust_blue_03.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_large_blue/exhaust_large_blue_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_large_blue/exhaust_large_blue_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_large_blue/exhaust_large_blue_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_large_blue/exhaust_large_blue_03.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_orange/exhaust_orange_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_orange/exhaust_orange_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_orange/exhaust_orange_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_orange/exhaust_orange_03.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_red/exhaust_red_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_red/exhaust_red_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_red/exhaust_red_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/exhaust_red/exhaust_red_03.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_large/explosion_large_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_large/explosion_large_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_large/explosion_large_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_large/explosion_large_03.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_large/explosion_large_04.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_large/explosion_large_05.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_large/explosion_large_06.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_large/explosion_large_07.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_small/explosion_small_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_small/explosion_small_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_small/explosion_small_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_small/explosion_small_03.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_small/explosion_small_04.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_small/explosion_small_05.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_small/explosion_small_06.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/explosion_small/explosion_small_07.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/muzzle_large/muzzle_large_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/muzzle_large/muzzle_large_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/muzzle_large/muzzle_large_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/muzzle_small/muzzle_small_00.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/muzzle_small/muzzle_small_01.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/frames/muzzle_small/muzzle_small_02.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/muzzle_large.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/effects/muzzle_small.png",
+      "category": "effects"
+    },
+    {
+      "path": "assets/planets/orbit_ring_96.png",
+      "category": "planets"
+    },
+    {
+      "path": "assets/planets/planet_gas_96.png",
+      "category": "planets"
+    },
+    {
+      "path": "assets/planets/planet_moon_32.png",
+      "category": "planets"
+    },
+    {
+      "path": "assets/planets/planet_terran_64.png",
+      "category": "planets"
+    },
+    {
+      "path": "assets/planets/star_yellow_64.png",
+      "category": "planets"
+    },
+    {
+      "path": "assets/projectiles/proj_heavy_shell.png",
+      "category": "projectiles"
+    },
+    {
+      "path": "assets/projectiles/proj_laser_blue.png",
+      "category": "projectiles"
+    },
+    {
+      "path": "assets/projectiles/proj_laser_red.png",
+      "category": "projectiles"
+    },
+    {
+      "path": "assets/projectiles/proj_missile.png",
+      "category": "projectiles"
+    },
+    {
+      "path": "assets/projectiles/proj_pulse_orb.png",
+      "category": "projectiles"
+    },
+    {
+      "path": "assets/projectiles/proj_rail_slug.png",
+      "category": "projectiles"
+    },
+    {
+      "path": "assets/salvage/container_large_24.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/salvage/salvage_container_generic.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/salvage/salvage_equipment.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/salvage/salvage_food.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/salvage/salvage_fuel.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/salvage/salvage_luxury.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/salvage/salvage_medicine.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/salvage/salvage_metal.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/salvage/salvage_weapon.png",
+      "category": "salvage"
+    },
+    {
+      "path": "assets/ships/ship_cargo_hauler.png",
+      "category": "ships"
+    },
+    {
+      "path": "assets/ships/ship_civilian_transport.png",
+      "category": "ships"
+    },
+    {
+      "path": "assets/ships/ship_military_destroyer.png",
+      "category": "ships"
+    },
+    {
+      "path": "assets/ships/ship_military_frigate.png",
+      "category": "ships"
+    },
+    {
+      "path": "assets/ships/ship_pirate_interceptor.png",
+      "category": "ships"
+    },
+    {
+      "path": "assets/ships/ship_player_runner.png",
+      "category": "ships"
+    },
+    {
+      "path": "assets/stations/station_ring_hub.png",
+      "category": "stations"
+    },
+    {
+      "path": "assets/ui/ui_btn_boost_down.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_btn_boost_up.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_btn_fire_down.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_btn_fire_up.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_btn_loot_down.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_btn_loot_up.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_button_9slice_disabled.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_button_9slice_normal.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_button_9slice_pressed.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_icon_credits.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_icon_energy.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_icon_fuel.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_icon_health.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_icon_inventory.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_icon_weapon.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_joystick_base.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_joystick_knob.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_offscreen_arrow.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_panel_9slice.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_reticle_lock.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_reticle_target.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/ui/ui_selection_ring.png",
+      "category": "ui"
+    },
+    {
+      "path": "assets/weapons/wpn_heavy_cannon.png",
+      "category": "weapons"
+    },
+    {
+      "path": "assets/weapons/wpn_laser_cannon.png",
+      "category": "weapons"
+    },
+    {
+      "path": "assets/weapons/wpn_missile_launcher.png",
+      "category": "weapons"
+    },
+    {
+      "path": "assets/weapons/wpn_pulse_cannon.png",
+      "category": "weapons"
+    },
+    {
+      "path": "assets/weapons/wpn_railgun.png",
+      "category": "weapons"
+    },
+    {
+      "path": "assets/weapons/wpn_turret_autocannon.png",
+      "category": "weapons"
+    }
+  ]
+}

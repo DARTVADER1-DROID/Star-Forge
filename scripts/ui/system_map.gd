@@ -88,7 +88,7 @@ func _draw() -> void:
             draw_arc(point,radius,0.0,TAU,32,Color(0.86,0.94,1.0,0.92),2.0)
         if selected_body == "PLANET %d" % (index+1):
             draw_arc(point,radius+8.0,0.0,TAU,32,Color(1.0,0.78,0.36,1.0),2.0)
-        draw_string(ThemeDB.fallback_font,point+Vector2(-42.0,radius+18.0),"PLANET %d" % (index+1),HORIZONTAL_ALIGNMENT_CENTER,84.0,12,Color(0.88,0.94,1.0,0.95))
+        draw_string(ThemeDB.fallback_font,point+Vector2(-110.0,radius+30.0),"PLANET %d" % (index+1),HORIZONTAL_ALIGNMENT_CENTER,220.0,28,Color(0.88,0.94,1.0,0.95))
 
     var moon_count := int(definition.get("moon_count",0))
     for moon_index in range(moon_count):
@@ -107,8 +107,12 @@ func _draw() -> void:
             draw_arc(moon_point,20.0,0.0,TAU,24,Color(1.0,0.78,0.36,1.0),2.0)
 
     if bool(definition.get("has_asteroids",false)):
+        var asteroid_texture := AssetLibrary.load_texture("asteroid_small_01.png")
         for asteroid_point in [Vector2(520,250),Vector2(680,420),Vector2(860,310),Vector2(740,160)]:
-            draw_circle(asteroid_point,7.0,Color(0.58,0.60,0.64,0.95))
+            if asteroid_texture != null:
+                draw_texture_rect(asteroid_texture,Rect2(asteroid_point-Vector2(10,10),Vector2(20,20)),false)
+            else:
+                draw_circle(asteroid_point,7.0,Color(0.58,0.60,0.64,0.95))
 
     var station_data: Array = definition.get("station_position",[480,270])
     var station := Vector2(float(station_data[0]),float(station_data[1]))
@@ -118,7 +122,7 @@ func _draw() -> void:
     else:
         draw_circle(station,20.0,Color(0.28,0.76,0.72,0.24))
         draw_arc(station,17.0,0.0,TAU,32,Color(0.42,0.94,0.84,1.0),3.0)
-    draw_string(ThemeDB.fallback_font,station+Vector2(-35.0,31.0),"STATION",HORIZONTAL_ALIGNMENT_CENTER,70.0,12,Color(0.58,0.98,0.90,1.0))
+    draw_string(ThemeDB.fallback_font,station+Vector2(-90.0,52.0),"STATION",HORIZONTAL_ALIGNMENT_CENTER,180.0,28,Color(0.58,0.98,0.90,1.0))
     draw_circle(ship_position,8.0,Color(0.46,0.86,1.0,1.0))
     draw_arc(ship_position,14.0,0.0,TAU,32,Color(0.46,0.86,1.0,0.9),2.0)
     draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)

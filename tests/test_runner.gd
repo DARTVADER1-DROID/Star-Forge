@@ -7,6 +7,7 @@ func _run_tests() -> void:
     var failures: Array[String] = []
     _test_content_database(failures)
     _test_asset_library(failures)
+    _test_asset_manifest(failures)
     _test_cargo_capacity(failures)
     _test_armour_damage(failures)
     _test_ftl_rules(failures)
@@ -37,6 +38,19 @@ func _test_asset_library(failures: Array[String]) -> void:
         failures.append("Player ship sprite is missing from the imported asset pack.")
     if not AssetLibrary.has_asset("bg_nebula_320x180.png"):
         failures.append("Nebula background is missing from the imported asset pack.")
+
+func _test_asset_manifest(failures: Array[String]) -> void:
+    var file := FileAccess.open("res://assets/asset_manifest.json",FileAccess.READ)
+    if file == null:
+        failures.append("Asset manifest is missing.")
+        return
+    var parsed: Variant = JSON.parse_string(file.get_as_text())
+    if not parsed is Dictionary or int(parsed.get("asset_count",0)) < 100:
+        failures.append("Asset manifest should index the full source art library.")
+        return
+    for entry: Variant in parsed.get("assets",[]):
+        if not entry is Dictionary or not ResourceLoader.exists("res://"+str(entry.get("path",""))):
+            failures.append("Manifest references a missing asset: " + str(entry.get("path","invalid")))
 
 func _test_cargo_capacity(failures: Array[String]) -> void:
     GameState.inventory = {"metal":0,"fuel":0,"food":0,"medicine":0,"weapon_salvage":0}
