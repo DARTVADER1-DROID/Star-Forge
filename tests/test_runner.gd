@@ -6,6 +6,7 @@ func _ready() -> void:
 func _run_tests() -> void:
     var failures: Array[String] = []
     _test_content_database(failures)
+    _test_asset_library(failures)
     _test_cargo_capacity(failures)
     _test_armour_damage(failures)
     _test_ftl_rules(failures)
@@ -28,6 +29,12 @@ func _test_content_database(failures: Array[String]) -> void:
         failures.append("Expected at least three ship designs.")
     if ContentDatabase.systems.size() != 4:
         failures.append("Expected four star systems.")
+
+func _test_asset_library(failures: Array[String]) -> void:
+    if not AssetLibrary.has_asset("ship_player_runner.png"):
+        failures.append("Player ship sprite is missing from the imported asset pack.")
+    if not AssetLibrary.has_asset("bg_nebula_320x180.png"):
+        failures.append("Nebula background is missing from the imported asset pack.")
 
 func _test_cargo_capacity(failures: Array[String]) -> void:
     GameState.inventory = {"metal":0,"fuel":0,"food":0,"medicine":0,"weapon_salvage":0}
