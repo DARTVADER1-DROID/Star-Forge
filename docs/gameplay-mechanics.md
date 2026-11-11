@@ -70,6 +70,7 @@ These are prototype balance values and should be tuned through playtesting.
 - NPCs may collect nearby salvage when NPC salvage behavior is enabled.
 - The player can jettison a selected quantity of ordinary commodities.
 - The player can sell all of one selected commodity when within 90 world units of the station.
+- The on-screen cargo panel supports item selection, jettison quantity adjustment, station sales and the NPC salvage toggle.
 
 ## Proposed mechanics — not implemented yet
 
@@ -99,7 +100,7 @@ These are prototype balance values and should be tuned through playtesting.
 - Inter-system travel is only possible through an installed FTL drive.
 - The prototype FTL jump consumes 5 units of the Fuel commodity.
 - A jump is rejected when the ship lacks an FTL drive or sufficient fuel.
-- Jumping resets local velocity and position and clears local NPCs, projectiles and salvage.
+- Jumping resets local velocity and position, clears transient projectiles and salvage, and initializes local cargo and pirate traffic in the destination system.
 - Directly flying to the edge of a system never transitions to another system.
 - Future fleet travel will calculate fuel from fleet mass and route distance; current prototype cost is fixed.
 
