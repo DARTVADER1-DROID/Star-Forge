@@ -392,8 +392,6 @@ int main(int argc, char **argv)
         SfInput input = { 0 };
         Uint64 current_counter;
         double frame_time;
-        float mouse_x = 0.0f;
-        float mouse_y = 0.0f;
         int window_width = SF_WINDOW_WIDTH;
         int window_height = SF_WINDOW_HEIGHT;
         int camera_x;
@@ -504,15 +502,6 @@ int main(int argc, char **argv)
                 draw_touch_ring(renderer, 160.0f, 90.0f, 8.0f + pulse * 55.0f);
             }
         }
-
-        sf_render_hover_info(
-            renderer,
-            &game,
-            mouse_x,
-            mouse_y,
-            camera_x,
-            camera_y
-        );
 
         if (inventory_open && !galaxy_map_open) {
             sf_render_inventory_panel(renderer, &game);
