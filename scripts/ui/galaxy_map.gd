@@ -14,6 +14,11 @@ const MAP_MARGIN := Vector2(42.0,34.0)
 var systems: Dictionary = {}
 var current_system_id := ""
 var selected_system_id := ""
+var _pan_offset := Vector2.ZERO
+var _zoom := 1.0
+var _active_touch := -1
+var _last_touch_position := Vector2.ZERO
+var _touch_moved := false
 
 func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_STOP
@@ -27,18 +32,32 @@ func configure(current_id: String, selected_id: String) -> void:
 func _system_point(system_id: String) -> Vector2:
     var definition: Dictionary = systems.get(system_id,{})
     var normalized: Array = definition.get("galaxy_position",[0.5,0.5])
-    var usable := size - MAP_MARGIN * 2.0
-    return MAP_MARGIN + Vector2(float(normalized[0]),float(normalized[1])) * usable
+    return MAP_MARGIN + Vector2(float(normalized[0]),float(normalized[1])) * (size-MAP_MARGIN*2.0)
+
+func pan_by(delta: Vector2) -> void:
+    _pan_offset += delta
+    queue_redraw()
+
+func set_zoom(value: float, anchor: Vector2 = Vector2.ZERO) -> void:
+    var map_anchor := (anchor-_pan_offset)/_zoom
+    _zoom = clampf(value,0.65,2.6)
+    _pan_offset = anchor-map_anchor*_zoom
+    queue_redraw()
+
+func reset_view() -> void:
+    _pan_offset = Vector2.ZERO
+    _zoom = 1.0
+    queue_redraw()
 
 func _draw() -> void:
-    draw_rect(Rect2(Vector2.ZERO,size),Color(0.015,0.035,0.075,0.92),true)
+    draw_rect(Rect2(Vector2.ZERO,size),Color(0.015,0.035,0.075,0.96),true)
     for grid_x in range(1,5):
-        var x := size.x * float(grid_x) / 5.0
+        var x := size.x*float(grid_x)/5.0
         draw_line(Vector2(x,12),Vector2(x,size.y-12),Color(0.22,0.37,0.52,0.12),1.0)
     for grid_y in range(1,3):
-        var y := size.y * float(grid_y) / 3.0
+        var y := size.y*float(grid_y)/3.0
         draw_line(Vector2(12,y),Vector2(size.x-12,y),Color(0.22,0.37,0.52,0.12),1.0)
-
+    draw_set_transform(_pan_offset,0.0,Vector2.ONE*_zoom)
     var current: Dictionary = systems.get(current_system_id,{})
     var links: Array = current.get("links",[])
     for id: String in systems:
@@ -48,7 +67,6 @@ func _draw() -> void:
                 continue
             var adjacent := id == current_system_id or neighbor == current_system_id
             draw_line(_system_point(id),_system_point(neighbor),EDGE_ACTIVE_COLOR if adjacent else EDGE_COLOR,2.4 if adjacent else 1.4)
-
     for id: String in systems:
         var definition: Dictionary = systems[id]
         var point := _system_point(id)
@@ -60,24 +78,40 @@ func _draw() -> void:
             draw_circle(point,17.0,Color(node_color.r,node_color.g,node_color.b,0.16))
         draw_circle(point,10.0 if is_current or is_selected else 7.0,node_color)
         draw_arc(point,10.0 if is_current or is_selected else 7.0,0.0,TAU,32,Color(0.78,0.91,1.0,0.88),1.4)
-        var name := str(definition.get("name",id))
-        var label_color := Color(0.90,0.96,1.0,1.0) if is_adjacent or is_current else Color(0.54,0.64,0.75,0.78)
-        draw_string(ThemeDB.fallback_font,point+Vector2(-46.0,25.0),name,HORIZONTAL_ALIGNMENT_CENTER,92.0,12,label_color)
-
-    draw_string(ThemeDB.fallback_font,Vector2(12.0,size.y-10.0),"CYAN: CURRENT   BLUE: LINKED   GREY: OUT OF RANGE",HORIZONTAL_ALIGNMENT_LEFT,-1,9,Color(0.62,0.75,0.88,0.85))
+        draw_string(ThemeDB.fallback_font,point+Vector2(-46.0,25.0),str(definition.get("name",id)),HORIZONTAL_ALIGNMENT_CENTER,92.0,12,Color(0.90,0.96,1.0,1.0) if is_adjacent or is_current else Color(0.54,0.64,0.75,0.78))
+    draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
+    draw_string(ThemeDB.fallback_font,Vector2(12.0,size.y-10.0),"DRAG TO PAN  ·  PINCH TO ZOOM  ·  TAP TO SELECT",HORIZONTAL_ALIGNMENT_LEFT,-1,9,Color(0.72,0.84,0.96,0.9))
 
 func _gui_input(event: InputEvent) -> void:
-    if not event is InputEventScreenTouch:
-        return
-    var touch := event as InputEventScreenTouch
-    if not touch.pressed:
-        return
-    var current: Dictionary = systems.get(current_system_id,{})
-    var links: Array = current.get("links",[])
+    if event is InputEventScreenTouch:
+        var touch := event as InputEventScreenTouch
+        if touch.pressed:
+            _active_touch = touch.index
+            _last_touch_position = touch.position
+            _touch_moved = false
+            accept_event()
+        elif touch.index == _active_touch:
+            if not _touch_moved:
+                _select_system_at((touch.position-_pan_offset)/_zoom)
+            _active_touch = -1
+            accept_event()
+    elif event is InputEventScreenDrag:
+        var drag := event as InputEventScreenDrag
+        if drag.index == _active_touch:
+            var movement := drag.position-_last_touch_position
+            if movement.length() > 2.0:
+                _touch_moved = true
+                pan_by(movement)
+            _last_touch_position = drag.position
+            accept_event()
+    elif event is InputEventMagnifyGesture:
+        var gesture := event as InputEventMagnifyGesture
+        set_zoom(_zoom*gesture.factor,gesture.position)
+        accept_event()
+
+func _select_system_at(map_position: Vector2) -> void:
     for id: String in systems:
-        if id == current_system_id or not links.has(id):
-            continue
-        if _system_point(id).distance_to(touch.position) <= 24.0:
+        if _system_point(id).distance_to(map_position) <= 24.0:
             system_selected.emit(id)
             accept_event()
             return

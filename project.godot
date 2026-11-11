@@ -1,4 +1,4 @@
-; Star Forge — Android-only Godot 4 project
+ ; Star Forge — Android-only Godot 4 project
 ; Landscape orientation with touch-only gameplay controls.
 
 config_version=5
@@ -13,6 +13,7 @@ config/description="Android-only offline top-down 2D pixel-art space sandbox RPG
 GameState="*res://scripts/autoload/game_state.gd"
 ContentDatabase="*res://scripts/autoload/content_database.gd"
 AssetLibrary="*res://scripts/autoload/asset_library.gd"
+AudioManager="*res://scripts/audio/audio_manager.gd"
 
 [display]
 window/size/viewport_width=960

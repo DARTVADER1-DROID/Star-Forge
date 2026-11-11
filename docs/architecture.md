@@ -1,50 +1,42 @@
-# Godot Architecture
+# Star Forge Architecture
 
-## Engine conventions
+## Product constraints
+- Godot 4.7.2, typed GDScript, Android-only landscape and touch-only gameplay.
+- Compatibility renderer, low-memory Android target, no keyboard/mouse gameplay.
+- Keep the development PR unmerged until explicitly approved.
 
-- Godot 4.7.2 is the single engine runtime.
-- Typed GDScript is the primary and only gameplay language.
-- Gameplay is scene-oriented; reusable actors and world objects have dedicated scenes.
-- Global state is restricted to the `GameState` and `ContentDatabase` autoloads.
-- Content definitions are JSON with stable IDs and are loaded once by the content database.
-- Touch input is handled by the HUD; player simulation receives normalized steering and action signals.
-- Rendering uses Godot's Compatibility renderer to target a broad Android device range.
+## Runtime ownership
+- `scenes/main.tscn`: composition root for world, player, follow camera, parallax background, entity containers, projectile pool and HUD canvas.
+- `scripts/player/`: player movement, ship state and weapons.
+- `scripts/npc/`: NPC roles, docking and combat decisions.
+- `scripts/world/`: world entities and focused world services.
+- `scripts/combat/`: projectiles and bounded pooling.
+- `scripts/ui/`: touch HUD, galaxy navigation and local system maps.
+- `scripts/audio/`: shared sound-effect playback service.
+- `scripts/autoload/`: persistent state, content indexes and Android asset registry.
 
-## Runtime layers
+## SOLID boundaries
+- `SystemContentBuilder` builds static system bodies from data; it does not own HUD, saves or NPC AI.
+- `WorldInteractionService` finds the nearest eligible planet/station interaction; it does not create UI or mutate player state.
+- `StarForgeWorld` coordinates system lifecycle and connects signals.
+- `NPCShip` owns movement, docking and combat eligibility. Docked traffic is stationary and protected from pirate targeting.
+- UI emits intent signals (LAND, DOCK, REFUEL, JUMP); world validates range and performs actions.
+- Use stable IDs, not display names or hard-coded scene references.
 
-### Application and UI
-`scenes/main.tscn` composes the world, player, entity containers and HUD. The HUD owns the touch joystick, action buttons, cargo panel, galaxy selector and recovery overlay.
+## Content boundaries
+- `data/economy/items.json`: commodities and equipment.
+- `data/ships/designs.json`: hull definitions.
+- `data/ships/roles.json`: NPC roles and manifests.
+- `data/world/systems.json`: system graph and configuration.
+- `data/world/planets/`, `data/world/maps/`, `data/services/`: future modular catalogs.
+- Definitions reference stable IDs; do not duplicate mutable gameplay stats.
 
-### Persistent state
-`scripts/autoload/game_state.gd` owns inventory, credits, ship state, FTL rules, system state and versioned local save data. It exposes signals rather than reaching into scene nodes.
+## Galaxy navigation
+The galaxy map supports touch drag to pan, pinch to zoom, and tap to select any known system for inspection/planning. FTL remains restricted to adjacent systems with sufficient fuel; selecting a distant system never bypasses route rules.
 
-### Content
-`scripts/autoload/content_database.gd` validates and indexes JSON definitions for items, ship designs, NPC roles and star systems.
+## Assets and audio
+Every manifest texture is explicitly preloaded by `AssetLibrary` for Android PCK inclusion. CI compares the manifest with the registry. Optional missing textures use procedural fallbacks.
+`AudioManager` owns a bounded eight-player SFX pool, sound-ID registration and global volume/mute settings. Feature modules request sound IDs; they do not create unmanaged players. The current source pack has no audio clips, so the manager is ready for later assets but does not invent placeholder sounds.
 
-### Gameplay
-- Player ship: movement, acceleration, armour, hull, energy and weapon firing.
-- NPC ship: role-specific navigation, cargo manifest, combat and salvage.
-- Projectile: lifetime, travel and collision-driven damage.
-- World: system loading, asteroid and planetary obstacles, NPC population and salvage persistence.
-
-### Data and assets
-Definitions belong in `data/`; reusable scenes and scripts belong in `scenes/` and `scripts/`. Art is imported as Godot resources and referenced through stable resource paths.
-
-## Code standards
-
-- Use typed variables, parameters and return types for public APIs.
-- Keep scripts focused on one responsibility.
-- Use signals for cross-layer communication.
-- Validate external data before indexing or applying it.
-- Avoid per-frame node creation and unbounded collections.
-- Keep gameplay input touch-only.
-- Do not introduce native extensions until profiling demonstrates a concrete need.
-
-## Runtime flow
-
-1. Godot loads the project and autoloads.
-2. The content database validates JSON data.
-3. The main scene restores local player state and loads the current system.
-4. The player and local actors run in the active scene only.
-5. System transitions persist local state and consume FTL fuel.
-6. Saves are written to the application user-data directory.
+## Persistence and tests
+`GameState` owns inventory, credits, FTL, per-system state and versioned saves. Save stable IDs and numeric state, never scene references. CI imports the project, runs gameplay tests and exports an Android debug APK.

@@ -2,6 +2,9 @@ extends StaticBody2D
 class_name StationBody
 
 @export var collision_radius := 28.0
+@export var interaction_radius := 112.0
+@export var body_id := "station"
+@export var body_name := "Orbital Station"
 var _sprite: Sprite2D
 
 func _ready() -> void:
