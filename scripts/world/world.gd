@@ -10,12 +10,12 @@ const STAR_COUNT: int = 110
 var _stars: PackedVector2Array = PackedVector2Array()
 
 func _ready() -> void:
+    get_viewport().size_changed.connect(queue_redraw)
     _create_star_field()
     player.projectile_container = projectile_container
     hud.steering_changed.connect(player.set_steering)
     hud.boost_changed.connect(player.set_boosting)
     hud.fire_changed.connect(player.set_firing)
-    hud.status_requested.connect(_update_hud)
     _update_hud()
 
 func _process(_delta: float) -> void:
@@ -25,10 +25,6 @@ func _draw() -> void:
     draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.012, 0.02, 0.055))
     for star_position: Vector2 in _stars:
         draw_circle(star_position, 1.0, Color(0.55, 0.67, 0.86, 0.72))
-
-func _notification(what: int) -> void:
-    if what == NOTIFICATION_RESIZED:
-        queue_redraw()
 
 func _create_star_field() -> void:
     var random := RandomNumberGenerator.new()
