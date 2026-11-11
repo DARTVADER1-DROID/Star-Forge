@@ -63,7 +63,7 @@ func _build_controls() -> void:
     var boost := _button("BOOST",Vector2(-218,-100),Vector2(96,72),true)
     var fire := _button("FIRE",Vector2(-110,-100),Vector2(96,72),true)
     var loot := _button("LOOT",Vector2(-100,14),Vector2(88,52),true,true)
-    var ftl := _button("FTL",Vector2(-100,74),Vector2(88,52),true,true)
+    var ftl := _button("FTL",Vector2(-108,-184),Vector2(96,60),true)
     var bag := _button("BAG",Vector2(-100,134),Vector2(88,52),true,true)
     var save := _button("SAVE",Vector2(-100,194),Vector2(88,52),true,true)
     boost.button_down.connect(func(): boost_changed.emit(true))
@@ -77,6 +77,7 @@ func _build_controls() -> void:
 
 func _button(caption: String, offset: Vector2, dimensions: Vector2, right: bool, top: bool = false) -> Button:
     var control := Button.new()
+    control.name = caption + "Button"
     control.text = caption
     control.focus_mode = Control.FOCUS_NONE
     control.anchor_left = 1.0 if right else 0.0

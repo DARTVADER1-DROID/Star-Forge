@@ -138,6 +138,14 @@ func _test_main_scene(failures: Array[String]) -> void:
     for node_name: String in ["PlayerShip","HUD","ProjectilePool","NPCs","Obstacles","CargoDrops"]:
         if game.get_node_or_null(node_name) == null:
             failures.append("Main scene missing node: " + node_name)
+    var ftl_button := game.get_node("HUD/FTLButton") as Button
+    if ftl_button == null:
+        failures.append("HUD must create a dedicated FTL button.")
+    else:
+        if ftl_button.text != "FTL" or not ftl_button.visible:
+            failures.append("FTL button must be clearly labelled and visible.")
+        if not is_equal_approx(ftl_button.anchor_top,1.0) or not is_equal_approx(ftl_button.anchor_right,1.0):
+            failures.append("FTL button must stay anchored in the lower-right flight-control cluster.")
     var pool := game.get_node("ProjectilePool") as ProjectilePool
     var player := game.get_node("PlayerShip") as PlayerShip
     if pool.get_child_count() != 64:
