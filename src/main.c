@@ -94,6 +94,17 @@ static void handle_ui_tap(
     }
 }
 
+static void release_touch_controls(SfTouchState *touch)
+{
+    if (touch == NULL) {
+        return;
+    }
+
+    touch->joystick_active = false;
+    touch->fire_active = false;
+    touch->boost_active = false;
+}
+
 static bool window_to_logical(
     SDL_Renderer *renderer,
     float window_x,
@@ -149,6 +160,12 @@ static void update_touch_event(
         return;
     }
 
+    if (finger->type == SDL_EVENT_FINGER_DOWN &&
+        (x < 0.0f || x > (float)layout->viewport_width ||
+         y < 0.0f || y > (float)SF_UI_LOGICAL_HEIGHT)) {
+        return;
+    }
+
     if (ftl_transition_timer > 0.0f) {
         if (finger->type == SDL_EVENT_FINGER_UP) {
             if (touch->joystick_active && finger->fingerID == touch->joystick_id) touch->joystick_active = false;
@@ -196,10 +213,8 @@ static void update_touch_event(
             touch->boost_active = false;
         } else if (sf_ui_contains(&layout->inventory, x, y)) {
             *inventory_open = true;
-            touch->joystick_active = false;
-            touch->fire_active = false;
-            touch->boost_active = false;
-        } else if (x < (float)layout->viewport_width * 0.48f &&
+            release_touch_controls(touch);
+        } else if (x < layout->inventory.x - 8.0f &&
                    !touch->joystick_active) {
             touch->joystick_active = true;
             touch->joystick_id = finger->fingerID;
@@ -409,6 +424,14 @@ int main(int argc, char **argv)
     (void)sf_assets_init(&assets, renderer);
 
     performance_frequency = SDL_GetPerformanceFrequency();
+    if (performance_frequency == 0) {
+        SDL_Log("FATAL: performance counter frequency is unavailable");
+        sf_assets_destroy(&assets);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
     previous_counter = SDL_GetPerformanceCounter();
 
     SDL_Log("Star-Forge: entering main loop");
@@ -444,6 +467,11 @@ int main(int argc, char **argv)
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
+            }
+
+            if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST ||
+                event.type == SDL_EVENT_WINDOW_HIDDEN) {
+                release_touch_controls(&touch);
             }
 
             if (event.type == SDL_EVENT_FINGER_DOWN ||
