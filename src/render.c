@@ -448,7 +448,7 @@ void sf_render_hover_info(
             (void)snprintf(
                 text,
                 sizeof(text),
-                "%s x%d | E: collect",
+                "%s x%d | LOOT button to collect",
                 sf_item_name(drop->item),
                 drop->quantity
             );
@@ -475,7 +475,7 @@ void sf_render_inventory_panel(
     SDL_RenderRect(renderer, &panel);
 
     set_draw_color(renderer, 240, 240, 245);
-    SDL_RenderDebugText(renderer, 72.0f, 61.0f, "CARGO HOLD (I to close)");
+    SDL_RenderDebugText(renderer, 72.0f, 61.0f, "CARGO HOLD");
 
     (void)snprintf(
         text,
@@ -490,9 +490,9 @@ void sf_render_inventory_panel(
         renderer,
         72.0f,
         91.0f,
-        "J jettison  +/- quantity  T sell at station"
+        "Use the on-screen cargo buttons"
     );
-    SDL_RenderDebugText(renderer, 72.0f, 106.0f, "E collect nearby salvage");
+    SDL_RenderDebugText(renderer, 72.0f, 106.0f, "Tap LOOT to collect nearby salvage");
 }
 
 
