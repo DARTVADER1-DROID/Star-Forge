@@ -17,6 +17,7 @@ const DROP_SCENE: PackedScene = preload("res://scenes/cargo_drop.tscn")
 
 var _stars := PackedVector2Array()
 var _system_id := ""
+var npc_salvage_enabled := false
 
 func _ready() -> void:
     get_viewport().size_changed.connect(queue_redraw)
@@ -149,6 +150,7 @@ func _spawn_npc(role: String, design: String, point: Vector2, station: Vector2) 
     npc.position = point
     npc.station_position = station
     npc.target = player
+    npc.loot_enabled = npc_salvage_enabled
     npc.projectile_container = projectile_container
     npc.drop_container = drop_container
     npc_container.add_child(npc)
@@ -203,6 +205,16 @@ func _on_hud_action(action: String, value: String = "") -> void:
             hud.toggle_inventory()
         "SAVE":
             GameState.save_game()
+        "NPC_LOOT":
+            npc_salvage_enabled = not npc_salvage_enabled
+            for npc_node: Node in npc_container.get_children():
+                if npc_node is NPCShip:
+                    (npc_node as NPCShip).loot_enabled = npc_salvage_enabled
+            hud.set_npc_loot_enabled(npc_salvage_enabled)
+        "JETTISON":
+            var parts := value.split(":")
+            if parts.size() == 2:
+                _jettison_item(parts[0],int(parts[1]))
         "SELL":
             var station_data: Array = ContentDatabase.get_system(_system_id).get("station_position",[480,270])
             var station := Vector2(float(station_data[0]),float(station_data[1]))
@@ -217,6 +229,16 @@ func _on_hud_action(action: String, value: String = "") -> void:
             player.velocity = Vector2.ZERO
             _update_player_state()
             GameState.save_game()
+
+func _jettison_item(item_id: String, quantity: int) -> void:
+    if not GameState.remove_item(item_id,quantity):
+        return
+    var drop := DROP_SCENE.instantiate() as CargoDrop
+    drop.item_id = item_id
+    drop.quantity = quantity
+    drop_container.add_child(drop)
+    drop.global_position = player.global_position + Vector2(26.0,0.0)
+    GameState.save_game()
 
 func _collect_nearest_drop() -> void:
     var nearest: CargoDrop
