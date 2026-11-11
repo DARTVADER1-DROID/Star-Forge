@@ -14,10 +14,16 @@ static void ship_draw(SDL_Renderer*r,float x,float y,float a,int cx,int cy,Uint8
  for(int i=0;i<3;i++){sx[i]=x+px[i]*co-py[i]*si-cx;sy[i]=y+px[i]*si+py[i]*co-cy;}
  color(r,cr,cg,cb);for(int i=0;i<3;i++)SDL_RenderLine(r,sx[i],sy[i],sx[(i+1)%3],sy[(i+1)%3]);
 }
+static void draw_asteroids(SDL_Renderer*r,int cx,int cy){
+ static const int ax[8]={520,680,860,1040,1280,1510,1740,1980};
+ static const int ay[8]={250,620,430,890,510,1120,760,1380};
+ static const int ar[8]={22,30,18,34,25,28,20,32};
+ for(int i=0;i<8;i++){int sx=ax[i]-cx,sy=ay[i]-cy;if(sx+ar[i]<0||sx-ar[i]>=LW||sy+ar[i]<0||sy-ar[i]>=LH)continue;color(r,75,85,105);for(int yy=-ar[i];yy<=ar[i];yy++){int half=(int)sqrt((double)(ar[i]*ar[i]-yy*yy));SDL_RenderLine(r,(float)(sx-half),(float)(sy+yy),(float)(sx+half),(float)(sy+yy));}color(r,105,115,135);SDL_RenderPoint(r,(float)(sx-4),(float)(sy-3));}
+}
 static void draw(SDL_Renderer*r,const SfGame*g,int cx,int cy){
  SDL_FRect q;char t[160];color(r,5,8,19);SDL_RenderClear(r);
  for(int i=0;i<90;i++){int x=(i*173+71)%2400-cx,y=(i*97+211)%2400-cy;if(x>=0&&x<LW&&y>=0&&y<LH){color(r,(Uint8)(70+i%4*30),(Uint8)(80+i%3*25),150);SDL_RenderPoint(r,(float)x,(float)y);}}
- color(r,55,110,150);q=(SDL_FRect){g->station_x-cx-9,g->station_y-cy-9,18,18};SDL_RenderRect(r,&q);
+ draw_asteroids(r,cx,cy);\n color(r,55,110,150);q=(SDL_FRect){g->station_x-cx-9,g->station_y-cy-9,18,18};SDL_RenderRect(r,&q);
  for(int i=0;i<SF_MAX_DROPS;i++){const SfCargoDrop*d=&g->drops[i];if(!d->active)continue;switch(d->item){case SF_ITEM_METAL:color(r,160,170,180);break;case SF_ITEM_FUEL:color(r,80,190,230);break;case SF_ITEM_FOOD:color(r,110,190,90);break;case SF_ITEM_MEDICINE:color(r,220,220,240);break;default:color(r,245,190,65);break;}q=(SDL_FRect){d->x-cx-3,d->y-cy-3,6,6};SDL_RenderFillRect(r,&q);}
  for(int i=0;i<SF_MAX_PROJECTILES;i++){const SfProjectile*p=&g->projectiles[i];if(p->active){color(r,p->from_player?100:255,p->from_player?220:90,80);SDL_RenderPoint(r,p->x-cx,p->y-cy);}}
  for(int i=0;i<SF_MAX_NPCS;i++){const SfShip*s=&g->npcs[i];if(!s->alive)continue;ship_draw(r,s->x,s->y,s->angle,cx,cy,s->role==SF_ROLE_PIRATE?235:90,s->role==SF_ROLE_PIRATE?80:190,s->role==SF_ROLE_PIRATE?85:220);color(r,180,60,70);SDL_RenderLine(r,s->x-cx-10,s->y-cy-13,s->x-cx-10+20*s->hp/s->max_hp,s->y-cy-13);}
