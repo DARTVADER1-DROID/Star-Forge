@@ -31,6 +31,7 @@ int main(void)
         sf_game_update(&game, &boost_input, 1.0f / 60.0f);
         assert(game.player.energy == 100.0f);
         assert(game.player.vx > 4.0f);
+        assert(game.npcs[2].ai_phase > 0.0f);
     }
 
     game.selected_item = SF_ITEM_METAL;
