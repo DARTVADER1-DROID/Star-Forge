@@ -16,8 +16,8 @@ static const SfGalaxyNode nodes[SF_MAX_SYSTEMS] = {
 
 static const bool links[SF_MAX_SYSTEMS][SF_MAX_SYSTEMS] = {
     { false, true,  true,  false },
-    { true,  false, false, true  },
-    { true,  false, false, true  },
+    { true,  false, true,  true  },
+    { true,  true,  false, true  },
     { false, true,  true,  false }
 };
 
