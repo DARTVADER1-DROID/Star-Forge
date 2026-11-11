@@ -564,6 +564,11 @@ static void update_touch_event(
             touch->boost_id = finger->fingerID;
         } else if (x > 175.0f && x <= 245.0f && y > 125.0f) {
             (void)sf_game_collect_nearest(game);
+        } else if (x > 175.0f && x <= 245.0f && y > 85.0f && y <= 125.0f) {
+            (void)sf_game_jump_to_system(
+                game,
+                (game->current_system + 1) % SF_MAX_SYSTEMS
+            );
         }
 
         return;
@@ -622,6 +627,7 @@ static void draw_touch_controls(
     SDL_FRect fire = { 268.0f, 125.0f, 43.0f, 43.0f };
     SDL_FRect boost = { 270.0f, 69.0f, 38.0f, 38.0f };
     SDL_FRect loot = { 211.0f, 145.0f, 38.0f, 27.0f };
+    SDL_FRect ftl = { 211.0f, 96.0f, 38.0f, 27.0f };
     float knob_x = 48.0f;
     float knob_y = 132.0f;
 
@@ -646,16 +652,19 @@ static void draw_touch_controls(
     SDL_RenderFillRect(renderer, &fire);
     SDL_RenderFillRect(renderer, &boost);
     SDL_RenderFillRect(renderer, &loot);
+    SDL_RenderFillRect(renderer, &ftl);
 
     set_draw_color(renderer, 125, 195, 245);
     SDL_RenderRect(renderer, &fire);
     SDL_RenderRect(renderer, &boost);
     SDL_RenderRect(renderer, &loot);
+    SDL_RenderRect(renderer, &ftl);
 
     set_draw_color(renderer, 245, 245, 255);
     SDL_RenderDebugText(renderer, 276.0f, 141.0f, "FIRE");
     SDL_RenderDebugText(renderer, 275.0f, 82.0f, "BOOST");
     SDL_RenderDebugText(renderer, 218.0f, 154.0f, "LOOT");
+    SDL_RenderDebugText(renderer, 218.0f, 105.0f, "FTL");
 
     {
         char energy_text[24];
