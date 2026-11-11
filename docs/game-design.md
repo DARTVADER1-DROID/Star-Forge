@@ -222,14 +222,28 @@ Piracy is a player-facing combat and economic activity. The player can attack ot
 - If the player cannot carry everything, uncollected items remain in the wreck for a limited or otherwise defined period; persistence, despawn timing, and loss conditions are open design decisions.
 - The player should be able to inspect the wreck contents and choose what to collect when capacity is limited.
 
-### 10.3 Salvage economy
+### 10.4 Salvage economy
 
 - Recovered trade commodities can be sold at planetary markets.
 - Sale value uses the destination planet's current market price and stock/demand rules, rather than a fixed universal value.
 - Recovered weapons can be sold through an appropriate weapons market or retained for installation, subject to compatibility.
 - Piracy therefore connects combat, cargo management, ship fitting, and planetary trading into one gameplay loop.
 
-### 10.4 Reputation and consequences
+### 10.3 Cargo jettison
+
+The player can deliberately eject cargo from their own ship to free cargo capacity and make room for more valuable salvage.
+
+- From the ship's cargo interface, the player selects a specific commodity or cargo item.
+- The player chooses either a specific quantity or the entire available stack.
+- The selected quantity is removed from the ship's inventory and spawned in space as a physical cargo module/container.
+- The player can then approach and hover over the dropped module to inspect its contents and collect it again, subject to normal cargo limits.
+- Dropped cargo retains its item identity and quantity. Jettisoning must not create, duplicate, or destroy goods except where a separately designed world rule explicitly causes loss.
+- Jettisoned cargo can be recovered by the player or potentially by other ships/NPCs if that interaction is later implemented.
+- The interface should clearly show the selected item, quantity, and the resulting cargo capacity freed before confirming the action.
+
+This enables tactical inventory decisions during salvage: for example, the player may discard some low-value metal to make room for a rare weapon discovered in another floating cargo module. The player should be able to inspect available salvage before deciding what to jettison.
+
+### 10.5 Reputation and consequences
 
 The existence of piracy is agreed, but its wider consequences are not yet specified. Possible systems include faction or local-security hostility, wanted status, patrol response, bounty/reputation changes, and restrictions at ports. Do not treat any of these as approved mechanics until designed.
 
