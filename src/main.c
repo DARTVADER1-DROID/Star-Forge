@@ -183,7 +183,8 @@ static void update_touch_event(
             } else if (x >= (float)layout->viewport_width - 64.0f && y >= 140.0f) {
                 if (galaxy_selected_system >= 0 &&
                     sf_game_systems_connected(game->current_system, galaxy_selected_system) &&
-                    game->player.has_ftl_drive && game->inventory[SF_ITEM_FUEL] >= 5) {
+                    game->player.alive && game->player.has_ftl_drive &&
+                    game->inventory[SF_ITEM_FUEL] >= 5) {
                     ftl_destination = galaxy_selected_system;
                     ftl_transition_timer = 1.45f;
                     galaxy_map_open = false;
@@ -208,9 +209,7 @@ static void update_touch_event(
         if (sf_ui_contains(&layout->ftl, x, y)) {
             galaxy_map_open = true;
             galaxy_selected_system = -1;
-            touch->joystick_active = false;
-            touch->fire_active = false;
-            touch->boost_active = false;
+            release_touch_controls(touch);
         } else if (sf_ui_contains(&layout->inventory, x, y)) {
             *inventory_open = true;
             release_touch_controls(touch);
