@@ -40,7 +40,6 @@ add_library(
     STATIC
     src/game.c
     src/world.c
-    src/galaxy.c
 )
 
 target_include_directories(
@@ -104,6 +103,7 @@ if(STARFORGE_BUILD_GAME)
         star_forge
         src/main.c
         src/render.c
+        src/galaxy.c
         src/assets.c
     )
 
