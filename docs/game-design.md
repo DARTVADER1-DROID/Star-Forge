@@ -8,7 +8,52 @@ Star-Forge is an original, offline-first, top-down 2D pixel-art space sandbox RP
 
 The galaxy is composed of distinct star systems. Ordinary interstellar travel is not available: reaching another system requires FTL travel. Each system contains at least two landable planets.
 
-## 2. Ship taxonomy
+## 2. NPC roles and dedicated ship designs
+
+NPCs have explicit roles and use dedicated ship designs suited to those roles. NPC identity/behavior and ship physical design are separate, data-driven definitions.
+
+### 2.1 NPC role definitions
+
+An NPC role defines its purpose and behavior, including:
+- Role identity and economic/combat purpose.
+- Preferred or required ship designs and allowed variants.
+- Cargo manifest generation rules and commodity preferences.
+- Combat posture, target selection, retreat and escape behavior.
+- Trading, travel, docking, salvage and resupply behavior as applicable.
+- Faction affiliations, hostility/friendliness and relationships with other roles.
+- Equipment and weapon loadout rules.
+
+Initial role families include:
+- **Pirates:** seek targets, attack suitable ships, loot or salvage wrecks, and may flee when threatened.
+- **Cargo haulers:** transport commodities between markets; manifests depend on their specialization and trade route.
+- **Fuel haulers:** dedicated fuel logistics ships that carry fuel and support fleet range.
+- **Traders:** move goods in response to market opportunities.
+- Additional roles can be introduced as the galaxy's economy and factions expand.
+
+These are initial role families, not a final exhaustive catalogue. A role is not itself a ship class or hull type.
+
+### 2.2 Dedicated ship designs
+
+Ship definitions specify the physical and technical properties of each vessel: hull type/class, sprite, mass limits, cargo capacity, fuel capacity, weapon layouts, equipment slots, performance and other ship statistics.
+
+Dedicated designs should exist for roles that need distinctive silhouettes, capacities or layouts. For example, a fuel hauler should have a purpose-built cargo/fuel configuration, while a pirate vessel should have a design and weapon layout suited to interception and combat.
+
+A role may allow multiple compatible ship designs or variants. The NPC instance then receives a valid ship design and a role-appropriate loadout and cargo manifest. Avoid hardcoding role behavior into hull definitions or hardcoding ship statistics into AI code.
+
+### 2.3 NPC instances and simulation
+
+Each spawned NPC instance combines:
+- A role definition.
+- A selected compatible ship design.
+- A runtime equipment/weapon loadout.
+- A cargo manifest and fuel state.
+- Current goals, state and relevant faction/relationship context.
+
+NPCs should use the same underlying ship, cargo, weapon, mass, fuel, wreck and salvage rules as the player. NPCs must not create or collect cargo through special shortcuts that bypass inventory constraints.
+
+The simulation should be scalable for low-memory Android devices: use local/nearby relevance, simplified distant activity, and event-driven updates where possible. The galaxy should feel active without fully simulating every NPC at full fidelity at all times.
+
+## 3. Ship taxonomy
 
 Ships have two independent classification dimensions:
 
@@ -51,7 +96,7 @@ These are role descriptions, not final numerical specifications. Exact hull size
 
 Class descriptions are design intent. Exact modifiers and restrictions are not yet locked.
 
-## 3. Ship statistics
+## 4. Ship statistics
 
 The ship-stat model should keep these concerns distinct:
 
@@ -83,7 +128,7 @@ The planned model is data-driven:
 
 Earlier illustrative class multipliers and 1–10 archetype ratings are provisional examples only. They are **not approved balance values** and must not be treated as final game data.
 
-## 4. Ship mass and weapon mounting
+## 5. Ship mass and weapon mounting
 
 Every ship has a defined mass and a weapon-mounting layout. Weapon installation is constrained by both the ship's layout and its remaining available mass.
 
@@ -127,7 +172,7 @@ Weapon size compatibility, physical mount geometry, and remaining mass are separ
 
 The current design states that only weapons of the same size class and compatible layout may be fused. The exact meaning and gameplay result of "fused" (for example, combining identical weapons into a linked mount, or merging them into one stronger weapon) is not yet defined. Preserve this as a design rule to clarify before implementation; do not assume fusion increases damage or changes weapon size.
 
-## 5. Ship upgrades
+## 6. Ship upgrades
 
 Ships are upgradeable. Upgrades have distinctive, humorous/in-universe names and improve one or more ship statistics by a defined percentage.
 
@@ -141,7 +186,7 @@ Upgrade definitions should be data-driven and identify:
 
 The percentage modifier should be explicit and inspectable in the ship configuration/UI. Stacking rules and whether modifiers are additive or multiplicative remain to be decided. Upgrades must respect hull limits so they improve a ship without erasing its archetype.
 
-## 6. Galaxy and star systems
+## 7. Galaxy and star systems
 
 - The game world is an open galaxy made up of multiple star systems.
 - Inter-system access requires FTL travel.
@@ -152,7 +197,7 @@ The percentage modifier should be explicit and inspectable in the ship configura
 
 The exact FTL mechanics, map representation, travel costs/times, system generation, and planet trait catalogue have not yet been specified.
 
-## 7. Fuel logistics and fleet range
+## 8. Fuel logistics and fleet range
 
 Fuel is a consumable resource:
 - FTL travel between star systems consumes fuel.
@@ -171,7 +216,7 @@ Cargo ships may include specialized **fuel haulers** designed to transport fuel 
 
 The design must later define whether fuel is transferred between ships before a jump, during a stop, or represented as a shared fleet fuel pool, and what happens if a fuel hauler is disabled or separated from the fleet.
 
-## 8. Planetary economy and commodities
+## 9. Planetary economy and commodities
 
 The initial commodity categories are:
 
@@ -191,7 +236,7 @@ Commodity prices may differ from planet to planet based on their characteristics
 
 A future economy model can account for local production, consumption, population demand, scarcity, and trade supply. These are candidate pricing inputs, not finalized formulas. The initial design should keep commodity definitions separate from each planet's market stock and price.
 
-## 9. Weapons market and ship mounting
+## 10. Weapons market and ship mounting
 
 - Weapons are purchasable through a weapons market.
 - Weapons are attachable equipment, installed at compatible ship hardpoints.
@@ -201,7 +246,7 @@ A future economy model can account for local production, consumption, population
 
 The user will provide/document the weapon catalogue and weapon details later. Therefore, this document intentionally does not define individual weapons, damage values, firing rates, projectile properties, or final weapon-market rules.
 
-## 10. Piracy, wrecks, and salvage
+## 11. Piracy, wrecks, and salvage
 
 Piracy is a player-facing combat and economic activity. The player can attack other ships, destroy them, recover surviving cargo and equipment from the wreck, and sell recovered goods at planetary markets.
 
@@ -262,7 +307,7 @@ The exact setting label/default, NPC detection rules, collection priorities, fac
 
 The existence of piracy is agreed, but its wider consequences are not yet specified. Possible systems include faction or local-security hostility, wanted status, patrol response, bounty/reputation changes, and restrictions at ports. Do not treat any of these as approved mechanics until designed.
 
-## 11. Asset and data separation
+## 12. Asset and data separation
 
 The implementation should separate:
 - **Visual asset metadata:** sprite path, dimensions, pivot, animation frames, hardpoint coordinates, engine attachment points, and collision geometry.
@@ -274,10 +319,10 @@ The implementation should separate:
 
 The engine should combine these definitions at runtime rather than embedding individual ships, planets, or weapon values in C source code. Sprite coordinates use the convention in [Asset Pipeline](asset-pipeline.md).
 
-## 12. Open design decisions
+## 13. Open design decisions
 
 The following are deliberately left open:
-- Exact baseline statistics and balance values for all six ship types.\n- Whether maximum permitted mass is an equipment-only limit or includes cargo and fuel.\n- Whether weapon mass is the only equipment mass counted against the installation budget.\n- Exact weapon layout schema, mount positions, firing-arc conventions, and whether arcs are per mount or per layout.\n- Exact meaning and result of weapon fusion.\n- Fuel consumption per FTL jump and fuel tank/fleet range calculations.\n- Fuel-hauler variants/classes, fuel transfer mechanics, and fleet membership constraints.
+- NPC role catalogue, role-to-ship compatibility rules, dedicated NPC ship designs, cargo-manifest generation, and behavior priorities.\n- Exact baseline statistics and balance values for all six ship types.\n- Whether maximum permitted mass is an equipment-only limit or includes cargo and fuel.\n- Whether weapon mass is the only equipment mass counted against the installation budget.\n- Exact weapon layout schema, mount positions, firing-arc conventions, and whether arcs are per mount or per layout.\n- Exact meaning and result of weapon fusion.\n- Fuel consumption per FTL jump and fuel tank/fleet range calculations.\n- Fuel-hauler variants/classes, fuel transfer mechanics, and fleet membership constraints.
 - Exact numerical class modifiers and class/type restrictions.
 - Upgrade names, upgrade catalogue, stacking rules, costs, and installation slots.
 - FTL navigation, range, fuel/cost, and travel-time rules.
@@ -287,7 +332,7 @@ The following are deliberately left open:
 - Weapons catalogue, weapon statistics, market rules, and mount-size taxonomy.
 - Whether and how population changes over time.
 
-## 13. Design constraints
+## 14. Design constraints
 
 - Preserve the offline-first requirement; the core galaxy, trading, and ship systems must not require a server.
 - Keep content definitions data-driven and versionable.
