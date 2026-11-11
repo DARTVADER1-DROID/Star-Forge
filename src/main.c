@@ -26,6 +26,16 @@ typedef struct {
     bool mouse_joystick_active;
 } SfTouchState;
 
+static void set_draw_color(
+    SDL_Renderer *renderer,
+    Uint8 red,
+    Uint8 green,
+    Uint8 blue
+)
+{
+    (void)SDL_SetRenderDrawColor(renderer, red, green, blue, 255);
+}
+
 static void handle_ui_tap(
     SfGame *game,
     bool *inventory_open,
