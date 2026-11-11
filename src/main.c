@@ -22,6 +22,8 @@ typedef struct {
     bool joystick_active;
     bool fire_active;
     bool boost_active;
+    float joystick_origin_x;
+    float joystick_origin_y;
     float joystick_x;
     float joystick_y;
     bool mouse_joystick_active;
@@ -96,15 +98,48 @@ static void handle_ui_tap(
     }
 }
 
+static bool window_to_logical(
+    SDL_Renderer *renderer,
+    float window_x,
+    float window_y,
+    float *logical_x,
+    float *logical_y
+)
+{
+    return SDL_RenderCoordinatesFromWindow(
+        renderer,
+        window_x,
+        window_y,
+        logical_x,
+        logical_y
+    );
+}
+
 static void update_touch_event(
     const SDL_TouchFingerEvent *finger,
     SfTouchState *touch,
     SfGame *game,
-    bool *inventory_open
+    bool *inventory_open,
+    SDL_Window *window,
+    SDL_Renderer *renderer
 )
 {
-    const float x = finger->x * (float)SF_LOGICAL_WIDTH;
-    const float y = finger->y * (float)SF_LOGICAL_HEIGHT;
+    int window_width = 0;
+    int window_height = 0;
+    float x = 0.0f;
+    float y = 0.0f;
+
+    SDL_GetWindowSize(window, &window_width, &window_height);
+    if (window_width <= 0 || window_height <= 0 ||
+        !window_to_logical(
+            renderer,
+            finger->x * (float)window_width,
+            finger->y * (float)window_height,
+            &x,
+            &y
+        )) {
+        return;
+    }
 
     if (finger->type == SDL_EVENT_FINGER_DOWN) {
         if (*inventory_open) {
@@ -114,9 +149,12 @@ static void update_touch_event(
 
         if (x >= 160.0f && x <= 207.0f && y >= 143.0f) {
             handle_ui_tap(game, inventory_open, x, y);
-        } else if (x < 155.0f && !touch->joystick_active) {
+        } else if (x < (float)SF_LOGICAL_WIDTH * 0.48f &&
+                   !touch->joystick_active) {
             touch->joystick_active = true;
             touch->joystick_id = finger->fingerID;
+            touch->joystick_origin_x = x;
+            touch->joystick_origin_y = y;
             touch->joystick_x = x;
             touch->joystick_y = y;
         } else if (x > 245.0f && y > 105.0f && !touch->fire_active) {
@@ -192,17 +230,21 @@ static void draw_touch_controls(
     SDL_FRect boost = { 270.0f, 69.0f, 38.0f, 38.0f };
     SDL_FRect loot = { 211.0f, 145.0f, 38.0f, 27.0f };
     SDL_FRect ftl = { 211.0f, 96.0f, 38.0f, 27.0f };
-    float knob_x = 48.0f;
-    float knob_y = 132.0f;
+    const float center_x = touch->joystick_active
+        ? touch->joystick_origin_x : 48.0f;
+    const float center_y = touch->joystick_active
+        ? touch->joystick_origin_y : 132.0f;
+    float knob_x = center_x;
+    float knob_y = center_y;
 
     if (touch->joystick_active) {
-        float dx = touch->joystick_x - 48.0f;
-        float dy = touch->joystick_y - 132.0f;
+        float dx = touch->joystick_x - center_x;
+        float dy = touch->joystick_y - center_y;
         const float length = sqrtf(dx * dx + dy * dy);
 
-        if (length > 25.0f) {
-            dx *= 25.0f / length;
-            dy *= 25.0f / length;
+        if (length > 28.0f) {
+            dx *= 28.0f / length;
+            dy *= 28.0f / length;
         }
 
         knob_x += dx;
@@ -221,11 +263,21 @@ static void draw_touch_controls(
             touch->boost_active ? SF_ASSET_BOOST_DOWN : SF_ASSET_BOOST_UP
         );
         SDL_Texture *loot_texture = sf_assets_get(assets, SF_ASSET_LOOT_UP);
-        SDL_FRect base_rect = { 16.0f, 100.0f, 64.0f, 64.0f };
-        SDL_FRect knob_rect = { knob_x - 13.0f, knob_y - 13.0f, 26.0f, 26.0f };
+        SDL_FRect base_rect = {
+            center_x - 34.0f,
+            center_y - 34.0f,
+            68.0f,
+            68.0f
+        };
+        SDL_FRect knob_rect = {
+            knob_x - 13.0f,
+            knob_y - 13.0f,
+            26.0f,
+            26.0f
+        };
 
         if (base) (void)SDL_RenderTexture(renderer, base, NULL, &base_rect);
-        else draw_touch_ring(renderer, 48.0f, 132.0f, 31.0f);
+        else draw_touch_ring(renderer, center_x, center_y, 33.0f);
         if (knob) (void)SDL_RenderTexture(renderer, knob, NULL, &knob_rect);
         else draw_touch_ring(renderer, knob_x, knob_y, 12.0f);
         if (fire_texture) (void)SDL_RenderTexture(renderer, fire_texture, NULL, &fire);
@@ -351,7 +403,14 @@ int main(int argc, char **argv)
             if (event.type == SDL_EVENT_FINGER_DOWN ||
                 event.type == SDL_EVENT_FINGER_MOTION ||
                 event.type == SDL_EVENT_FINGER_UP) {
-                update_touch_event(&event.tfinger, &touch, &game, &inventory_open);
+                update_touch_event(
+                    &event.tfinger,
+                    &touch,
+                    &game,
+                    &inventory_open,
+                    window,
+                    renderer
+                );
             }
 
             if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
@@ -373,18 +432,31 @@ int main(int argc, char **argv)
                     pointer_y = event.button.y;
                 }
 
-                if (width > 0 && height > 0) {
-                    pointer_x *= (float)SF_LOGICAL_WIDTH / (float)width;
-                    pointer_y *= (float)SF_LOGICAL_HEIGHT / (float)height;
+                if (width <= 0 || height <= 0 ||
+                    !window_to_logical(
+                        renderer,
+                        pointer_x,
+                        pointer_y,
+                        &pointer_x,
+                        &pointer_y
+                    )) {
+                    continue;
                 }
 
                 if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
                     (inventory_open || (pointer_x >= 160.0f && pointer_x <= 207.0f &&
                                         pointer_y >= 143.0f))) {
                     handle_ui_tap(&game, &inventory_open, pointer_x, pointer_y);
-                } else if (pointer_x < 155.0f) {
-                    touch.mouse_joystick_active = pressed;
-                    touch.joystick_active = pressed;
+                } else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
+                           pointer_x < (float)SF_LOGICAL_WIDTH * 0.48f) {
+                    touch.mouse_joystick_active = true;
+                    touch.joystick_active = true;
+                    touch.joystick_origin_x = pointer_x;
+                    touch.joystick_origin_y = pointer_y;
+                    touch.joystick_x = pointer_x;
+                    touch.joystick_y = pointer_y;
+                } else if (event.type == SDL_EVENT_MOUSE_MOTION &&
+                           touch.mouse_joystick_active) {
                     touch.joystick_x = pointer_x;
                     touch.joystick_y = pointer_y;
                 } else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
@@ -417,13 +489,23 @@ int main(int argc, char **argv)
         input.boost = touch.boost_active;
 
         if (touch.joystick_active) {
-            const float dx = touch.joystick_x - 48.0f;
-            const float dy = touch.joystick_y - 132.0f;
+            const float dx = touch.joystick_x - touch.joystick_origin_x;
+            const float dy = touch.joystick_y - touch.joystick_origin_y;
+            const float distance = sqrtf(dx * dx + dy * dy);
+            const float maximum_radius = 42.0f;
+            const float normalized_distance = fminf(
+                distance / maximum_radius,
+                1.0f
+            );
 
-            input.turn_left = input.turn_left || dx < -8.0f;
-            input.turn_right = input.turn_right || dx > 8.0f;
-            input.thrust = input.thrust || dy < -8.0f;
-            input.reverse = input.reverse || dy > 8.0f;
+            if (distance > 0.5f) {
+                const float dead_zone = 0.12f;
+                input.steering_x = dx / distance;
+                input.steering_y = dy / distance;
+                input.steering_strength = normalized_distance <= dead_zone
+                    ? 0.0f
+                    : (normalized_distance - dead_zone) / (1.0f - dead_zone);
+            }
         }
 
         current_counter = SDL_GetPerformanceCounter();
@@ -451,8 +533,13 @@ int main(int argc, char **argv)
         SDL_GetWindowSize(window, &window_width, &window_height);
 
         if (window_width > 0 && window_height > 0) {
-            mouse_x = mouse_x * (float)SF_LOGICAL_WIDTH / (float)window_width;
-            mouse_y = mouse_y * (float)SF_LOGICAL_HEIGHT / (float)window_height;
+            (void)window_to_logical(
+                renderer,
+                mouse_x,
+                mouse_y,
+                &mouse_x,
+                &mouse_y
+            );
         }
 
         sf_render_world(renderer, &game, &assets, camera_x, camera_y);
