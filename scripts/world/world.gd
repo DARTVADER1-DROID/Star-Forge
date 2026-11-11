@@ -51,7 +51,6 @@ func _process(_delta: float) -> void:
     hud.update_ship_status(player.hull,player.max_hull,player.armour,player.max_armour,player.energy,player.max_energy,GameState.credits,GameState.inventory,int(GameState.inventory.get("fuel",0)),str(ContentDatabase.get_system(_system_id).get("name",_system_id)),station_distance)
 
 func _draw() -> void:
-    draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.012,0.02,0.055))
     for star: Vector2 in _stars:
         draw_circle(star, 1.0, Color(0.55,0.67,0.86,0.72))
 
@@ -111,19 +110,19 @@ func _load_system(id: String) -> void:
         var planet_position := Vector2(150.0 + float(index)*280.0,100.0 + float(index%2)*330.0)
         planet_positions.append(planet_position)
         var body := PLANET_SCENE.instantiate() as PlanetBody
-        obstacle_container.add_child(body)
         body.position = planet_position
         body.body_radius = 30.0 + float(index%3)*12.0
+        obstacle_container.add_child(body)
     for moon_index in range(moon_count):
         if planet_positions.is_empty():
             break
         var parent_position: Vector2 = planet_positions[moon_index % planet_positions.size()]
         var orbit_angle := float(moon_index) * 2.399
         var moon := PLANET_SCENE.instantiate() as PlanetBody
-        obstacle_container.add_child(moon)
         moon.position = parent_position + Vector2(cos(orbit_angle),sin(orbit_angle))*76.0
         moon.body_radius = 11.0 + float(moon_index % 3)*3.0
         moon.body_color = Color(0.48,0.52,0.60)
+        obstacle_container.add_child(moon)
 
     var station_body := STATION_SCENE.instantiate()
     obstacle_container.add_child(station_body)
