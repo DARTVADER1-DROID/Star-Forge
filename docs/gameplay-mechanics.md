@@ -15,17 +15,29 @@ This document records the current implemented rules and the intended direction f
 - Linear drag is applied each simulation step.
 - Asteroid collisions push ships outside the collision radius and damp/reverse their velocity.
 
-### Boost
+### Boost and movement power
 
 - Boost is held while the boost input is active.
 - Boost acceleration is 340 world units per second squared.
 - Boost speed cap is 270 world units per second.
-- Boost energy capacity is 100 units.
-- Boost drains 38 energy units per second.
-- Energy regenerates at 16 units per second when boost is not active.
-- Boost cannot activate when energy reaches zero.
+- Normal acceleration is 190 world units per second squared.
+- Normal speed cap is 190 world units per second.
+- Turning, thrust, reverse thrust and boost do not consume ship energy.
 
 These are prototype balance values and should be tuned through playtesting.
+
+### Armour, hull and energy
+
+- Armour absorbs incoming damage before hull is affected.
+- Damage exceeding remaining armour spills into hull.
+- A ship is destroyed when hull reaches zero.
+- The player starts with 60 armour and 100 hull.
+- The player starts with 100 energy.
+- Each player weapon shot costs 8 energy.
+- Weapons cannot fire without sufficient energy.
+- Energy regenerates at 12 units per second.
+- NPC weapons also consume energy and NPC energy regenerates at the same prototype rate.
+- Movement does not consume energy.
 
 ### Combat
 
@@ -77,12 +89,19 @@ These are prototype balance values and should be tuned through playtesting.
 - A station market should expose buy and sell prices separately.
 - Dynamic market state must be saved locally.
 
-### FTL
+### Star systems and FTL
 
-- Inter-system travel requires an FTL-capable ship.
-- Jump fuel cost depends on ship configuration, total fleet mass and route distance.
-- The jump must be rejected if the fleet cannot pay the required fuel.
-- Fuel haulers may extend fleet range, but their contribution must be explicit and bounded.
+- Each star system is a separate local room with its own local coordinates.
+- The prototype defines four systems: Solace, Vesper, Kestrel and Ironwake.
+- Each system has its own planet and moon counts and station location.
+- Some systems contain asteroid fields; other systems do not.
+- Asteroids are environmental obstacles for now; mining is a future feature.
+- Inter-system travel is only possible through an installed FTL drive.
+- The prototype FTL jump consumes 5 units of the Fuel commodity.
+- A jump is rejected when the ship lacks an FTL drive or sufficient fuel.
+- Jumping resets local velocity and position and clears local NPCs, projectiles and salvage.
+- Directly flying to the edge of a system never transitions to another system.
+- Future fleet travel will calculate fuel from fleet mass and route distance; current prototype cost is fixed.
 
 ### Salvage ownership and NPC behavior
 
