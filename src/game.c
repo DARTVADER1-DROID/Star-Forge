@@ -650,8 +650,6 @@ static void update_cargo_drops(SfGame *game, float dt)
             for (j = 0; j < SF_MAX_NPCS; ++j) {
                 SfShip *npc = &game->npcs[j];
                 const int volume_per_item = drop->item == SF_ITEM_WEAPON ? 2 : 1;
-                int added_volume;
-
                 int free_volume;
                 int quantity_to_collect;
 
