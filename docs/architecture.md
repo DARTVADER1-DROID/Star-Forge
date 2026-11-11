@@ -16,7 +16,9 @@
 - `scripts/autoload/`: persistent state, content indexes and Android asset registry.
 
 ## SOLID boundaries
+- `SystemLayout` is the shared data adapter for celestial bodies, asteroid placements and station coordinates. Galaxy/system views and runtime scene construction consume the same definitions.
 - `SystemContentBuilder` builds static system bodies from data; it does not own HUD, saves or NPC AI.
+- `ContentDatabase.validate_world_catalog()` checks system links, stable body IDs and referenced texture registrations before release.
 - `WorldInteractionService` finds the nearest eligible planet/station interaction; it does not create UI or mutate player state.
 - `StarForgeWorld` coordinates system lifecycle and connects signals.
 - `NPCShip` owns movement, docking and combat eligibility. Docked traffic is stationary and protected from pirate targeting.

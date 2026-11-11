@@ -6,6 +6,7 @@ func _ready() -> void:
 func _run_tests() -> void:
     var failures: Array[String] = []
     _test_content_database(failures)
+    _test_world_catalog(failures)
     _test_asset_library(failures)
     _test_asset_manifest(failures)
     _test_galaxy_map_pan(failures)
@@ -37,6 +38,10 @@ func _test_content_database(failures: Array[String]) -> void:
         failures.append("Expected at least three ship designs.")
     if ContentDatabase.systems.size() != 4:
         failures.append("Expected four star systems.")
+
+func _test_world_catalog(failures: Array[String]) -> void:
+    for failure: String in ContentDatabase.validate_world_catalog():
+        failures.append(failure)
 
 func _test_asset_library(failures: Array[String]) -> void:
     if not AssetLibrary.has_asset("ship_player_runner.png"):
