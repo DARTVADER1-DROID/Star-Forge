@@ -32,7 +32,7 @@ func _ready() -> void:
     hull = float(design.get("base_hull",65.0))
     cargo_capacity = int(design.get("cargo_capacity",50))
     _phase = float(get_instance_id() % 1000) / 1000.0 * TAU
-    var sprite_name := "ship_pirate_interceptor.png" if role_id == "pirate" else "ship_military_frigate.png"
+    var sprite_name := "ship_pirate_interceptor.png" if role_id == "pirate" else ("ship_cargo_hauler.png" if role_id == "cargo_hauler" else "ship_military_frigate.png")
     var texture := AssetLibrary.load_texture(sprite_name)
     if texture != null:
         _sprite = Sprite2D.new()
