@@ -1,81 +1,60 @@
-# Star-Forge
+# Star Forge
 
 An original, offline-first, top-down 2D pixel-art space sandbox RPG.
 
-## Current milestone: v0.1 playable prototype
+## Active development: Godot 4 + GDScript migration
 
-The repository contains the first playable star-system sandbox: steer a ship, fight a pirate, destroy an NPC freighter, collect physical cargo salvage, jettison selected cargo by quantity, and sell goods at a station. NPC cargo collection can be toggled with F3.
+The active migration branch is `migration/godot-gdscript`. The project is moving to Godot 4 with typed GDScript to improve iteration speed, scene architecture, UI scaling and maintainability.
 
-See [v0.1 prototype notes](docs/v0.1-playable-prototype.md) and [controls](docs/controls.md).
+The previous SDL3/C17 implementation is retained temporarily as a reference while mechanics are ported and validated. It is not the active game runtime.
 
 ## Project goals
 
 - Android is the primary platform; desktop builds are for development and testing.
-- Low-memory Android compatibility is a design goal to validate on real devices.
-- Native C17 game code with explicit memory ownership and predictable runtime behavior.
-- Offline exploration, ship customization, combat, trading, missions, factions, and progression.
+- Landscape-only, touch-first gameplay. No keyboard or mouse gameplay bindings.
+- Offline exploration, ship customization, combat, trading, missions, factions and progression.
+- Low-memory Android compatibility is an optimisation target that must be verified on physical devices.
+- Preserve readable, modular, data-driven code.
 
 ## Technology
 
 | Area | Choice |
 |---|---|
-| Core language | C17 |
-| Platform layer | SDL3 |
-| Build system | CMake |
-| Android target | Android NDK + SDL3 Android project |
+| Engine | Godot 4.7.2 stable |
+| Main language | Typed GDScript |
+| Native optimisation | Consider C/C++ only after profiling and feature completion |
+| Renderer | Compatibility / OpenGL |
+| Game type | 2D |
+| Android target | arm64-v8a debug APK |
 | Cloud Android builds | GitHub Actions |
-| Game definitions | JSON during authoring |
+| Content definitions | JSON and Godot resources |
 | Version control | Git + GitHub |
 
-## Build an Android APK without installing anything locally
+## Cloud Android build
 
-Android APKs are built on GitHub's cloud runners. You do not need Android Studio, the Android SDK, the NDK, Gradle, or a C compiler installed on your desktop.
+No desktop installation is required. GitHub Actions installs Godot, Android SDK and export templates, imports the project and exports the APK.
 
-1. Open the repository's **Actions** tab.
-2. Select **Build Android APK in the cloud**.
-3. Press **Run workflow** and select the `main` branch.
-4. Wait for the workflow to finish successfully.
-5. Open that workflow run and download the **star-forge-android-debug** artifact.
-6. Extract the downloaded ZIP and install the APK on your Android device. Android may ask you to allow installation from that source.
+1. Open the repository's Actions tab.
+2. Select **Build Star Forge Android APK**.
+3. Run the workflow on `migration/godot-gdscript`.
+4. Download the `star-forge-godot-android-debug` artifact after a successful run.
 
-Every push to `main` also starts an APK build automatically. Build artifacts are retained for 14 days.
+Pushes to the migration branch also trigger the build. Artifacts are retained for 14 days.
 
-The workflow uses the official SDL3 Android project generator and builds the native C code with Android's NDK in the cloud. See the [SDL3 Android build documentation](https://wiki.libsdl.org/SDL3/README-android).
+## Initial Godot vertical slice
 
-## Build the desktop prototype (optional)
+- Landscape project configuration and adaptive canvas-item scaling.
+- Touch-only floating joystick.
+- Dedicated BOOST and FIRE touch buttons.
+- Top-down ship steering and movement.
+- Hull, armour and energy status.
+- Weapons consume energy; ordinary movement does not.
+- Projectile scene separation.
 
-A desktop build is optional. It is not needed to generate the Android APK.
+The first slice uses placeholder vector-drawn visuals. Existing art is retained in the asset pack and will be integrated as the Godot asset pipeline is validated.
 
-Requires CMake 3.21+, a C17 compiler, Git, and network access on the first configure if SDL3 is fetched automatically.
+## Migration plan
 
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-    cmake --build build --config Release
-    ctest --test-dir build --output-on-failure
+See [Godot migration notes](docs/godot-migration.md), [game design](docs/game-design.md), [gameplay mechanics](docs/gameplay-mechanics.md) and [performance requirements](docs/performance.md).
 
-Run the generated `star_forge` executable.
-
-To use a system-installed SDL3 package, configure with `-DSTARFORGE_FETCH_SDL3=OFF`.
-
-## Code formatting
-
-C and header files use the repository's `.clang-format` rules. After installing clang-format, format all source files with:
-
-    sh tools/format.sh
-
-Keep functions, conditions, declarations, and data structures on separate readable lines. Do not compress implementation code into one-line blocks.
-
-## Repository layout
-
-- `src/` — SDL frontend and simulation
-- `data/` — starter item and NPC role definitions
-- `assets/` — sprites, audio, fonts, and other assets
-- `docs/` — architecture, performance, design, and controls
-- `tests/` — simulation tests
-- `tools/` — developer utilities, including formatting
-- `.github/workflows/` — CI and cloud build automation
-
-## Not yet implemented
-
-Touch controls, final sprite art, animation, save/load, FTL travel, multiple systems, dynamic markets, advanced NPC factions/reputation, and full ship fitting are future milestones.
-
-See [Architecture](docs/architecture.md), [Performance](docs/performance.md), [Asset Pipeline](docs/asset-pipeline.md), and [Game Design Foundations](docs/game-design.md).
+The SDL code under `src/` remains reference material until equivalent Godot mechanics are implemented and tested. Do not remove it prematurely.
