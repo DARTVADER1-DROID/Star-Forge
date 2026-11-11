@@ -213,7 +213,7 @@ func _on_hud_action(action: String, value: String = "") -> void:
         "FTL":
             hud.show_galaxy_map()
         "JUMP":
-            _begin_ftl_jump(value)
+            await _begin_ftl_jump(value)
         "BAG":
             hud.toggle_inventory()
         "SAVE":

@@ -23,9 +23,11 @@ func configure(id: String, system_data: Dictionary, ship: Vector2) -> void:
     if system_id != id:
         system_id = id
         definition = system_data
+        selected_body = ""
         _rebuild_body_points()
-    ship_position = ship
-    queue_redraw()
+    if ship_position.distance_squared_to(ship) > 1.0:
+        ship_position = ship
+        queue_redraw()
 
 func _rebuild_body_points() -> void:
     _body_points.clear()

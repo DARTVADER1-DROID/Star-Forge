@@ -11,6 +11,7 @@ func _run_tests() -> void:
     _test_armour_damage(failures)
     _test_ftl_rules(failures)
     _test_map_graph(failures)
+    _test_system_map(failures)
     _test_save_round_trip(failures)
     _test_main_scene(failures)
 
@@ -84,6 +85,20 @@ func _test_map_graph(failures: Array[String]) -> void:
     var solace: Dictionary = ContentDatabase.get_system("solace")
     if not Array(solace.get("links",[])).has("vesper") or Array(solace.get("links",[])).has("ironwake"):
         failures.append("Galaxy map graph adjacency does not match FTL routing.")
+    map.free()
+
+func _test_system_map(failures: Array[String]) -> void:
+    var map_script: Script = load("res://scripts/ui/system_map.gd")
+    if map_script == null:
+        failures.append("System map script is missing.")
+        return
+    var map := map_script.new() as Control
+    map.call("configure","solace",ContentDatabase.get_system("solace"),Vector2(480,270))
+    var body_points: Dictionary = map.get("_body_points")
+    if body_points.size() != 9:
+        failures.append("System map should expose the station, three planets and five moons in Solace.")
+    if not body_points.has("STATION") or not body_points.has("PLANET 1"):
+        failures.append("System map is missing expected celestial body markers.")
     map.free()
 
 func _test_save_round_trip(failures: Array[String]) -> void:
