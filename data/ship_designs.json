@@ -1,0 +1,41 @@
+{
+ "schema_version": 1,
+ "ship_designs": [
+  {
+   "id": "starter_freighter",
+   "display_name": "Wayfarer-class Freighter",
+   "role_fit": ["cargo_hauler"],
+   "hull_type": "freighter",
+   "mass": 420,
+   "cargo_capacity": 100,
+   "fuel_capacity": 120,
+   "weapon_layout": {"small": 1},
+   "base_hull": 65,
+   "notes": "Civilian cargo vessel; slow, lightly armed, and built to carry trade goods."
+  },
+  {
+   "id": "starter_interceptor",
+   "display_name": "Needle-class Interceptor",
+   "role_fit": ["pirate"],
+   "hull_type": "corvette",
+   "mass": 180,
+   "cargo_capacity": 20,
+   "fuel_capacity": 65,
+   "weapon_layout": {"small": 2},
+   "base_hull": 85,
+   "notes": "Fast raider with a small hold and a combat-focused profile."
+  },
+  {
+   "id": "starter_patrol",
+   "display_name": "Sentinel-class Patrol Craft",
+   "role_fit": ["patrol"],
+   "hull_type": "corvette",
+   "mass": 210,
+   "cargo_capacity": 25,
+   "fuel_capacity": 75,
+   "weapon_layout": {"small": 2, "medium": 1},
+   "base_hull": 100,
+   "notes": "Security vessel reserved for future patrol encounters."
+  }
+ ]
+}
