@@ -19,6 +19,7 @@ var _recovery_panel: PanelContainer
 var _inventory_rows: VBoxContainer
 var _galaxy_buttons: VBoxContainer
 var _selected_system := ""
+var _jump_button: Button
 var _gameplay_blocked := false
 
 func _ready() -> void:
@@ -42,10 +43,10 @@ func _build_status() -> void:
 func _build_controls() -> void:
     var boost := _button("BOOST",Vector2(-222,-94),Vector2(94,66),true)
     var fire := _button("FIRE",Vector2(-116,-94),Vector2(94,66),true)
-    var loot := _button("LOOT",Vector2(16,-68),Vector2(76,52),false)
-    var ftl := _button("FTL",Vector2(16,-128),Vector2(76,52),false)
-    var bag := _button("BAG",Vector2(16,-188),Vector2(76,52),false)
-    var save := _button("SAVE",Vector2(16,-248),Vector2(76,52),false)
+    var loot := _button("LOOT",Vector2(-96,14),Vector2(80,46),true,true)
+    var ftl := _button("FTL",Vector2(-96,68),Vector2(80,46),true,true)
+    var bag := _button("BAG",Vector2(-96,122),Vector2(80,46),true,true)
+    var save := _button("SAVE",Vector2(-96,176),Vector2(80,46),true,true)
     boost.button_down.connect(func(): boost_changed.emit(true))
     boost.button_up.connect(func(): boost_changed.emit(false))
     fire.button_down.connect(func(): fire_changed.emit(true))
@@ -55,14 +56,14 @@ func _build_controls() -> void:
     bag.pressed.connect(func(): toggle_inventory())
     save.pressed.connect(func(): action_requested.emit("SAVE",""))
 
-func _button(caption: String, offset: Vector2, dimensions: Vector2, right: bool) -> Button:
+func _button(caption: String, offset: Vector2, dimensions: Vector2, right: bool, top: bool = false) -> Button:
     var control := Button.new()
     control.text = caption
     control.focus_mode = Control.FOCUS_NONE
     control.anchor_left = 1.0 if right else 0.0
     control.anchor_right = control.anchor_left
-    control.anchor_top = 1.0
-    control.anchor_bottom = 1.0
+    control.anchor_top = 0.0 if top else 1.0
+    control.anchor_bottom = control.anchor_top
     control.offset_left = offset.x
     control.offset_top = offset.y
     control.offset_right = offset.x+dimensions.x
@@ -186,6 +187,7 @@ func _build_galaxy() -> void:
     var actions := HBoxContainer.new()
     content.add_child(actions)
     var jump := Button.new()
+    _jump_button = jump
     jump.text = "JUMP"
     jump.pressed.connect(func(): action_requested.emit("JUMP",_selected_system))
     actions.add_child(jump)
@@ -209,8 +211,13 @@ func _refresh_galaxy(_system_id: String) -> void:
         button.disabled = not connected
         button.button_pressed = id == _selected_system
         button.toggle_mode = true
-        button.pressed.connect(func(): _selected_system = id)
+        button.pressed.connect(func():
+            _selected_system = id
+            _refresh_galaxy(GameState.current_system_id)
+        )
         _galaxy_buttons.add_child(button)
+    if is_instance_valid(_jump_button):
+        _jump_button.disabled = not GameState.can_jump_to(_selected_system)
 
 func show_galaxy_map() -> void:
     _close_panels()
@@ -244,6 +251,13 @@ func show_recovery_panel() -> void:
     steering_changed.emit(Vector2.ZERO)
 
 func _close_panels() -> void:
+    if _active_touch != -1:
+        _active_touch = -1
+        _joystick_vector = Vector2.ZERO
+        steering_changed.emit(Vector2.ZERO)
+        queue_redraw()
+    boost_changed.emit(false)
+    fire_changed.emit(false)
     if is_instance_valid(_inventory_panel): _inventory_panel.hide()
     if is_instance_valid(_galaxy_panel): _galaxy_panel.hide()
     if is_instance_valid(_recovery_panel): _recovery_panel.hide()
