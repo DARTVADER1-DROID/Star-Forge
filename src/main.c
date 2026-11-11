@@ -184,7 +184,7 @@ static void update_touch_event(
                 if (galaxy_selected_system >= 0 &&
                     sf_game_systems_connected(game->current_system, galaxy_selected_system) &&
                     game->player.alive && game->player.has_ftl_drive &&
-                    game->inventory[SF_ITEM_FUEL] >= 5) {
+                    game->inventory[SF_ITEM_FUEL] >= SF_FTL_FUEL_COST) {
                     ftl_destination = galaxy_selected_system;
                     ftl_transition_timer = 1.45f;
                     galaxy_map_open = false;
