@@ -1,44 +1,47 @@
-# Godot Migration
+# Godot-only Migration
 
-## Decision
+## Migration status
 
-The active development direction is Godot 4 with typed GDScript. The existing SDL3/C17 implementation is retained temporarily as a reference until the Godot port has feature parity and has passed device validation.
+The active repository runtime is Godot 4.7.2 with typed GDScript. The previous native implementation, its CMake configuration, C source, C headers, native image decoder, C tests and C-specific formatting tool have been removed from the active branch.
 
-## Migration rules
+## Platform and engine decisions
 
-- Do not delete or rewrite the original SDL implementation during the initial migration.
-- Port mechanics from the design and gameplay documents; do not blindly translate old code.
-- Keep gameplay systems modular and data-driven.
-- Use typed GDScript, descriptive names, small focused scripts, and documented public APIs.
-- Keep all gameplay input touch-only. Do not add keyboard or mouse gameplay bindings.
-- Lock Android orientation to landscape.
-- Use a 960 x 540 logical viewport with canvas-item stretching and responsive anchors.
-- Start with the Compatibility renderer and profile on actual Android hardware.
-- Keep the game offline-first.
-- Use object pools for high-churn projectiles and effects before increasing entity counts.
-- Never claim 1 GB device compatibility without testing on a genuine low-memory device.
+- Godot 4.7.2 stable.
+- Typed GDScript for all gameplay and tooling.
+- Compatibility renderer with ETC2/ASTC texture import enabled for Android.
+- Android arm64-v8a debug APK.
+- Landscape orientation and a 960 × 540 logical canvas.
+- Canvas-item scaling for varied screen aspect ratios.
+- Touch-only gameplay controls.
+- GitHub Actions for cloud validation and Android packaging.
 
-## Initial vertical slice
+## Ported gameplay foundation
 
-The first Godot slice establishes:
-- Android-oriented landscape project settings.
-- A top-down player ship with touch joystick steering.
-- Dedicated touch BOOST and FIRE buttons.
-- Hull, armour and energy status display.
-- Weapon energy consumption and passive energy regeneration.
-- Projectile scene separation.
-- Cloud-based Android export.
+- Player steering, thrust, boost and weapon fire.
+- Hull, armour and energy rules.
+- NPC roles and dedicated ship-design data.
+- Asteroid and planetary collision bodies.
+- Projectile collision and damage.
+- Cargo inventory, capacity, physical drops, collection and station sale.
+- Four star systems with adjacency-based FTL travel and fuel consumption.
+- Versioned local save data and emergency ship recovery.
 
-## Porting order
+## Repository standards
 
-1. Input, viewport, camera and player flight.
-2. Ship stats, armour, hull, energy, weapons and projectile pooling.
-3. Asteroids and physical collision.
-4. Cargo, salvage, station trading and inventory.
-5. NPC ship definitions, roles and behavior.
-6. Galaxy map, FTL fuel rules and per-system persistence.
-7. Save/load, recovery, balancing and performance profiling.
+- No C/C++ source, headers, CMake, SDL or native build scripts.
+- All gameplay scripts use typed GDScript.
+- Reusable entities have dedicated scenes.
+- Content is data-driven and validated at startup.
+- UI and gameplay input are touch-first.
+- Generated Godot import caches and APKs are excluded from version control.
 
-## Future native optimisation
+## Remaining completion work
 
-GDScript remains the default through feature completion. A later C/C++ rewrite is a separate project decision and must be justified by profiling and a stable gameplay specification.
+- Full entity persistence for every system, including NPCs and markets.
+- Complete planet/moon interactions and landing.
+- Full ship catalogue, fitting, progression, missions and factions.
+- Production-ready art/audio integration.
+- Automated edge-case and lifecycle tests.
+- Real-device validation for touch, orientation, performance and memory.
+
+A future native rewrite is a separate decision and must be justified by measured profiling after gameplay completion.
