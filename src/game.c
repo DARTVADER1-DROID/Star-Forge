@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <stddef.h>
+#include <limits.h>
 
 #define SF_PI 3.14159265358979323846f
 #define SF_WORLD_SIZE 2400.0f
@@ -783,7 +784,17 @@ bool sf_game_sell_selected(SfGame *game)
         return false;
     }
 
-    game->credits += quantity * sf_item_price(item);
+    {
+        const long long sale_value = (long long)quantity * (long long)sf_item_price(item);
+        const long long new_credits = (long long)game->credits + sale_value;
+
+        if (new_credits > INT_MAX || new_credits < 0) {
+            return false;
+        }
+
+        game->credits = (int)new_credits;
+    }
+
     game->inventory[item] = 0;
 
     return true;
