@@ -15,7 +15,10 @@ var station_position := Vector2.ZERO
 var target: Node2D
 var projectile_container: Node2D
 var drop_container: Node2D
+var loot_enabled := false
+var cargo_capacity := 100
 var _fire_timer := 0.0
+var _loot_timer := 0.0
 var _phase := 0.0
 
 func _ready() -> void:
@@ -26,6 +29,7 @@ func _ready() -> void:
         queue_free()
         return
     hull = float(design.get("base_hull",65.0))
+    cargo_capacity = int(design.get("cargo_capacity",50))
     _phase = float(get_instance_id() % 1000) / 1000.0 * TAU
     var manifest: Dictionary = role.get("manifest", {})
     var random := RandomNumberGenerator.new()
@@ -42,6 +46,10 @@ func _physics_process(delta: float) -> void:
         return
     energy = minf(100.0,energy + 12.0 * delta)
     _fire_timer = maxf(0.0,_fire_timer-delta)
+    _loot_timer = maxf(0.0,_loot_timer-delta)
+    if loot_enabled and _loot_timer <= 0.0:
+        _try_collect_salvage()
+        _loot_timer = 0.4
     var goal := station_position
     if role_id == "pirate" and is_instance_valid(target):
         goal = target.global_position
@@ -76,6 +84,25 @@ func _fire_at_target() -> void:
     shot.from_player = false
     shot.speed = 230.0
 
+func _try_collect_salvage() -> void:
+    if not is_instance_valid(drop_container):
+        return
+    var used := 0
+    for cargo_id: String in cargo:
+        used += int(cargo[cargo_id]) * int(ContentDatabase.get_item(cargo_id).get("cargo_units_per_item",1))
+    for node: Node in drop_container.get_children():
+        if not node is CargoDrop:
+            continue
+        var crate := node as CargoDrop
+        if global_position.distance_to(crate.global_position) > 28.0:
+            continue
+        var item := ContentDatabase.get_item(crate.item_id)
+        var volume := int(item.get("cargo_units_per_item",1)) * crate.quantity
+        if used + volume <= cargo_capacity:
+            cargo[crate.item_id] = int(cargo.get(crate.item_id,0)) + crate.quantity
+            crate.queue_free()
+            break
+
 func _drop_cargo() -> void:
     if not is_instance_valid(drop_container):
         return
@@ -88,6 +115,14 @@ func _drop_cargo() -> void:
         drop.quantity = amount
         drop_container.add_child(drop)
         drop.global_position = global_position
+    var random := RandomNumberGenerator.new()
+    random.randomize()
+    if random.randf() < 0.35:
+        var weapon_drop := preload("res://scenes/cargo_drop.tscn").instantiate() as CargoDrop
+        weapon_drop.item_id = "weapon_salvage"
+        weapon_drop.quantity = 1
+        drop_container.add_child(weapon_drop)
+        weapon_drop.global_position = global_position
 
 func _draw() -> void:
     var tint := Color(0.92,0.34,0.28) if role_id=="pirate" else Color(0.42,0.78,0.62)
