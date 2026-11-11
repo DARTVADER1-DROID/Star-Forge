@@ -181,7 +181,7 @@ static void update_touch_event(
         if (x >= 257.0f && x <= 281.0f && y >= 116.0f && y <= 140.0f) {
             galaxy_map_open = true;
             galaxy_selected_system = -1;
-        } else         if (x >= 160.0f && x <= 207.0f && y >= 143.0f) {
+        } else if (x >= 160.0f && x <= 207.0f && y >= 143.0f) {
             handle_ui_tap(game, inventory_open, x, y);
         } else if (x < (float)SF_LOGICAL_WIDTH * 0.48f &&
                    !touch->joystick_active) {
@@ -191,13 +191,14 @@ static void update_touch_event(
             touch->joystick_origin_y = y;
             touch->joystick_x = x;
             touch->joystick_y = y;
-        } else if (x > 245.0f && y > 105.0f && !touch->fire_active) {
+        } else if (x >= 286.0f && y >= 145.0f && !touch->fire_active) {
             touch->fire_active = true;
             touch->fire_id = finger->fingerID;
-        } else if (x > 245.0f && y <= 105.0f && !touch->boost_active) {
+        } else if (x >= 257.0f && x < 286.0f && y >= 145.0f &&
+                   !touch->boost_active) {
             touch->boost_active = true;
             touch->boost_id = finger->fingerID;
-        } else if (x > 175.0f && x <= 245.0f && y > 125.0f) {
+        } else if (x >= 286.0f && y >= 116.0f && y < 145.0f) {
             (void)sf_game_collect_nearest(game);
         }
 
@@ -446,7 +447,31 @@ int main(int argc, char **argv)
                     continue;
                 }
 
-                if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
+                if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && galaxy_map_open) {
+                    if (pointer_x >= 264.0f && pointer_y >= 8.0f && pointer_y <= 30.0f) {
+                        galaxy_map_open = false;
+                        galaxy_selected_system = -1;
+                    } else if (pointer_x >= 260.0f && pointer_y >= 140.0f) {
+                        if (galaxy_selected_system >= 0 &&
+                            sf_galaxy_is_connected(game.current_system, galaxy_selected_system) &&
+                            game.player.has_ftl_drive && game.inventory[SF_ITEM_FUEL] >= 5) {
+                            ftl_destination = galaxy_selected_system;
+                            ftl_transition_timer = 1.45f;
+                            galaxy_map_open = false;
+                            galaxy_selected_system = -1;
+                        }
+                    } else {
+                        const int node = sf_galaxy_hit_test(pointer_x, pointer_y);
+                        if (node >= 0 && sf_galaxy_is_connected(game.current_system, node)) {
+                            galaxy_selected_system = node;
+                        }
+                    }
+                } else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
+                           pointer_x >= 257.0f && pointer_x <= 281.0f &&
+                           pointer_y >= 116.0f && pointer_y <= 140.0f) {
+                    galaxy_map_open = true;
+                    galaxy_selected_system = -1;
+                } else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
                     (inventory_open || (pointer_x >= 160.0f && pointer_x <= 207.0f &&
                                         pointer_y >= 143.0f))) {
                     handle_ui_tap(&game, &inventory_open, pointer_x, pointer_y);
@@ -507,7 +532,7 @@ int main(int argc, char **argv)
             const float dx = touch.joystick_x - touch.joystick_origin_x;
             const float dy = touch.joystick_y - touch.joystick_origin_y;
             const float distance = sqrtf(dx * dx + dy * dy);
-            const float maximum_radius = 18.0f;
+            const float maximum_radius = 14.0f
             const float normalized_distance = fminf(
                 distance / maximum_radius,
                 1.0f
