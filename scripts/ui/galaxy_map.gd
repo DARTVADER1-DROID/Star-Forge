@@ -96,8 +96,10 @@ func _gui_input(event: InputEvent) -> void:
                 _touch_moved = false
             elif _touch_positions.size() == 2:
                 var points: Array = _touch_positions.values()
-                _pinch_distance = (points[0] as Vector2).distance_to(points[1] as Vector2)
-                _pinch_midpoint = ((points[0] as Vector2)+(points[1] as Vector2))*0.5
+                var first_point: Vector2 = points[0]
+                var second_point: Vector2 = points[1]
+                _pinch_distance = first_point.distance_to(second_point)
+                _pinch_midpoint = (first_point+second_point)*0.5
             accept_event()
         else:
             if touch.index == _active_touch and _touch_positions.size() == 1 and not _touch_moved:
@@ -119,8 +121,10 @@ func _gui_input(event: InputEvent) -> void:
         _touch_positions[drag.index] = drag.position
         if _touch_positions.size() >= 2:
             var points: Array = _touch_positions.values()
-            var midpoint := ((points[0] as Vector2)+(points[1] as Vector2))*0.5
-            var distance := (points[0] as Vector2).distance_to(points[1] as Vector2)
+            var first_point: Vector2 = points[0]
+            var second_point: Vector2 = points[1]
+            var midpoint := (first_point+second_point)*0.5
+            var distance := first_point.distance_to(second_point)
             if _pinch_distance > 1.0 and distance > 1.0:
                 set_zoom(_zoom*distance/_pinch_distance,_pinch_midpoint)
             pan_by(midpoint-_pinch_midpoint)
