@@ -1,10 +1,10 @@
 extends Node
 
 const DATA_FILES: Dictionary = {
-    "items": "res://data/items.json",
-    "ships": "res://data/ship_designs.json",
-    "roles": "res://data/npc_roles.json",
-    "systems": "res://data/systems.json"
+    "items": "res://data/economy/items.json",
+    "ships": "res://data/ships/designs.json",
+    "roles": "res://data/ships/roles.json",
+    "systems": "res://data/world/systems.json"
 }
 var items: Dictionary = {}
 var ship_designs: Dictionary = {}
