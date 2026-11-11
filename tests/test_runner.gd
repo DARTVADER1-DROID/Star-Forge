@@ -88,9 +88,11 @@ func _test_main_scene(failures: Array[String]) -> void:
     var game := packed.instantiate()
     add_child(game)
     await get_tree().process_frame
-    for node_name: String in ["PlayerShip","HUD","Projectiles","NPCs","Obstacles","CargoDrops"]:
+    for node_name: String in ["PlayerShip","HUD","ProjectilePool","NPCs","Obstacles","CargoDrops"]:
         if game.get_node_or_null(node_name) == null:
             failures.append("Main scene missing node: " + node_name)
+    if game.get_node("ProjectilePool").get_child_count() != 64:
+        failures.append("Projectile pool should preallocate 64 slots.")
     if game.get_node("NPCs").get_child_count() != 3:
         failures.append("Initial system should spawn three NPC roles.")
     game.queue_free()
