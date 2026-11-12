@@ -80,6 +80,14 @@ func _test_galaxy_map_pan(failures: Array[String]) -> void:
     map.set_zoom(1.5,Vector2(220,110))
     if not is_equal_approx(float(map.get("_zoom")),1.5):
         failures.append("Galaxy map pinch zoom did not change scale.")
+    map.pan_by(Vector2(10000.0,10000.0))
+    var bounded_pan: Vector2 = map.get("_pan_offset")
+    if bounded_pan.x > 0.0 or bounded_pan.y > 0.0:
+        failures.append("Galaxy map pan exceeded the top-left viewport boundary.")
+    map.pan_by(Vector2(-10000.0,-10000.0))
+    bounded_pan = map.get("_pan_offset")
+    if bounded_pan.x < map.size.x*(1.0-1.5)-0.1 or bounded_pan.y < map.size.y*(1.0-1.5)-0.1:
+        failures.append("Galaxy map pan exceeded the bottom-right viewport boundary.")
     map.reset_view()
     if map.get("_pan_offset") != Vector2.ZERO or not is_equal_approx(float(map.get("_zoom")),1.0):
         failures.append("Galaxy map reset did not restore overview.")
@@ -188,7 +196,19 @@ func _test_system_map(failures: Array[String]) -> void:
         failures.append("System map script is missing.")
         return
     var map := map_script.new() as Control
+    map.size = Vector2(460,220)
     map.call("configure","solace",ContentDatabase.get_system("solace"),Vector2(480,270))
+    map.call("pan_by",Vector2(-10000.0,-10000.0))
+    var map_offset: Vector2 = map.get("_map_offset")
+    if map_offset.x > 0.1 or map_offset.y > 0.1:
+        failures.append("System map pan exceeded the top-left viewport boundary.")
+    map.call("set_zoom",2.0,Vector2(230,110))
+    if not is_equal_approx(float(map.get("_zoom")),2.0):
+        failures.append("System map pinch zoom did not change scale.")
+    map.call("pan_by",Vector2(10000.0,10000.0))
+    var bounded_pan: Vector2 = map.get("_pan_offset")
+    if bounded_pan.x < -map.size.x or bounded_pan.y < -map.size.y:
+        failures.append("System map pan exceeded its viewport after zoom.")
     var body_points: Dictionary = map.get("_body_points")
     if body_points.size() != 9:
         failures.append("System map should expose the station, three planets and five moons in Solace.")
@@ -234,7 +254,7 @@ func _test_main_scene(failures: Array[String]) -> void:
         if not is_equal_approx(ftl_button.anchor_top,1.0) or not is_equal_approx(ftl_button.anchor_right,1.0):
             failures.append("FTL button must stay anchored in the lower-right flight-control cluster.")
         var ftl_rect := ftl_button.get_global_rect()
-        if ftl_rect.size.x < 80.0 or ftl_rect.size.y < 50.0 or not Rect2(Vector2.ZERO,get_viewport_rect().size).encloses(ftl_rect):
+        if ftl_rect.size.x < 80.0 or ftl_rect.size.y < 50.0 or not Rect2(Vector2.ZERO,get_viewport().get_visible_rect().size).encloses(ftl_rect):
             failures.append("FTL button must have a usable size and remain inside the viewport.")
     if hud != null:
         for button_name: String in ["BOOSTButton","FIREButton","LOOTButton","FTLButton","BAGButton","SAVEButton"]:
