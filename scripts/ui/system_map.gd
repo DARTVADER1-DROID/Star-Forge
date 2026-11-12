@@ -13,10 +13,20 @@ var ship_position := Vector2(480.0,270.0)
 var selected_body := ""
 var _map_scale := 0.35
 var _map_offset := Vector2.ZERO
+var _base_map_offset := Vector2.ZERO
+var _zoom := 1.0
+var _pan_offset := Vector2.ZERO
+var _touch_positions: Dictionary = {}
+var _active_touch := -1
+var _last_touch_position := Vector2.ZERO
+var _touch_moved := false
+var _pinch_distance := 0.0
+var _pinch_midpoint := Vector2.ZERO
 var _body_points: Dictionary = {}
 
 func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_STOP
+    clip_contents = true
     custom_minimum_size = Vector2(460.0,220.0)
 
 func configure(id: String, system_data: Dictionary, ship: Vector2) -> void:
@@ -24,6 +34,8 @@ func configure(id: String, system_data: Dictionary, ship: Vector2) -> void:
         system_id = id
         definition = system_data
         selected_body = ""
+        _zoom = 1.0
+        _pan_offset = Vector2.ZERO
         _rebuild_body_points()
     if ship_position.distance_squared_to(ship) > 1.0:
         ship_position = ship
@@ -46,6 +58,37 @@ static func _read_position(raw: Variant) -> Vector2:
         return Vector2(float(raw[0]),float(raw[1]))
     return Vector2.ZERO
 
+func _update_map_transform() -> void:
+    _map_scale = minf((size.x-MAP_MARGIN.x*2.0)/MAP_WIDTH,(size.y-MAP_MARGIN.y*2.0)/MAP_HEIGHT)
+    _base_map_offset = (size-Vector2(MAP_WIDTH,MAP_HEIGHT)*_map_scale)*0.5
+    var content_size := Vector2(MAP_WIDTH,MAP_HEIGHT)*_map_scale*_zoom
+    var min_pan := Vector2(
+        minf(0.0,size.x-_base_map_offset.x-content_size.x),
+        minf(0.0,size.y-_base_map_offset.y-content_size.y)
+    )
+    var max_pan := Vector2(minf(0.0,-_base_map_offset.x),minf(0.0,-_base_map_offset.y))
+    _pan_offset = Vector2(clampf(_pan_offset.x,min_pan.x,max_pan.x),clampf(_pan_offset.y,min_pan.y,max_pan.y))
+    _map_offset = _base_map_offset+_pan_offset
+
+func pan_by(delta: Vector2) -> void:
+    _pan_offset += delta
+    _update_map_transform()
+    queue_redraw()
+
+func set_zoom(value: float, anchor: Vector2 = Vector2.ZERO) -> void:
+    _update_map_transform()
+    var map_anchor := (anchor-_map_offset)/(_map_scale*_zoom)
+    _zoom = clampf(value,1.0,3.0)
+    _pan_offset = anchor-map_anchor*(_map_scale*_zoom)-_base_map_offset
+    _update_map_transform()
+    queue_redraw()
+
+func reset_view() -> void:
+    _zoom = 1.0
+    _pan_offset = Vector2.ZERO
+    _update_map_transform()
+    queue_redraw()
+
 func _draw() -> void:
     draw_rect(Rect2(Vector2.ZERO,size),Color(0.015,0.035,0.075,0.92),true)
     for x_index in range(1,5):
@@ -55,9 +98,8 @@ func _draw() -> void:
         var y := size.y*float(y_index)/3.0
         draw_line(Vector2(8,y),Vector2(size.x-8,y),Color(0.22,0.37,0.52,0.12),1.0)
 
-    _map_scale = minf((size.x-MAP_MARGIN.x*2.0)/MAP_WIDTH,(size.y-MAP_MARGIN.y*2.0)/MAP_HEIGHT)
-    _map_offset = (size-Vector2(MAP_WIDTH,MAP_HEIGHT)*_map_scale)*0.5
-    draw_set_transform(_map_offset,0.0,Vector2(_map_scale,_map_scale))
+    _update_map_transform()
+    draw_set_transform(_map_offset,0.0,Vector2(_map_scale*_zoom,_map_scale*_zoom))
     var star_texture := AssetLibrary.load_texture("star_yellow_64.png")
     if star_texture != null:
         draw_texture_rect(star_texture,Rect2(Vector2(448,238),Vector2(64,64)),false)
@@ -121,12 +163,65 @@ func _draw() -> void:
     draw_string(ThemeDB.fallback_font,Vector2(10.0,size.y-9.0),"LOCAL SYSTEM · TAP A PLANET OR STATION FOR DETAILS",HORIZONTAL_ALIGNMENT_LEFT,-1,9,Color(0.62,0.75,0.88,0.85))
 
 func _gui_input(event: InputEvent) -> void:
-    if not event is InputEventScreenTouch:
-        return
-    var touch := event as InputEventScreenTouch
-    if not touch.pressed:
-        return
-    var world_point := (touch.position-_map_offset)/_map_scale
+    if event is InputEventScreenTouch:
+        var touch := event as InputEventScreenTouch
+        if touch.pressed:
+            _touch_positions[touch.index] = touch.position
+            if _touch_positions.size() == 1:
+                _active_touch = touch.index
+                _last_touch_position = touch.position
+                _touch_moved = false
+            elif _touch_positions.size() == 2:
+                var points: Array = _touch_positions.values()
+                var first_point: Vector2 = points[0]
+                var second_point: Vector2 = points[1]
+                _pinch_distance = first_point.distance_to(second_point)
+                _pinch_midpoint = (first_point+second_point)*0.5
+            accept_event()
+        else:
+            if touch.index == _active_touch and _touch_positions.size() == 1 and not _touch_moved:
+                _select_body_at(touch.position)
+            _touch_positions.erase(touch.index)
+            if _touch_positions.size() < 2:
+                _pinch_distance = 0.0
+            _active_touch = -1
+            if _touch_positions.size() == 1:
+                _active_touch = int(_touch_positions.keys()[0])
+                _last_touch_position = _touch_positions.values()[0]
+                _touch_moved = true
+            accept_event()
+    elif event is InputEventScreenDrag:
+        var drag := event as InputEventScreenDrag
+        if not _touch_positions.has(drag.index):
+            return
+        _touch_positions[drag.index] = drag.position
+        if _touch_positions.size() >= 2:
+            var points: Array = _touch_positions.values()
+            var first_point: Vector2 = points[0]
+            var second_point: Vector2 = points[1]
+            var midpoint := (first_point+second_point)*0.5
+            var distance := first_point.distance_to(second_point)
+            if _pinch_distance > 1.0 and distance > 1.0:
+                set_zoom(_zoom*distance/_pinch_distance,_pinch_midpoint)
+            pan_by(midpoint-_pinch_midpoint)
+            _pinch_distance = distance
+            _pinch_midpoint = midpoint
+            _touch_moved = true
+        elif drag.index == _active_touch:
+            var movement := drag.position-_last_touch_position
+            if movement.length() > 2.0:
+                _touch_moved = true
+                pan_by(movement)
+            _last_touch_position = drag.position
+        accept_event()
+    elif event is InputEventMagnifyGesture:
+        var gesture := event as InputEventMagnifyGesture
+        set_zoom(_zoom*gesture.factor,gesture.position)
+        accept_event()
+
+func _select_body_at(screen_point: Vector2) -> void:
+    _update_map_transform()
+    var world_point := (screen_point-_map_offset)/(_map_scale*_zoom)
     var closest_name := ""
     var closest_distance := 38.0
     for body_name: String in _body_points:
