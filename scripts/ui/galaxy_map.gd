@@ -16,6 +16,8 @@ var current_system_id := ""
 var selected_system_id := ""
 var _pan_offset := Vector2.ZERO
 var _zoom := 1.0
+const MIN_ZOOM := 1.0
+const MAX_ZOOM := 2.6
 var _touch_positions: Dictionary = {}
 var _active_touch := -1
 var _last_touch_position := Vector2.ZERO
@@ -25,6 +27,7 @@ var _pinch_midpoint := Vector2.ZERO
 
 func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_STOP
+    clip_contents = true
     custom_minimum_size = Vector2(460.0,220.0)
 
 func configure(current_id: String, selected_id: String) -> void:
@@ -37,14 +40,21 @@ func _system_point(system_id: String) -> Vector2:
     var normalized: Array = definition.get("galaxy_position",[0.5,0.5])
     return MAP_MARGIN + Vector2(float(normalized[0]),float(normalized[1])) * (size-MAP_MARGIN*2.0)
 
+func _clamp_pan(offset: Vector2) -> Vector2:
+    var scaled_size := size * _zoom
+    return Vector2(
+        clampf(offset.x, minf(0.0, size.x-scaled_size.x), 0.0),
+        clampf(offset.y, minf(0.0, size.y-scaled_size.y), 0.0)
+    )
+
 func pan_by(delta: Vector2) -> void:
-    _pan_offset += delta
+    _pan_offset = _clamp_pan(_pan_offset + delta)
     queue_redraw()
 
 func set_zoom(value: float, anchor: Vector2 = Vector2.ZERO) -> void:
     var map_anchor := (anchor-_pan_offset)/_zoom
-    _zoom = clampf(value,0.65,2.6)
-    _pan_offset = anchor-map_anchor*_zoom
+    _zoom = clampf(value,MIN_ZOOM,MAX_ZOOM)
+    _pan_offset = _clamp_pan(anchor-map_anchor*_zoom)
     queue_redraw()
 
 func reset_view() -> void:
