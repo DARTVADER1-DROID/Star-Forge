@@ -1,15 +1,17 @@
-# Tests
+# Godot Tests
 
-Automated tests will be added alongside engine modules.
+CI runs the test runner as a regular Godot scene so project autoloads and runtime services are initialized exactly as they are in the game.
 
-Priority test areas:
+Command:
 
-- Coordinate and transform math
-- Fixed-step timing
-- Memory pool allocation and reset
-- Entity/component storage
-- Collision detection
-- Save-file versioning and recovery
-- Data-definition parsing and validation
+`godot --headless --path . res://tests/test_runner.tscn`
 
-Tests should be deterministic and runnable in CI without requiring a graphics device wherever possible.
+Coverage includes:
+- Content database loading and schema counts.
+- Cargo capacity and item volume.
+- Armour-first damage with hull spillover.
+- FTL adjacency, fuel checks and fuel consumption.
+- Local save/load round-trip.
+- Main scene composition and initial NPC population.
+
+Extend this runner with deterministic regression cases whenever gameplay rules change.

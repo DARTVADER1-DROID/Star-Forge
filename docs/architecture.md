@@ -1,55 +1,44 @@
-# Architecture
+# Star Forge Architecture
 
-## Principles
+## Product constraints
+- Godot 4.7.2, typed GDScript, Android-only landscape and touch-only gameplay.
+- Compatibility renderer, low-memory Android target, no keyboard/mouse gameplay.
+- Keep the development PR unmerged until explicitly approved.
 
-1. Keep gameplay and simulation independent of Android, Windows, Linux, and macOS APIs.
-2. Keep platform integration behind SDL3 and narrow engine interfaces.
-3. Prefer explicit ownership, fixed-capacity pools, and predictable data layouts.
-4. Separate game content from engine code.
-5. Keep the first playable prototype small; expand only when profiling and gameplay require it.
+## Runtime ownership
+- `scenes/main.tscn`: composition root for world, player, follow camera, parallax background, entity containers, projectile pool and HUD canvas.
+- `scripts/player/`: player movement, ship state and weapons.
+- `scripts/npc/`: NPC roles, docking and combat decisions.
+- `scripts/world/`: world entities and focused world services.
+- `scripts/combat/`: projectiles and bounded pooling.
+- `scripts/ui/`: touch HUD, galaxy navigation and local system maps.
+- `scripts/audio/`: shared sound-effect playback service.
+- `scripts/autoload/`: persistent state, content indexes and Android asset registry.
 
-## Planned layers
+## SOLID boundaries
+- `SystemLayout` is the shared data adapter for celestial bodies, asteroid placements and station coordinates. Galaxy/system views and runtime scene construction consume the same definitions.
+- `SystemContentBuilder` builds static system bodies from data; it does not own HUD, saves or NPC AI.
+- `ContentDatabase.validate_world_catalog()` checks system links, stable body IDs and referenced texture registrations before release.
+- `WorldInteractionService` finds the nearest eligible planet/station interaction; it does not create UI or mutate player state.
+- `StarForgeWorld` coordinates system lifecycle and connects signals.
+- `NPCShip` owns movement, docking and combat eligibility. Docked traffic is stationary and protected from pirate targeting.
+- UI emits intent signals (LAND, DOCK, REFUEL, JUMP); world validates range and performs actions.
+- Use stable IDs, not display names or hard-coded scene references.
 
-### Platform
-Window lifecycle, input events, audio device access, timing, and platform file locations. SDL3 is the initial integration layer.
+## Content boundaries
+- `data/economy/items.json`: commodities and equipment.
+- `data/ships/designs.json`: hull definitions.
+- `data/ships/roles.json`: NPC roles and manifests.
+- `data/world/systems.json`: system graph and configuration.
+- `data/world/planets/`, `data/world/maps/`, `data/services/`: future modular catalogs.
+- Definitions reference stable IDs; do not duplicate mutable gameplay stats.
 
-### Engine core
-Application lifecycle, logging, frame timing, memory arenas/pools, resource handles, and configuration.
+## Galaxy navigation
+The galaxy map supports touch drag to pan, pinch to zoom, and tap to select any known system for inspection/planning. FTL remains restricted to adjacent systems with sufficient fuel; selecting a distant system never bypasses route rules.
 
-### Renderer
-A custom 2D sprite renderer. The initial compatibility target is OpenGL ES 2.0 on Android. Renderer interfaces must not leak graphics API types into gameplay code.
+## Assets and audio
+Every manifest texture is explicitly preloaded by `AssetLibrary` for Android PCK inclusion. CI compares the manifest with the registry. Optional missing textures use procedural fallbacks.
+`AudioManager` owns a bounded eight-player SFX pool, sound-ID registration and global volume/mute settings. Feature modules request sound IDs; they do not create unmanaged players. The current source pack has no audio clips, so the manager is ready for later assets but does not invent placeholder sounds.
 
-### Simulation
-Entity/component storage, transforms, movement, collision detection, combat, and AI. Simulation uses a fixed update step; rendering may interpolate between simulation states.
-
-### World
-Sector loading, local entity simulation, procedural content, stations, asteroids, and exploration.
-
-### Game systems
-Player progression, spacecraft modules, weapons, cargo, economy, missions, factions, and save/load.
-
-## Current source modules
-
-- `main.c`: SDL lifecycle, fixed-step clock, touch/mouse event routing and on-screen controls.
-- `game.c`: deterministic simulation, ship movement, combat, NPC behavior, salvage and trading rules.
-- `world.c`: data and queries for star-system definitions.
-- `render.c`: camera-space world drawing, HUD, sprite rendering and cargo-panel presentation.
-- `assets.c`: bounded PNG decoding, SDL texture creation, pixel-art scaling and resource cleanup.
-- `game.h`, `render.h`, and `assets.h`: narrow interfaces between those modules.
-
-Keep the simulation library independent of SDL. Split additional gameplay systems into their own modules when the public interfaces and ownership boundaries are clear; avoid empty placeholder files.
-
-## Initial prototype
-
-1. SDL3 application shell.
-2. Input and fixed-step timing.
-3. Pixel-art camera and sprite renderer.
-4. Player ship movement.
-5. Asteroids and collision.
-6. One weapon and projectile pool.
-7. One enemy and basic combat.
-8. Local save/load.
-
-## Platform strategy
-
-Android is the primary shipping platform. Desktop builds are useful for faster iteration and debugging. Platform-specific code must remain isolated so the same gameplay source can be compiled for each target.
+## Persistence and tests
+`GameState` owns inventory, credits, FTL, per-system state and versioned saves. Save stable IDs and numeric state, never scene references. CI imports the project, runs gameplay tests and exports an Android debug APK.

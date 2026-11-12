@@ -1,88 +1,93 @@
-name: Build Android APK in the cloud
+name: Build Star Forge Android APK
 
 on:
   push:
     branches:
+      - migration/godot-gdscript
+  pull_request:
+    branches:
       - main
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   android-apk:
-    name: Build Star-Forge APK
+    name: Export Godot Android APK
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     steps:
-      - name: Check out Star-Forge
+      - name: Check out Star Forge
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
+      - name: Set up Android SDK command-line tools
         uses: android-actions/setup-android@v4
-        with:
-          packages: platform-tools
 
-      - name: Install Android build tools
+      - name: Install Android SDK packages
         run: |
-          sdkmanager --install \
-            "platforms;android-35" \
-            "build-tools;35.0.0" \
-            "ndk;28.2.13676358" \
-            "cmake;3.22.1"
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Download SDL3 source
+      - name: Install Godot 4.7.2 and Android export templates
         run: |
-          git clone \
-            --depth 1 \
-            --branch release-3.2.10 \
-            https://github.com/libsdl-org/SDL.git \
-            "$RUNNER_TEMP/SDL"
+          set -euo pipefail
+          GODOT_VERSION="4.7.2"
+          GODOT_TAG="${GODOT_VERSION}-stable"
+          curl -L --fail --retry 3 \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_TAG}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" \
+            -o "$RUNNER_TEMP/godot.zip"
+          curl -L --fail --retry 3 \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_TAG}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" \
+            -o "$RUNNER_TEMP/export_templates.tpz"
+          mkdir -p "$RUNNER_TEMP/godot" "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          sudo ln -sf "$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          mkdir -p "$RUNNER_TEMP/export_templates"
+          unzip -q "$RUNNER_TEMP/export_templates.tpz" -d "$RUNNER_TEMP/export_templates"
+          cp -a "$RUNNER_TEMP/export_templates/templates/." "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+          printf '%s' "${GODOT_VERSION}.stable" > "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/version.txt"
 
-      - name: Generate Android project from the SDL3 template
+      - name: Create Android debug signing key
         run: |
-          python3 "$RUNNER_TEMP/SDL/build-scripts/create-android-project.py" \
-            com.starforge.game \
-            "$GITHUB_WORKSPACE/src/main.c" \
-            "$GITHUB_WORKSPACE/src/game.c" \
-            "$GITHUB_WORKSPACE/src/world.c" \
-            "$GITHUB_WORKSPACE/src/game.h" \
-            "$GITHUB_WORKSPACE/src/render.c" \
-            "$GITHUB_WORKSPACE/src/render.h" \
-            "$GITHUB_WORKSPACE/src/assets.c" \
-            "$GITHUB_WORKSPACE/src/assets.h" \
-            "$GITHUB_WORKSPACE/src/stb_image.h" \
-            --variant copy \
-            --output "$RUNNER_TEMP/starforge-android"
+          mkdir -p "$HOME/.android"
+          keytool -genkeypair -v \
+            -keystore "$HOME/.android/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -keyalg RSA -keysize 2048 -validity 10000
 
-      - name: Extract asset pack
+      - name: Restore original game assets
         run: |
           mkdir -p assets data
           unzip -q StarForge_Asset_Pack.zip -d "$RUNNER_TEMP/starforge-assets"
           cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/assets/." assets/
-          cp -a "$RUNNER_TEMP/starforge-assets/StarForge_Asset_Pack/data/." data/
 
-      - name: Package runtime assets
+      - name: Import Godot resources
+        run: godot --headless --editor --path . --import --quit
+
+      - name: Export debug APK
         run: |
-          mkdir -p "$RUNNER_TEMP/starforge-android/com.starforge.game/app/src/main/assets"
-          cp -a assets data "$RUNNER_TEMP/starforge-android/com.starforge.game/app/src/main/assets/"
+          mkdir -p build
+          godot --headless --path . --export-debug "Android" build/StarForge-debug.apk
 
-      - name: Build debug APK
-        working-directory: ${{ runner.temp }}/starforge-android/com.starforge.game
-        run: |
-          chmod +x ./gradlew
-          ./gradlew --no-daemon assembleDebug -PBUILD_WITH_CMAKE=1
-
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: star-forge-android-debug
-          path: ${{ runner.temp }}/starforge-android/com.starforge.game/app/build/outputs/apk/debug/*.apk
+          name: star-forge-godot-android-debug
+          path: build/StarForge-debug.apk
           if-no-files-found: error
           retention-days: 14

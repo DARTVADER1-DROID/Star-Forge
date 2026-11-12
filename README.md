@@ -1,81 +1,66 @@
-# Star-Forge
+# Star Forge
 
-An original, offline-first, top-down 2D pixel-art space sandbox RPG.
-
-## Current milestone: v0.1 playable prototype
-
-The repository contains the first playable star-system sandbox: steer a ship, fight a pirate, destroy an NPC freighter, collect physical cargo salvage, jettison selected cargo by quantity, and sell goods at a station. NPC cargo collection can be toggled with F3.
-
-See [v0.1 prototype notes](docs/v0.1-playable-prototype.md) and [controls](docs/controls.md).
-
-## Project goals
-
-- Android is the primary platform; desktop builds are for development and testing.
-- Low-memory Android compatibility is a design goal to validate on real devices.
-- Native C17 game code with explicit memory ownership and predictable runtime behavior.
-- Offline exploration, ship customization, combat, trading, missions, factions, and progression.
+Star Forge is an original, offline-first, top-down 2D pixel-art space sandbox RPG built exclusively for Android phones and tablets.
 
 ## Technology
 
-| Area | Choice |
-|---|---|
-| Core language | C17 |
-| Platform layer | SDL3 |
-| Build system | CMake |
-| Android target | Android NDK + SDL3 Android project |
-| Cloud Android builds | GitHub Actions |
-| Game definitions | JSON during authoring |
-| Version control | Git + GitHub |
+- **Engine:** Godot 4.7.2 stable
+- **Language:** typed GDScript
+- **Renderer:** Compatibility (OpenGL ES)
+- **Target platform:** Android only
+- **Display:** landscape orientation, scalable 960 × 540 logical canvas
+- **Input:** touchscreen only; no keyboard or mouse gameplay support
+- **Builds:** cloud-based Android APK export through GitHub Actions
 
-## Build an Android APK without installing anything locally
+The Godot editor may be used as a development tool, but the game itself is an Android-only product. There are no desktop game targets or desktop gameplay controls.
 
-Android APKs are built on GitHub's cloud runners. You do not need Android Studio, the Android SDK, the NDK, Gradle, or a C compiler installed on your desktop.
+## Development
 
-1. Open the repository's **Actions** tab.
-2. Select **Build Android APK in the cloud**.
-3. Press **Run workflow** and select the `main` branch.
-4. Wait for the workflow to finish successfully.
-5. Open that workflow run and download the **star-forge-android-debug** artifact.
-6. Extract the downloaded ZIP and install the APK on your Android device. Android may ask you to allow installation from that source.
+Open this repository's root directory in Godot 4.7.2 to edit the project. The entry scene is `scenes/main.tscn`. The project uses a 960 × 540 logical canvas with canvas-item stretching and the Compatibility renderer.
 
-Every push to `main` also starts an APK build automatically. Build artifacts are retained for 14 days.
+## Current playable systems
 
-The workflow uses the official SDL3 Android project generator and builds the native C code with Android's NDK in the cloud. See the [SDL3 Android build documentation](https://wiki.libsdl.org/SDL3/README-android).
+- Floating touch joystick with rate-limited ship turning and thrust.
+- Dedicated BOOST and FIRE buttons.
+- Hull, armour and energy; movement is free, weapons consume energy.
+- Energy regeneration, weapon cooldown and projectile combat.
+- NPC cargo hauler, pirate interceptor and patrol roles.
+- Asteroid, planet, moon and station collision bodies.
+- Physical cargo drops, collection, cargo capacity, jettison and station selling.
+- Optional NPC salvage collection.
+- Four connected star systems with FTL drive and a 5-fuel jump cost.
+- Local save/load, per-system NPC/drop persistence and emergency recovery.
 
-## Build the desktop prototype (optional)
+The game is still being iterated. This is a playable foundation, not a claim that every planned RPG feature is complete.
 
-A desktop build is optional. It is not needed to generate the Android APK.
+## Cloud Android APK
 
-Requires CMake 3.21+, a C17 compiler, Git, and network access on the first configure if SDL3 is fetched automatically.
+No local Android SDK or desktop build setup is required to produce a debug APK.
 
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-    cmake --build build --config Release
-    ctest --test-dir build --output-on-failure
+1. Open the repository's Actions tab.
+2. Select **Build Star Forge Android APK**.
+3. Run it on branch `migration/godot-gdscript`, or push a commit to that branch.
+4. Download the `star-forge-godot-android-debug` artifact after the workflow succeeds.
 
-Run the generated `star_forge` executable.
+The APK is arm64-v8a and debug-signed. It is for testing, not Play Store release.
 
-To use a system-installed SDL3 package, configure with `-DSTARFORGE_FETCH_SDL3=OFF`.
+## Validation
 
-## Code formatting
+The CI workflow installs Godot headlessly, imports the project and runs the project-aware GDScript test scene. The Android workflow separately exports and uploads the APK. Automated CI does not replace testing on a physical phone.
 
-C and header files use the repository's `.clang-format` rules. After installing clang-format, format all source files with:
+## Project layout
 
-    sh tools/format.sh
+- `project.godot` — engine, renderer, Android display and autoload settings
+- `scenes/` — reusable gameplay scenes
+- `scripts/autoload/` — content database and persistent game state
+- `scripts/player/` — player ship simulation
+- `scripts/npc/` — NPC behavior
+- `scripts/combat/` — projectiles and combat
+- `scripts/world/` — systems, obstacles, planets and cargo drops
+- `scripts/ui/` — touch HUD and panels
+- `data/` — JSON content definitions
+- `assets/` — source art and imported runtime resources
+- `tests/` — headless project and gameplay regression tests
+- `.github/workflows/` — Godot validation and Android APK export
 
-Keep functions, conditions, declarations, and data structures on separate readable lines. Do not compress implementation code into one-line blocks.
-
-## Repository layout
-
-- `src/` — SDL frontend and simulation
-- `data/` — starter item and NPC role definitions
-- `assets/` — sprites, audio, fonts, and other assets
-- `docs/` — architecture, performance, design, and controls
-- `tests/` — simulation tests
-- `tools/` — developer utilities, including formatting
-- `.github/workflows/` — CI and cloud build automation
-
-## Not yet implemented
-
-Touch controls, final sprite art, animation, save/load, FTL travel, multiple systems, dynamic markets, advanced NPC factions/reputation, and full ship fitting are future milestones.
-
-See [Architecture](docs/architecture.md), [Performance](docs/performance.md), [Asset Pipeline](docs/asset-pipeline.md), and [Game Design Foundations](docs/game-design.md).
+See `docs/architecture.md`, `docs/gameplay-mechanics.md` and `docs/performance.md`.

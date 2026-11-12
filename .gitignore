@@ -1,34 +1,22 @@
-# Build output
-/build/
-/out/
-/cmake-build-*/
-/.android-build/
-/.gradle/
-/.externalNativeBuild/
+# Godot editor/import cache and generated exports
+.godot/
+.import/
+.export/
+build/
+dist/
+*.apk
+*.aab
+*.pck
 
-# IDE and OS files
+# IDE and operating system
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-
-# Generated binaries and debug symbols
-*.o
-*.obj
-*.a
-*.so
-*.dll
-*.dylib
-*.exe
-*.apk
-*.aab
-*.class
-*.pdb
-*.dSYM/
-
-# Local editor backups
 *~
 *.swp
 *.swo
 
-# Keep source art and editable sprite projects; ignore only temporary exports.
+# Temporary logs and local profiling
+*.log
+*.prof

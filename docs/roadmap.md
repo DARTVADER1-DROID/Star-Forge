@@ -1,48 +1,33 @@
 # Development Roadmap
 
-## Milestone 0 — Repository foundation
-- [x] Establish project goals and technology direction
-- [x] Add initial CMake and SDL3 application shell
-- [ ] Validate desktop build
-- [ ] Add Android Gradle/NDK packaging and CI APK artifact
+## Godot foundation
+- [x] Godot project and landscape Android configuration
+- [x] Compatibility renderer
+- [x] Typed GDScript module layout
+- [x] Touch joystick, BOOST and FIRE
+- [x] Player hull, armour, energy and weapon cost
+- [x] NPC role and ship-design data
+- [x] Four-system FTL graph and fuel cost
+- [x] Cargo inventory, drops and station sale foundations
+- [x] Local save/load foundation
+- [x] Godot headless smoke test
+- [ ] Full physical-device validation and tuning
 
-## Milestone 1 — Engine basics
-- [ ] Logging and configuration
-- [ ] Input abstraction, including touch controls
-- [ ] Fixed-step simulation clock
-- [ ] Memory arenas and bounded object pools
-- [ ] Resource handles and asset loading
-
-## Milestone 2 — First playable space scene
-- [ ] Pixel-art camera and renderer
-- [ ] Player ship movement
-- [ ] Asteroid field
-- [ ] Collision detection
-- [ ] Weapon and projectile pool
-- [ ] Basic enemy behavior
-
-## Design documentation
-- [x] Document ship types and classes, ship-stat model, upgrade direction, galaxy/system/planet structure, initial commodities, and weapons-market boundary in `docs/game-design.md`
-- [ ] Define and balance numerical ship statistics
-- [ ] Define FTL travel and galaxy/system data model
-- [ ] Define planetary traits and commodity market simulation
-- [ ] Add the weapon catalogue after weapon specifications are supplied
-
-## Milestone 3 — Sandbox foundations
-- [ ] Sector representation and streaming
-- [ ] Stations and docking
-- [ ] Ship equipment and hardpoints
-- [ ] Cargo and trading
-- [ ] Local save/load
-
-## Milestone 4 — RPG systems
-- [ ] Missions
-- [ ] Factions and reputation
-- [ ] Progression and equipment economy
-- [ ] More ships, weapons, enemies, and locations
+## Gameplay completion
+- [ ] Persistent full entity state per star system (NPCs, drops, asteroids and market)
+- [ ] Planet and moon interaction, landing and orbit mechanics
+- [ ] Dedicated ship type/class matrix and fitting UI
+- [ ] Complete commodity markets with local supply/demand
+- [ ] Missions, factions and reputation
+- [ ] Ship acquisition, upgrades and equipment
+- [ ] NPC traders, miners, escorts and fuel haulers
+- [ ] Audio, effects, menus and onboarding
+- [ ] Atomic save backups and recovery testing
 
 ## Quality gates
-- Profile memory and frame pacing on low-end Android hardware at every milestone.
-- Test offline behavior.
-- Test pause/resume and interrupted saves.
-- Keep source readable and documented.
+- Godot headless import and smoke test pass.
+- Android export completes and APK artifact is verified.
+- Test touch controls at multiple aspect ratios.
+- Test pause/resume, app backgrounding and interrupted saves.
+- Profile memory, frame pacing, thermal behavior and battery use on physical Android hardware.
+- Do not claim compatibility with 1 GB devices without a genuine low-memory device test.

@@ -1,121 +1,99 @@
-# Gameplay Mechanics — Prototype Rules
+# Gameplay Mechanics — Godot Implementation
 
-This document records the current implemented rules and the intended direction for the next playable iteration. It distinguishes implemented behavior from design proposals so that future changes do not accidentally treat balancing placeholders as final.
+This document distinguishes current prototype behavior from features that remain in the design backlog.
 
-## Implemented in the current prototype
+## Player flight
 
-### Player flight
+- Top-down 2D movement with a touch joystick.
+- Ship facing turns at a rate-limited angular speed.
+- Normal thrust acceleration: 190 world units/s².
+- Boost acceleration: 340 world units/s².
+- Normal speed cap: 190 world units/s.
+- Boost speed cap: 270 world units/s.
+- Drag is applied every physics step.
+- Movement and boost do not consume ship energy.
+- Asteroids, planets, moons and stations use physical collision bodies.
 
-- Ships use a top-down 2D coordinate system.
-- The ship's facing angle determines its thrust direction.
-- Turning is currently rate-limited to 2.8 radians per second.
-- Normal thrust acceleration is 190 world units per second squared.
-- Reverse thrust acceleration is 123.5 world units per second squared.
-- Normal speed is capped at 190 world units per second.
-- Linear drag is applied each simulation step.
-- Asteroid collisions push ships outside the collision radius and damp/reverse their velocity.
+## Ship condition and power
 
-### Boost and movement power
-
-- Boost is held while the boost input is active.
-- Boost acceleration is 340 world units per second squared.
-- Boost speed cap is 270 world units per second.
-- Normal acceleration is 190 world units per second squared.
-- Normal speed cap is 190 world units per second.
-- Turning, thrust, reverse thrust and boost do not consume ship energy.
-
-These are prototype balance values and should be tuned through playtesting.
-
-### Armour, hull and energy
-
+- Player starts with 100 hull, 60 armour and 100 energy.
 - Armour absorbs incoming damage before hull is affected.
-- Damage exceeding remaining armour spills into hull.
-- A ship is destroyed when hull reaches zero.
-- The player starts with 60 armour and 100 hull.
-- The player starts with 100 energy.
-- Each player weapon shot costs 8 energy.
-- Weapons cannot fire without sufficient energy.
-- Energy regenerates at 12 units per second.
-- NPC weapons also consume energy and NPC energy regenerates at the same prototype rate.
-- Movement does not consume energy.
+- Damage beyond remaining armour spills into hull.
+- Hull reaching zero destroys the ship and opens the recovery panel.
+- Emergency recovery restores 70 hull, 30 armour and 100 energy.
+- Energy regenerates at 12 units/s.
+- Each player shot costs 8 energy.
+- Weapons cannot fire without enough energy.
 
-### Combat
+## Combat
 
-- Player projectiles travel at 360 world units per second.
-- Player weapon cooldown is 0.22 seconds.
-- Player projectile damage is 24.
-- Pirate projectiles travel at 230 world units per second.
-- Pirate weapon cooldown is 0.85 seconds.
-- Enemy projectile damage to the player is 8.
-- Projectiles are stored in a fixed-capacity pool.
-- Destroyed NPCs release their remaining cargo as physical salvage.
-- A destroyed NPC has a 35% chance to drop one weapon salvage item.
+- Player projectile speed: 360 world units/s.
+- Player weapon cooldown: 0.22 seconds.
+- Player projectile damage: 24.
+- Pirate projectile speed: 230 world units/s.
+- Pirate weapon cooldown: 0.85 seconds.
+- Pirate projectile damage: 8.
+- Projectiles expire after 1.8 seconds.
+- A fixed pool of 64 projectile nodes is preallocated per active system; shots are reused instead of repeatedly allocated and freed.
+- NPC armour and hull use the same armour-first damage rule.
+- Destroyed NPC cargo is released as physical salvage.
+- NPC destruction has a 35% chance to release one weapon-salvage item.
 
-### NPC roles
+## NPC roles
 
-- Cargo haulers navigate toward the station.
-- Pirates pursue the cargo hauler while it is alive, then target the player.
-- Patrol ships maintain an orbit around their system station as local traffic.
-- Pirates maintain a preferred combat distance and fire when the target is within range.
-- NPC salvage collection can be enabled or disabled.
-- More dedicated roles (trader, miner, patrol, escort) are planned, not yet implemented.
+- Cargo haulers navigate toward their system station.
+- Pirates pursue a cargo hauler target and fire when in range.
+- Patrol ships orbit the local station.
+- NPC roles and ship designs are separate JSON definitions.
+- NPC cargo is constrained by ship-design cargo capacity.
+- Optional NPC salvage collection can be enabled from the cargo panel.
 
-### Cargo and salvage
+## Cargo and economy prototype
 
-- Commodity types currently include metal, fuel, food, medicine and weapon salvage.
-- Ordinary commodities consume one cargo volume unit per item.
-- Weapon salvage consumes two cargo volume units per item.
-- Player cargo capacity is currently 100 volume units.
+- Commodities: metal, fuel, food, medicine and weapon salvage.
+- Ordinary commodities use one cargo-volume unit per item.
+- Weapon salvage uses two cargo-volume units per item.
+- Player cargo capacity: 100 volume units.
 - Salvage exists as physical drops in the world.
-- The player collects the nearest eligible drop within 38 world units.
-- NPCs may collect nearby salvage when NPC salvage behavior is enabled.
-- The player can jettison a selected quantity of ordinary commodities.
-- The player can sell all of one selected commodity when within 90 world units of the station.
-- The on-screen cargo panel supports item selection, jettison quantity adjustment, station sales and the NPC salvage toggle.
+- Player collection range: 38 world units.
+- NPC collection requires free cargo capacity and a nearby drop.
+- Player can jettison a selected quantity as a physical drop.
+- Player can sell an item stack near the local station.
+- Item prices and volume are loaded from `data/items.json`.
 
-## Proposed mechanics — not implemented yet
+## Galaxy and FTL
 
-### Ship fitting
+- Four prototype systems: Solace, Vesper, Kestrel and Ironwake.
+- Each system is a separate local scene-space.
+- Ordinary interstellar travel is unavailable; an installed FTL drive is required.
+- A jump requires a directly connected system and five fuel.
+- Fuel is deducted only after a valid jump.
+- Local NPC and cargo-drop state is saved when leaving a system.
+- Returning to a system restores its saved NPCs and drops.
+- System definitions and adjacency are data-driven in `data/systems.json`.
 
-- Hull archetypes define hardpoints, allowed mount sizes, mount types and equipment mass limits.
-- Weapons are installed into compatible hardpoints.
-- A weapon must pass both hardpoint compatibility and equipment-mass checks.
-- Power generation and consumption will be checked separately from mass.
-- Installed weapon mass and cargo mass must not be conflated.
+## Save and recovery
 
-### Economy
+- Local save data is written under Godot's application user-data directory.
+- Save files carry a schema version.
+- Inventory, credits, current system, player condition and local system state are saved.
+- Invalid system references and unsupported save versions are rejected.
 
-- Each planet will eventually have its own supply, demand and market prices.
-- Price changes should be driven by local supply and demand, not arbitrary random price rolls.
-- Fuel remains a tradeable commodity and is also consumed by FTL travel.
-- A station market should expose buy and sell prices separately.
-- Dynamic market state must be saved locally.
+## Planned, not yet implemented
 
-### Star systems and FTL
-
-- Each star system is a separate local room with its own local coordinates.
-- The prototype defines four systems: Solace, Vesper, Kestrel and Ironwake.
-- Each system has its own planet and moon counts and station location.
-- Some systems contain asteroid fields; other systems do not.
-- Asteroids are environmental obstacles for now; mining is a future feature.
-- Inter-system travel is only possible through an installed FTL drive.
-- The prototype FTL jump consumes 5 units of the Fuel commodity.
-- A jump is rejected when the ship lacks an FTL drive or sufficient fuel.
-- Jumping resets local velocity and position, clears transient projectiles and salvage, and initializes local cargo and pirate traffic in the destination system.
-- Directly flying to the edge of a system never transitions to another system.
-- Future fleet travel will calculate fuel from fleet mass and route distance; current prototype cost is fixed.
-
-### Salvage ownership and NPC behavior
-
-- A physical salvage drop remains available until collected, destroyed or expired by an explicitly defined rule.
-- NPC collection should require sufficient free cargo volume.
-- NPCs should not collect hostile or inaccessible salvage without an appropriate role/behavior.
-- Player collection should report capacity failures rather than silently discarding cargo.
+- Planet and moon landing, orbit, surface interaction and resource extraction.
+- Dynamic supply/demand markets for each planet and station.
+- Full ship fitting, hardpoints, modules and equipment mass/power validation.
+- Additional ship types and classes, ship acquisition and upgrades.
+- Trader, miner, escort and dedicated fuel-hauler AI.
+- Missions, factions, reputation and progression.
+- Atomic backup rotation and recovery from interrupted writes.
 
 ## Engineering constraints
 
-- Keep simulation independent of SDL and Android APIs.
-- Keep all frequently updated entities in fixed-capacity pools until profiling justifies another storage model.
-- Avoid heap allocation in the per-frame simulation loop.
-- Keep tuning values centralized and documented.
-- Add deterministic tests for every new economic or combat rule.
+- Keep frequently updated actors bounded and avoid unbounded scene growth.
+- Reuse projectiles and high-churn effects through pools as their count increases.
+- Load only local-system content.
+- Keep content IDs stable and validate data before use.
+- Add regression tests whenever gameplay rules change.
+- Profile memory and frame pacing on actual Android devices.

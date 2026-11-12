@@ -1,0 +1,442 @@
+{
+  "schema_version": 1,
+  "systems": [
+    {
+      "id": "solace",
+      "name": "Solace",
+      "links": [
+        "vesper",
+        "kestrel"
+      ],
+      "planet_count": 3,
+      "moon_count": 5,
+      "has_asteroids": true,
+      "station_position": [
+        220,
+        180
+      ],
+      "galaxy_position": [
+        0.18,
+        0.5
+      ],
+      "bodies": [
+        {
+          "id": "solace_planet_01",
+          "name": "Solace 1",
+          "position": [
+            150,
+            100
+          ],
+          "radius": 30,
+          "interaction_radius": 106,
+          "texture": "planet_terran_64.png",
+          "moons": [
+            {
+              "id": "solace_moon_01",
+              "name": "Solace Moon 1",
+              "offset": [
+                76,
+                0
+              ],
+              "radius": 11,
+              "texture": "planet_moon_32.png"
+            },
+            {
+              "id": "solace_moon_04",
+              "name": "Solace Moon 4",
+              "offset": [
+                46.42,
+                60.18
+              ],
+              "radius": 11,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        },
+        {
+          "id": "solace_planet_02",
+          "name": "Solace 2",
+          "position": [
+            430,
+            430
+          ],
+          "radius": 42,
+          "interaction_radius": 118,
+          "texture": "planet_gas_96.png",
+          "moons": [
+            {
+              "id": "solace_moon_02",
+              "name": "Solace Moon 2",
+              "offset": [
+                -55.99,
+                51.39
+              ],
+              "radius": 14,
+              "texture": "planet_moon_32.png"
+            },
+            {
+              "id": "solace_moon_05",
+              "name": "Solace Moon 5",
+              "offset": [
+                -74.89,
+                -12.95
+              ],
+              "radius": 14,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        },
+        {
+          "id": "solace_planet_03",
+          "name": "Solace 3",
+          "position": [
+            710,
+            100
+          ],
+          "radius": 54,
+          "interaction_radius": 130,
+          "texture": "planet_terran_64.png",
+          "moons": [
+            {
+              "id": "solace_moon_03",
+              "name": "Solace Moon 3",
+              "offset": [
+                6.5,
+                -75.72
+              ],
+              "radius": 17,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        }
+      ],
+      "asteroid_positions": [
+        [
+          520,
+          250
+        ],
+        [
+          680,
+          420
+        ],
+        [
+          860,
+          310
+        ],
+        [
+          740,
+          160
+        ]
+      ]
+    },
+    {
+      "id": "vesper",
+      "name": "Vesper",
+      "links": [
+        "solace",
+        "kestrel",
+        "ironwake"
+      ],
+      "planet_count": 2,
+      "moon_count": 3,
+      "has_asteroids": false,
+      "station_position": [
+        360,
+        260
+      ],
+      "galaxy_position": [
+        0.5,
+        0.22
+      ],
+      "bodies": [
+        {
+          "id": "vesper_planet_01",
+          "name": "Vesper 1",
+          "position": [
+            150,
+            100
+          ],
+          "radius": 30,
+          "interaction_radius": 106,
+          "texture": "planet_terran_64.png",
+          "moons": [
+            {
+              "id": "vesper_moon_01",
+              "name": "Vesper Moon 1",
+              "offset": [
+                76,
+                0
+              ],
+              "radius": 11,
+              "texture": "planet_moon_32.png"
+            },
+            {
+              "id": "vesper_moon_03",
+              "name": "Vesper Moon 3",
+              "offset": [
+                6.5,
+                -75.72
+              ],
+              "radius": 17,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        },
+        {
+          "id": "vesper_planet_02",
+          "name": "Vesper 2",
+          "position": [
+            430,
+            430
+          ],
+          "radius": 42,
+          "interaction_radius": 118,
+          "texture": "planet_gas_96.png",
+          "moons": [
+            {
+              "id": "vesper_moon_02",
+              "name": "Vesper Moon 2",
+              "offset": [
+                -55.99,
+                51.39
+              ],
+              "radius": 14,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        }
+      ],
+      "asteroid_positions": []
+    },
+    {
+      "id": "kestrel",
+      "name": "Kestrel",
+      "links": [
+        "solace",
+        "vesper",
+        "ironwake"
+      ],
+      "planet_count": 4,
+      "moon_count": 7,
+      "has_asteroids": true,
+      "station_position": [
+        180,
+        420
+      ],
+      "galaxy_position": [
+        0.5,
+        0.78
+      ],
+      "bodies": [
+        {
+          "id": "kestrel_planet_01",
+          "name": "Kestrel 1",
+          "position": [
+            150,
+            100
+          ],
+          "radius": 30,
+          "interaction_radius": 106,
+          "texture": "planet_terran_64.png",
+          "moons": [
+            {
+              "id": "kestrel_moon_01",
+              "name": "Kestrel Moon 1",
+              "offset": [
+                76,
+                0
+              ],
+              "radius": 11,
+              "texture": "planet_moon_32.png"
+            },
+            {
+              "id": "kestrel_moon_05",
+              "name": "Kestrel Moon 5",
+              "offset": [
+                -74.89,
+                -12.95
+              ],
+              "radius": 14,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        },
+        {
+          "id": "kestrel_planet_02",
+          "name": "Kestrel 2",
+          "position": [
+            430,
+            430
+          ],
+          "radius": 42,
+          "interaction_radius": 118,
+          "texture": "planet_gas_96.png",
+          "moons": [
+            {
+              "id": "kestrel_moon_02",
+              "name": "Kestrel Moon 2",
+              "offset": [
+                -55.99,
+                51.39
+              ],
+              "radius": 14,
+              "texture": "planet_moon_32.png"
+            },
+            {
+              "id": "kestrel_moon_06",
+              "name": "Kestrel Moon 6",
+              "offset": [
+                63.93,
+                -41.1
+              ],
+              "radius": 17,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        },
+        {
+          "id": "kestrel_planet_03",
+          "name": "Kestrel 3",
+          "position": [
+            710,
+            100
+          ],
+          "radius": 54,
+          "interaction_radius": 130,
+          "texture": "planet_terran_64.png",
+          "moons": [
+            {
+              "id": "kestrel_moon_03",
+              "name": "Kestrel Moon 3",
+              "offset": [
+                6.5,
+                -75.72
+              ],
+              "radius": 17,
+              "texture": "planet_moon_32.png"
+            },
+            {
+              "id": "kestrel_moon_07",
+              "name": "Kestrel Moon 7",
+              "offset": [
+                -19.31,
+                73.51
+              ],
+              "radius": 11,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        },
+        {
+          "id": "kestrel_planet_04",
+          "name": "Kestrel 4",
+          "position": [
+            990,
+            430
+          ],
+          "radius": 30,
+          "interaction_radius": 106,
+          "texture": "planet_gas_96.png",
+          "moons": [
+            {
+              "id": "kestrel_moon_04",
+              "name": "Kestrel Moon 4",
+              "offset": [
+                46.42,
+                60.18
+              ],
+              "radius": 11,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        }
+      ],
+      "asteroid_positions": [
+        [
+          520,
+          250
+        ],
+        [
+          680,
+          420
+        ],
+        [
+          860,
+          310
+        ],
+        [
+          740,
+          160
+        ]
+      ]
+    },
+    {
+      "id": "ironwake",
+      "name": "Ironwake",
+      "links": [
+        "vesper",
+        "kestrel"
+      ],
+      "planet_count": 2,
+      "moon_count": 2,
+      "has_asteroids": false,
+      "station_position": [
+        480,
+        340
+      ],
+      "galaxy_position": [
+        0.82,
+        0.5
+      ],
+      "bodies": [
+        {
+          "id": "ironwake_planet_01",
+          "name": "Ironwake 1",
+          "position": [
+            150,
+            100
+          ],
+          "radius": 30,
+          "interaction_radius": 106,
+          "texture": "planet_terran_64.png",
+          "moons": [
+            {
+              "id": "ironwake_moon_01",
+              "name": "Ironwake Moon 1",
+              "offset": [
+                76,
+                0
+              ],
+              "radius": 11,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        },
+        {
+          "id": "ironwake_planet_02",
+          "name": "Ironwake 2",
+          "position": [
+            430,
+            430
+          ],
+          "radius": 42,
+          "interaction_radius": 118,
+          "texture": "planet_gas_96.png",
+          "moons": [
+            {
+              "id": "ironwake_moon_02",
+              "name": "Ironwake Moon 2",
+              "offset": [
+                -55.99,
+                51.39
+              ],
+              "radius": 14,
+              "texture": "planet_moon_32.png"
+            }
+          ]
+        }
+      ],
+      "asteroid_positions": []
+    }
+  ]
+}
