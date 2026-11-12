@@ -62,11 +62,14 @@ func _update_map_transform() -> void:
     _map_scale = minf((size.x-MAP_MARGIN.x*2.0)/MAP_WIDTH,(size.y-MAP_MARGIN.y*2.0)/MAP_HEIGHT)
     _base_map_offset = (size-Vector2(MAP_WIDTH,MAP_HEIGHT)*_map_scale)*0.5
     var content_size := Vector2(MAP_WIDTH,MAP_HEIGHT)*_map_scale*_zoom
-    var min_pan := Vector2(
-        minf(0.0,size.x-_base_map_offset.x-content_size.x),
-        minf(0.0,size.y-_base_map_offset.y-content_size.y)
-    )
-    var max_pan := Vector2(minf(0.0,-_base_map_offset.x),minf(0.0,-_base_map_offset.y))
+    var min_pan := Vector2.ZERO
+    var max_pan := Vector2.ZERO
+    if content_size.x > size.x:
+        min_pan.x = size.x-_base_map_offset.x-content_size.x
+        max_pan.x = -_base_map_offset.x
+    if content_size.y > size.y:
+        min_pan.y = size.y-_base_map_offset.y-content_size.y
+        max_pan.y = -_base_map_offset.y
     _pan_offset = Vector2(clampf(_pan_offset.x,min_pan.x,max_pan.x),clampf(_pan_offset.y,min_pan.y,max_pan.y))
     _map_offset = _base_map_offset+_pan_offset
 
