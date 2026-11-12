@@ -74,12 +74,12 @@ func _test_galaxy_map_pan(failures: Array[String]) -> void:
     map.systems = ContentDatabase.systems
     map.configure("solace","")
     var original: Vector2 = map.get("_pan_offset")
-    map.pan_by(Vector2(35.0,-20.0))
-    if map.get("_pan_offset") == original:
-        failures.append("Galaxy map touch pan did not change the map offset.")
     map.set_zoom(1.5,Vector2(220,110))
     if not is_equal_approx(float(map.get("_zoom")),1.5):
         failures.append("Galaxy map pinch zoom did not change scale.")
+    map.pan_by(Vector2(35.0,-20.0))
+    if map.get("_pan_offset") == original:
+        failures.append("Galaxy map touch pan did not change the map offset.")
     map.pan_by(Vector2(10000.0,10000.0))
     var bounded_pan: Vector2 = map.get("_pan_offset")
     if bounded_pan.x > 0.0 or bounded_pan.y > 0.0:
@@ -198,17 +198,21 @@ func _test_system_map(failures: Array[String]) -> void:
     var map := map_script.new() as Control
     map.size = Vector2(460,220)
     map.call("configure","solace",ContentDatabase.get_system("solace"),Vector2(480,270))
-    map.call("pan_by",Vector2(-10000.0,-10000.0))
-    var map_offset: Vector2 = map.get("_map_offset")
-    if map_offset.x > 0.1 or map_offset.y > 0.1:
-        failures.append("System map pan exceeded the top-left viewport boundary.")
     map.call("set_zoom",2.0,Vector2(230,110))
     if not is_equal_approx(float(map.get("_zoom")),2.0):
         failures.append("System map pinch zoom did not change scale.")
+    map.call("pan_by",Vector2(-10000.0,-10000.0))
+    var map_offset: Vector2 = map.get("_map_offset")
+    var map_scale: float = float(map.get("_map_scale"))*float(map.get("_zoom"))
+    var rendered_size := Vector2(960.0,540.0)*map_scale
+    if map_offset.x > 0.1 or map_offset.y > 0.1:
+        failures.append("System map pan exceeded the top-left viewport boundary.")
+    if map_offset.x+rendered_size.x < map.size.x-0.1 or map_offset.y+rendered_size.y < map.size.y-0.1:
+        failures.append("System map pan exposed empty space at the top-left viewport edge.")
     map.call("pan_by",Vector2(10000.0,10000.0))
-    var bounded_pan: Vector2 = map.get("_pan_offset")
-    if bounded_pan.x < -map.size.x or bounded_pan.y < -map.size.y:
-        failures.append("System map pan exceeded its viewport after zoom.")
+    map_offset = map.get("_map_offset")
+    if map_offset.x+rendered_size.x < map.size.x-0.1 or map_offset.y+rendered_size.y < map.size.y-0.1:
+        failures.append("System map pan exposed empty space at the bottom-right viewport edge.")
     var body_points: Dictionary = map.get("_body_points")
     if body_points.size() != 9:
         failures.append("System map should expose the station, three planets and five moons in Solace.")
